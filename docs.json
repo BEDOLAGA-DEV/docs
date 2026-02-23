@@ -51,6 +51,7 @@
             "group": "Бот",
             "pages": [
               "bot/overview",
+              "bot/user-onboarding",
               "bot/payments",
               "bot/subscriptions",
               "bot/referral-program",
