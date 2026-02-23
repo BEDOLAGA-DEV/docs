@@ -1,11 +1,11 @@
 ---
 title: "База данных"
-description: "Полная схема базы данных: 68 таблиц, модели, связи и миграции"
+description: "Полная схема базы данных: модели, связи и миграции"
 ---
 
 ## Обзор
 
-Бот использует PostgreSQL через SQLAlchemy 2.x async ORM. Все модели определены в `app/database/models.py` (68 таблиц, включая 3 связующие M2M).
+Бот использует PostgreSQL через SQLAlchemy 2.x async ORM. Все модели определены в `app/database/models.py`.
 
 ## Миграции (Alembic)
 
@@ -131,7 +131,7 @@ async with get_session() as session:
 
 **`traffic_purchases`** — докупки трафика (`traffic_gb`, `expires_at` = дата покупки + 30 дней).
 
-### Платежи и транзакции (14 таблиц)
+### Платежи и транзакции (12 таблиц)
 
 **`transactions`** — единый финансовый реестр.
 
@@ -145,7 +145,7 @@ async with get_session() as session:
 | `is_completed` | Завершена ли |
 | `receipt_uuid` | UUID фискального чека NaloGO |
 
-**12 таблиц платежных провайдеров** — по одной на каждый провайдер. Все содержат: `user_id`, `status`, `transaction_id`, сумму и ID во внешней системе.
+**10 таблиц платежных провайдеров** — по одной на каждый провайдер. Все содержат: `user_id`, `status`, `transaction_id`, сумму и ID во внешней системе. Telegram Stars и Tribute не имеют отдельных таблиц — используют `transactions` напрямую.
 
 | Таблица | Провайдер | Уникальный ID |
 | ------- | --------- | ------------- |
@@ -329,7 +329,7 @@ M2M связи: `server_squads`, `tariffs`, `payment_method_configs`
 
 **`squads`** — устаревшая таблица серверов (заменена на `server_squads`).
 
-### Системные и контентные (11 таблиц)
+### Системные и контентные (12 таблиц)
 
 | Таблица | Описание |
 | ------- | -------- |
@@ -343,6 +343,7 @@ M2M связи: `server_squads`, `tariffs`, `payment_method_configs`
 | `welcome_texts` | Приветственные тексты |
 | `pinned_messages` | Закрепленные сообщения (текст, медиа) |
 | `main_menu_buttons` | Кастомные кнопки главного меню |
+| `menu_layout_history` | История изменений конфигурации меню |
 | `monitoring_logs` | Журнал мониторинга |
 
 ### Вебхуки (2 таблицы)
@@ -363,7 +364,7 @@ M2M связи: `server_squads`, `tariffs`, `payment_method_configs`
 | ----- | ------ | ----------------- |
 | Пользователи | 3 | users, cabinet_refresh_tokens, partner_applications |
 | Подписки | 5 | subscriptions, subscription_servers, subscription_conversions, subscription_events, traffic_purchases |
-| Платежи | 14 | transactions + 12 провайдеров + payment_method_configs |
+| Платежи | 12 | transactions + 10 провайдеров + payment_method_configs |
 | Промо | 8 + 3 M2M | promo_groups, user_promo_groups, promocodes, discount_offers, promo_offer_templates |
 | Реферал | 3 | referral_earnings, withdrawal_requests, sent_notifications |
 | Поддержка | 5 | tickets, ticket_messages, ticket_notifications, support_audit_logs, broadcast_history |
@@ -372,7 +373,7 @@ M2M связи: `server_squads`, `tariffs`, `payment_method_configs`
 | Опросы | 5 | polls, poll_questions, poll_options, poll_responses, poll_answers |
 | Колесо фортуны | 3 | wheel_configs, wheel_prizes, wheel_spins |
 | Серверы и тарифы | 3 | tariffs, server_squads, squads |
-| Системные | 11 | system_settings, service_rules, privacy_policies, faq_pages, main_menu_buttons и др. |
+| Системные | 12 | system_settings, service_rules, privacy_policies, faq_pages, main_menu_buttons, menu_layout_history и др. |
 | Вебхуки | 2 | webhooks, webhook_deliveries |
 | Web API | 2 | web_api_tokens, button_click_logs |
-| **Итого** | **68** | |
+| **Итого** | **~66 + 3 M2M** | |
