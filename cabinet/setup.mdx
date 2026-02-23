@@ -8,14 +8,15 @@ description: "Пошаговая установка веб-кабинета"
 В `.env` файле бота добавьте:
 
 ```env
+# Включить Cabinet API
 CABINET_ENABLED=true
+
+# JWT секрет (сгенерируйте: openssl rand -hex 32)
 CABINET_JWT_SECRET=your_random_secret_key_here
+
+# Домен кабинета для CORS
 CABINET_ALLOWED_ORIGINS=https://cabinet.example.com
 ```
-
-<Warning>
-  Обязательно сгенерируйте `CABINET_JWT_SECRET` командой `openssl rand -hex 32`.
-</Warning>
 
 Перезапустите бота:
 
@@ -36,21 +37,165 @@ docker cp tmp_cabinet:/usr/share/nginx/html ./cabinet-dist
 docker rm tmp_cabinet
 ```
 
-### Вариант B: Сборка из исходников
+### Вариант B: Сборка из исходников (через Docker)
 
 ```bash
 git clone https://github.com/BEDOLAGA-DEV/bedolaga-cabinet.git
 cd bedolaga-cabinet
+cp .env.example .env
+```
+
+Отредактируйте `.env`:
+
+```env
+VITE_API_URL=/api
+VITE_TELEGRAM_BOT_USERNAME=your_bot_username
+VITE_APP_NAME=My VPN
+VITE_APP_LOGO=V
+```
+
+Соберите и извлеките:
+
+```bash
+docker compose build
+docker create --name tmp_cabinet cabinet_frontend
+docker cp tmp_cabinet:/usr/share/nginx/html ./cabinet-dist
+docker rm tmp_cabinet
+```
+
+### Вариант C: Сборка без Docker (через npm)
+
+Установите Node.js через NVM:
+
+```bash
+# Установка NVM
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+source ~/.bashrc
+
+# Установка Node.js LTS
+nvm install --lts
+```
+
+Соберите проект:
+
+```bash
+git clone https://github.com/BEDOLAGA-DEV/bedolaga-cabinet.git
+cd bedolaga-cabinet
+cp .env.example .env
+# Отредактируйте .env (VITE_API_URL, VITE_TELEGRAM_BOT_USERNAME и т.д.)
+
 npm install
 npm run build
 ```
 
-Собранные файлы будут в `dist/`.
+Собранные файлы будут в `dist/`. Скопируйте их на сервер:
 
-## Шаг 3. Настройка обратного прокси
+```bash
+sudo mkdir -p /srv/cabinet
+sudo cp -r ./dist/* /srv/cabinet/
+```
 
-Смотрите раздел [Настройка прокси](/cabinet/proxy-config).
+## Шаг 3. Размещение файлов на сервере
 
-## Проверка
+```bash
+# Создайте директорию
+sudo mkdir -p /srv/cabinet
+
+# Скопируйте файлы
+sudo cp -r ./cabinet-dist/* /srv/cabinet/
+```
+
+## Шаг 4. Настройка обратного прокси
+
+Подробная настройка — в разделе [Настройка прокси](/cabinet/proxy-config).
+
+## Шаг 5. Запуск и проверка
+
+```bash
+# Перезагрузите Caddy
+docker exec <caddy_container> caddy reload --config /etc/caddy/Caddyfile
+
+# Или Nginx
+docker exec <nginx_container> nginx -s reload
+```
 
 Откройте `https://cabinet.example.com` в браузере. Вы должны увидеть экран авторизации через Telegram.
+
+## Альтернативная установка: Docker контейнер
+
+Если не хотите раздавать статику напрямую, можно проксировать запросы на Docker контейнер cabinet.
+
+### docker-compose.yml
+
+```yaml docker-compose.yml
+services:
+  cabinet-frontend:
+    image: ghcr.io/bedolaga-dev/bedolaga-cabinet:latest
+    container_name: cabinet_frontend
+    restart: unless-stopped
+    networks:
+      - bot_network
+
+networks:
+  bot_network:
+    external: true
+    name: remnawave-bedolaga-telegram-bot_bot_network
+```
+
+### Caddyfile
+
+```caddy Caddyfile
+https://cabinet.example.com {
+    encode gzip zstd
+
+    # API запросы → backend бота
+    handle /api/* {
+        uri strip_prefix /api
+        reverse_proxy remnawave_bot:8080
+    }
+
+    # Frontend → nginx контейнер (порт 80 внутри Docker сети)
+    handle {
+        reverse_proxy cabinet_frontend:80
+    }
+}
+```
+
+<Info>
+  В этом варианте кэшированием статики занимается nginx внутри контейнера.
+</Info>
+
+## Устранение проблем
+
+### CORS ошибка в консоли браузера
+
+Домен кабинета не добавлен в `CABINET_ALLOWED_ORIGINS` в `.env` бота. Добавьте и перезапустите.
+
+### API возвращает HTML вместо JSON
+
+Прокси настроен неправильно — запросы `/api/*` попадают на frontend вместо backend. Проверьте порядок блоков `handle` в Caddyfile (API должен быть первым).
+
+### 502 Bad Gateway
+
+1. Backend бота не запущен — проверьте `docker ps`
+2. Контейнеры в разных Docker сетях:
+   ```bash
+   # Проверить сети контейнера
+   docker inspect <container> --format='{{json .NetworkSettings.Networks}}' | python3 -m json.tool
+
+   # Подключить к нужной сети
+   docker network connect <network_name> <container_name>
+   ```
+3. Неправильное имя сервиса:
+   ```bash
+   docker exec <caddy_container> wget -qO- http://remnawave_bot:8080/health
+   ```
+
+### Telegram авторизация не работает
+
+1. `VITE_TELEGRAM_BOT_USERNAME` должен быть без `@`
+2. Домен кабинета добавлен в BotFather → Bot Settings → Domain
+
+### Белый экран / SPA не работает
+
+Прокси не настроен на fallback к `index.html`. Убедитесь что `try_files {path} /index.html` (Caddy) или `try_files $uri /index.html` (Nginx) присутствует.

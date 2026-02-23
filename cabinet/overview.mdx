@@ -5,7 +5,13 @@ description: "Веб-интерфейс личного кабинета поль
 
 ## Что такое Cabinet?
 
-**Bedolaga Cabinet** — это веб-приложение (React + TypeScript), которое предоставляет пользователям интерфейс для управления VPN подписками через браузер.
+**Bedolaga Cabinet** — веб-приложение для управления VPN подписками через браузер. Работает как frontend к backend-API бота.
+
+## Требования
+
+- Docker и Docker Compose
+- Запущенный backend бота с включённым Cabinet API
+- Обратный прокси (Caddy / Nginx / Traefik)
 
 ## Возможности
 
@@ -28,6 +34,33 @@ Frontend — статические файлы (HTML, JS, CSS). Обратный
 1. Раздаёт статику frontend
 2. Проксирует `/api/*` на backend бота (с удалением префикса `/api`)
 
+## Переменные окружения
+
+### Build-time (вшиваются в JS при сборке)
+
+| Переменная | Описание | По умолчанию |
+| ---------- | -------- | ------------ |
+| `VITE_API_URL` | Путь к API (`/api` или полный URL) | `/api` |
+| `VITE_TELEGRAM_BOT_USERNAME` | Username бота (без @) | — |
+| `VITE_APP_NAME` | Название в шапке и вкладке | `Cabinet` |
+| `VITE_APP_LOGO` | Текст логотипа (1-2 символа) | `V` |
+
+### Runtime (только для Docker контейнера)
+
+| Переменная | Описание | По умолчанию |
+| ---------- | -------- | ------------ |
+| `CABINET_PORT` | Порт контейнера на хосте | `3020` |
+
+### Backend бота (.env бота)
+
+| Переменная | Описание | По умолчанию |
+| ---------- | -------- | ------------ |
+| `CABINET_ENABLED` | Включить Cabinet API | `false` |
+| `CABINET_JWT_SECRET` | Секретный ключ для JWT | `BOT_TOKEN` |
+| `CABINET_ALLOWED_ORIGINS` | CORS origins (через запятую) | — |
+| `CABINET_ACCESS_TOKEN_EXPIRE_MINUTES` | Время жизни access token | `15` |
+| `CABINET_REFRESH_TOKEN_EXPIRE_DAYS` | Время жизни refresh token | `7` |
+
 ## Стек технологий
 
 | Технология | Назначение |
@@ -38,3 +71,23 @@ Frontend — статические файлы (HTML, JS, CSS). Обратный
 | Tailwind CSS | Стили |
 | i18next | Мультиязычность |
 | Telegram WebApp SDK | Авторизация |
+
+## Структура проекта
+
+```
+bedolaga-cabinet/
+├── src/
+│   ├── api/           # API клиенты (axios)
+│   ├── components/    # React компоненты (UI kit)
+│   ├── contexts/      # React контексты (auth, theme)
+│   ├── hooks/         # Custom hooks
+│   ├── locales/       # Переводы (i18n)
+│   ├── pages/         # Страницы приложения
+│   ├── types/         # TypeScript типы
+│   └── utils/         # Утилиты
+├── public/            # Статические файлы
+├── Dockerfile         # Multi-stage сборка (node → nginx)
+├── docker-compose.yml # Docker Compose для сборки
+├── nginx.conf         # Nginx конфиг внутри контейнера
+└── .env.example       # Пример переменных окружения
+```

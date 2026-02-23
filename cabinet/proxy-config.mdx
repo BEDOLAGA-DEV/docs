@@ -11,53 +11,82 @@ Cabinet требует обратный прокси, который:
 
 ## Caddy (рекомендуется)
 
+Caddy автоматически получает и обновляет SSL сертификаты.
+
 ```caddy Caddyfile
-cabinet.example.com {
+https://cabinet.example.com {
+    encode gzip zstd
+
+    # API запросы → backend бота (удаляет /api префикс)
     handle /api/* {
         uri strip_prefix /api
         reverse_proxy remnawave_bot:8080
     }
 
+    # Frontend статика
     handle {
         root * /srv/cabinet
         try_files {path} /index.html
         file_server
+
+        # Кэширование статических ассетов (JS, CSS, шрифты, изображения)
+        @static path *.js *.css *.woff *.woff2 *.ttf *.ico *.png *.jpg *.jpeg *.svg *.webp *.gif
+        header @static Cache-Control "public, max-age=31536000, immutable"
+
+        # HTML без кэша (для обновлений SPA)
+        @html path *.html /
+        header @html Cache-Control "no-cache, must-revalidate"
     }
 }
 ```
+
+<Note>
+  `remnawave_bot:8080` — имя контейнера бота в Docker сети. Если Caddy запущен на хосте (не в Docker), используйте `localhost:8080` или IP сервера.
+</Note>
 
 ## Nginx
 
 ```nginx nginx.conf
 server {
-    listen 443 ssl;
+    listen 443 ssl http2;
     server_name cabinet.example.com;
 
-    ssl_certificate /etc/letsencrypt/live/cabinet.example.com/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/cabinet.example.com/privkey.pem;
+    ssl_certificate     /path/to/cert.pem;
+    ssl_certificate_key /path/to/key.pem;
 
     root /srv/cabinet;
     index index.html;
 
-    # API проксирование
+    gzip on;
+    gzip_types text/plain text/css application/json application/javascript text/xml image/svg+xml;
+
+    # API запросы → backend бота
     location /api/ {
-        proxy_pass http://remnawave_bot:8080/;
+        rewrite ^/api/(.*) /$1 break;
+        proxy_pass http://remnawave_bot:8080;
+        proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
     }
 
+    # Кэширование статических ассетов
+    location ~* \.(?:js|css|woff2?|ttf|ico|png|jpe?g|svg|webp|gif)$ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+        access_log off;
+    }
+
     # SPA fallback
     location / {
-        try_files $uri $uri/ /index.html;
+        try_files $uri /index.html;
+        add_header Cache-Control "no-cache, must-revalidate";
     }
 }
 ```
 
-## Docker Compose
-
-Если используете Docker для прокси:
+## Docker Compose (раздача статики напрямую)
 
 ```yaml docker-compose.yml
 services:
@@ -79,6 +108,44 @@ volumes:
   caddy_data:
   caddy_config:
 ```
+
+## Docker Compose (проксирование на контейнер)
+
+Альтернативный вариант — проксировать на Docker контейнер cabinet с nginx внутри:
+
+```yaml docker-compose.yml
+services:
+  cabinet-frontend:
+    image: ghcr.io/bedolaga-dev/bedolaga-cabinet:latest
+    container_name: cabinet_frontend
+    restart: unless-stopped
+    networks:
+      - bot_network
+
+networks:
+  bot_network:
+    external: true
+    name: remnawave-bedolaga-telegram-bot_bot_network
+```
+
+```caddy Caddyfile
+https://cabinet.example.com {
+    encode gzip zstd
+
+    handle /api/* {
+        uri strip_prefix /api
+        reverse_proxy remnawave_bot:8080
+    }
+
+    handle {
+        reverse_proxy cabinet_frontend:80
+    }
+}
+```
+
+<Info>
+  В этом варианте кэшированием статики занимается nginx внутри контейнера.
+</Info>
 
 ## Проверка
 
