@@ -71,7 +71,8 @@
             "pages": [
               "cabinet/overview",
               "cabinet/setup",
-              "cabinet/proxy-config"
+              "cabinet/proxy-config",
+              "cabinet/oauth-setup"
             ]
           },
           {

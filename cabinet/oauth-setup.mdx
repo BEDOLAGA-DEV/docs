@@ -1,0 +1,295 @@
+---
+title: "Настройка OAuth авторизации"
+description: "Подключение входа через Google, Яндекс, Discord и VK в Cabinet"
+---
+
+## Обзор
+
+Cabinet поддерживает вход через 4 OAuth-провайдера. Пользователи могут входить через социальные аккаунты вместо email+пароль.
+
+| Провайдер | Scope | Что получаем |
+| --------- | ----- | ------------ |
+| Google | `openid email profile` | Email (верифицированный), имя, аватар |
+| Яндекс | `login:info login:email` | Email, логин, имя, аватар |
+| Discord | `identify email` | Email, username, аватар |
+| VK | `email` | Email (из токена), имя, аватар |
+
+<Warning>
+  Требуется `CABINET_ENABLED=true` и заполненный `CABINET_URL`. OAuth использует `CABINET_URL` для формирования redirect URI.
+</Warning>
+
+## Как работает
+
+1. Пользователь нажимает кнопку провайдера в Cabinet
+2. Cabinet запрашивает URL авторизации у API бота (`GET /cabinet/auth/oauth/{provider}/authorize`)
+3. Бот генерирует CSRF-токен (state), сохраняет в Redis (TTL 10 минут) и возвращает URL
+4. Пользователь перенаправляется на страницу провайдера, подтверждает доступ
+5. Провайдер перенаправляет обратно на `{CABINET_URL}/auth/oauth/callback` с кодом
+6. Cabinet отправляет код в API бота (`POST /cabinet/auth/oauth/{provider}/callback`)
+7. Бот обменивает код на токен, получает профиль пользователя, создаёт или находит аккаунт
+8. Возвращает JWT-токены для авторизации в Cabinet
+
+### Привязка аккаунтов
+
+- Если пользователь с таким OAuth provider_id уже существует — вход
+- Если email совпадает с существующим (и верифицирован у провайдера) — аккаунт автоматически привязывается
+- Если аккаунт не найден — создаётся новый
+
+## Redirect URI
+
+Для всех провайдеров redirect URI одинаковый:
+
+```
+{CABINET_URL}/auth/oauth/callback
+```
+
+Например: `https://cabinet.example.com/auth/oauth/callback`
+
+<Warning>
+  Redirect URI должен **точно совпадать** с тем, что указан в настройках провайдера. Различие даже в `/` в конце приведёт к ошибке.
+</Warning>
+
+## Google
+
+### Шаг 1: Создание проекта
+
+1. Откройте [Google Cloud Console](https://console.cloud.google.com/)
+2. Создайте новый проект (или выберите существующий)
+3. Включите **Google+ API** или **People API**:
+   - Меню → APIs & Services → Library
+   - Найдите и включите "Google People API"
+
+### Шаг 2: Настройка OAuth Consent Screen
+
+1. Меню → APIs & Services → OAuth consent screen
+2. Выберите **External** (доступ для всех аккаунтов Google)
+3. Заполните:
+   - **App name**: название вашего сервиса
+   - **User support email**: ваш email
+   - **Developer contact information**: ваш email
+4. Scopes: добавьте `openid`, `email`, `profile`
+5. Test users: добавьте свой email для тестирования (пока приложение не верифицировано)
+
+### Шаг 3: Создание credentials
+
+1. Меню → APIs & Services → Credentials
+2. Create Credentials → OAuth client ID
+3. Application type: **Web application**
+4. Name: любое (например, "Cabinet OAuth")
+5. Authorized redirect URIs: добавьте `https://cabinet.example.com/auth/oauth/callback`
+6. Нажмите Create
+7. Скопируйте **Client ID** и **Client Secret**
+
+### Шаг 4: .env бота
+
+```env
+OAUTH_GOOGLE_ENABLED=true
+OAUTH_GOOGLE_CLIENT_ID=123456789-abcdefg.apps.googleusercontent.com
+OAUTH_GOOGLE_CLIENT_SECRET=GOCSPX-xxxxxxxxxx
+```
+
+### Публикация приложения
+
+Пока приложение в статусе **Testing**, только добавленные тестовые пользователи могут входить. Для открытого доступа:
+
+1. OAuth consent screen → Publish App
+2. Для приложений с sensitive scopes потребуется верификация Google (несколько дней)
+
+<Note>
+  Scopes `openid`, `email`, `profile` не являются sensitive — верификация обычно проходит автоматически.
+</Note>
+
+## Яндекс
+
+### Шаг 1: Создание приложения
+
+1. Откройте [Яндекс OAuth](https://oauth.yandex.ru/client/new)
+2. Заполните:
+   - **Название**: название вашего сервиса
+   - **Иконка**: по желанию
+   - **Платформа**: Веб-сервисы
+   - **Redirect URI**: `https://cabinet.example.com/auth/oauth/callback`
+3. Права:
+   - Яндекс.Паспорт → **Доступ к логину, имени и фамилии, полу** (`login:info`)
+   - Яндекс.Паспорт → **Доступ к адресу электронной почты** (`login:email`)
+4. Нажмите "Создать приложение"
+5. Скопируйте **ID** и **Пароль** (Client Secret)
+
+### Шаг 2: .env бота
+
+```env
+OAUTH_YANDEX_ENABLED=true
+OAUTH_YANDEX_CLIENT_ID=abcdef1234567890
+OAUTH_YANDEX_CLIENT_SECRET=yandex_client_secret_here
+```
+
+<Note>
+  Яндекс OAuth не требует верификации приложения — работает сразу после создания.
+</Note>
+
+## Discord
+
+### Шаг 1: Создание приложения
+
+1. Откройте [Discord Developer Portal](https://discord.com/developers/applications)
+2. New Application → введите название → Create
+3. Перейдите в **OAuth2** (левое меню)
+
+### Шаг 2: Настройка OAuth2
+
+1. **Redirects**: добавьте `https://cabinet.example.com/auth/oauth/callback`
+2. Скопируйте **Client ID** (на вкладке General Information или OAuth2)
+3. **Client Secret**: нажмите Reset Secret и скопируйте
+
+### Шаг 3: .env бота
+
+```env
+OAUTH_DISCORD_ENABLED=true
+OAUTH_DISCORD_CLIENT_ID=1234567890123456789
+OAUTH_DISCORD_CLIENT_SECRET=discord_client_secret_here
+```
+
+<Warning>
+  Discord возвращает email только если он верифицирован в аккаунте пользователя. Пользователи без верифицированного email смогут войти, но email не будет привязан.
+</Warning>
+
+## VK
+
+### Шаг 1: Создание приложения
+
+1. Откройте [VK для разработчиков](https://vk.com/editapp?act=create)
+2. Тип: **Веб-сайт**
+3. Заполните:
+   - **Название**: название вашего сервиса
+   - **Адрес сайта**: `https://cabinet.example.com`
+   - **Базовый домен**: `cabinet.example.com`
+4. Нажмите "Подключить сайт"
+
+### Шаг 2: Настройка redirect URI
+
+1. Перейдите в настройки приложения
+2. Найдите раздел **Платформы** → Веб-сайт
+3. **Доверенный redirect URI**: добавьте `https://cabinet.example.com/auth/oauth/callback`
+
+### Шаг 3: Получение ключей
+
+1. В настройках приложения найдите:
+   - **ID приложения** — это Client ID
+   - **Защищённый ключ** — это Client Secret
+
+### Шаг 4: .env бота
+
+```env
+OAUTH_VK_ENABLED=true
+OAUTH_VK_CLIENT_ID=12345678
+OAUTH_VK_CLIENT_SECRET=vk_secure_key_here
+```
+
+<Note>
+  VK возвращает email в ответе на обмен кода (token response), а не через отдельный API. Email доступен только если пользователь дал согласие на передачу.
+</Note>
+
+## Итоговая настройка .env
+
+Пример со всеми четырьмя провайдерами:
+
+```env
+# === CABINET ===
+CABINET_ENABLED=true
+CABINET_URL=https://cabinet.example.com
+CABINET_JWT_SECRET=your_jwt_secret_here
+CABINET_ALLOWED_ORIGINS=https://cabinet.example.com
+
+# === OAUTH ===
+# Google
+OAUTH_GOOGLE_ENABLED=true
+OAUTH_GOOGLE_CLIENT_ID=123456789-abcdefg.apps.googleusercontent.com
+OAUTH_GOOGLE_CLIENT_SECRET=GOCSPX-xxxxxxxxxx
+
+# Яндекс
+OAUTH_YANDEX_ENABLED=true
+OAUTH_YANDEX_CLIENT_ID=abcdef1234567890
+OAUTH_YANDEX_CLIENT_SECRET=yandex_secret
+
+# Discord
+OAUTH_DISCORD_ENABLED=true
+OAUTH_DISCORD_CLIENT_ID=1234567890123456789
+OAUTH_DISCORD_CLIENT_SECRET=discord_secret
+
+# VK
+OAUTH_VK_ENABLED=true
+OAUTH_VK_CLIENT_ID=12345678
+OAUTH_VK_CLIENT_SECRET=vk_secret
+```
+
+Перезапустите бота после изменений:
+
+```bash
+docker compose up -d --build
+```
+
+## Проверка
+
+### API: список провайдеров
+
+```bash
+curl -s https://hooks.example.com/cabinet/auth/oauth/providers | jq
+```
+
+Ответ:
+
+```json
+{
+  "providers": [
+    {"name": "google", "display_name": "Google"},
+    {"name": "yandex", "display_name": "Yandex"},
+    {"name": "discord", "display_name": "Discord"},
+    {"name": "vk", "display_name": "VK"}
+  ]
+}
+```
+
+Если провайдер не появился — проверьте что `*_ENABLED=true`, `*_CLIENT_ID` и `*_CLIENT_SECRET` заполнены.
+
+### Тестирование входа
+
+1. Откройте Cabinet в браузере
+2. На экране входа должны появиться кнопки включённых провайдеров
+3. Нажмите на провайдер — должно перенаправить на страницу авторизации
+4. После подтверждения — вернуть в Cabinet с авторизованной сессией
+
+## Устранение проблем
+
+### "redirect_uri_mismatch" (Google)
+
+Redirect URI в Google Console не совпадает с `{CABINET_URL}/auth/oauth/callback`. Проверьте:
+- Протокол (http vs https)
+- Наличие/отсутствие `/` в конце
+- Точный домен (www vs без www)
+
+### "Invalid or expired OAuth state"
+
+CSRF-токен протух (TTL 10 минут) или Redis недоступен. Причины:
+- Пользователь слишком долго авторизовался у провайдера
+- Redis не работает или перезапустился
+- Бот перезапустился между генерацией state и callback
+
+### "Failed to exchange authorization code"
+
+Код авторизации невалиден. Причины:
+- Код уже был использован (одноразовый)
+- Неверный Client Secret
+- Redirect URI в запросе на обмен не совпадает с redirect URI при авторизации
+
+### Провайдер не появляется в Cabinet
+
+1. Проверьте `OAUTH_*_ENABLED=true` в `.env`
+2. Убедитесь что `OAUTH_*_CLIENT_ID` и `OAUTH_*_CLIENT_SECRET` не пустые
+3. Перезапустите бота после изменения `.env`
+4. Проверьте API: `GET /cabinet/auth/oauth/providers`
+
+### Пользователь входит но email не привязан
+
+- Discord: email верифицирован в аккаунте пользователя?
+- VK: пользователь дал согласие на передачу email?
+- Google/Яндекс: email возвращается всегда если scope корректен
