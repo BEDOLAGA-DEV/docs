@@ -54,7 +54,13 @@
               "bot/user-onboarding",
               "bot/payments",
               "bot/subscriptions",
+              "bot/promo-system",
               "bot/referral-program",
+              "bot/campaigns",
+              "bot/contests",
+              "bot/notifications",
+              "bot/support-system",
+              "bot/maintenance",
               "bot/admin-panel"
             ]
           },
