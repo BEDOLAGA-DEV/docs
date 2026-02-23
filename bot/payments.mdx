@@ -18,6 +18,7 @@ description: "Подключение платёжных систем к Bedolaga
 | Heleket | Криптовалюта | `/heleket-webhook` |
 | MulenPay | Карты | `/mulenpay-webhook` |
 | Tribute | Telegram | `/tribute-webhook` |
+| Kassa AI | СБП, карты, SberPay | `/kassa-ai-webhook` |
 
 <Note>
   Все webhook URL доступны на едином сервере бота (порт 8080). Укажите полный путь: `https://hooks.domain.com/<webhook-path>`.
@@ -138,3 +139,19 @@ Webhook: `https://hooks.domain.com/tribute-webhook`
 ## WATA
 
 Webhook: `https://hooks.domain.com/wata-webhook`
+
+## Kassa AI
+
+Отдельная платёжная система (api.fk.life), работает параллельно с Freekassa.
+
+```env
+KASSA_AI_ENABLED=true
+KASSA_AI_SHOP_ID=12345
+KASSA_AI_API_KEY=your_api_key
+KASSA_AI_SECRET_WORD_2=secret2
+KASSA_AI_PAYMENT_SYSTEM_ID=44
+```
+
+- `KASSA_AI_PAYMENT_SYSTEM_ID=44` — СБП QR, `36` — Карты РФ, `43` — SberPay
+
+Webhook: `https://hooks.domain.com/kassa-ai-webhook`
