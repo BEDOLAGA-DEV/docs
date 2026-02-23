@@ -84,7 +84,8 @@
             "group": "Интеграции",
             "pages": [
               "integrations/remnawave",
-              "integrations/webhooks"
+              "integrations/webhooks",
+              "integrations/egames-auth"
             ]
           }
         ]

@@ -1,0 +1,192 @@
+---
+title: "eGames авторизация"
+description: "Настройка авторизации для панели Remnawave, установленной через скрипт eGames"
+---
+
+## Обзор
+
+[eGames](https://github.com/eGamesAPI/remnawave-reverse-proxy) — это reverse-proxy для защиты панели Remnawave. При установке через скрипт eGames панель закрывается cookie-авторизацией: все HTTP-запросы без корректной cookie отклоняются.
+
+Бот поддерживает работу с защищенной панелью — для этого нужно указать секретный ключ, который передается как cookie при каждом запросе к API.
+
+## Настройка бота
+
+### Шаг 1: Получение секретного ключа
+
+При установке Remnawave через скрипт eGames в процессе настройки генерируется cookie-ключ. Его можно найти в конфигурации nginx reverse-proxy:
+
+1. Откройте конфигурацию nginx на сервере с панелью:
+   ```bash
+   # Расположение зависит от установки, обычно:
+   nano /etc/nginx/nginx.conf
+   # или
+   nano /etc/nginx/conf.d/remnawave.conf
+   ```
+
+2. Найдите секцию `map $http_cookie $auth_cookie` — в ней указаны имя и значение cookie
+
+3. Запишите их в формате `ИМЯ:ЗНАЧЕНИЕ`
+
+### Шаг 2: Настройка .env бота
+
+```env
+REMNAWAVE_API_URL=https://panel.example.com
+REMNAWAVE_API_KEY=your_api_key_here
+REMNAWAVE_SECRET_KEY=XXXXXXX:DDDDDDDD
+```
+
+Где:
+- `REMNAWAVE_API_URL` — публичный адрес панели
+- `REMNAWAVE_API_KEY` — API-ключ из панели Remnawave
+- `REMNAWAVE_SECRET_KEY` — cookie в формате `имя:значение`
+
+<Note>
+  `REMNAWAVE_AUTH_TYPE` менять **не нужно**. Значение по умолчанию `api_key` работает с eGames. Cookie передается автоматически при наличии `REMNAWAVE_SECRET_KEY`.
+</Note>
+
+### Шаг 3: Перезапуск бота
+
+```bash
+docker compose up -d --build
+```
+
+### Проверка
+
+Выполните синхронизацию серверов через админ-панель бота. Если серверы загрузились — авторизация работает.
+
+Если в логах ошибки `401 Unauthorized` или `403 Forbidden`:
+- Проверьте формат `REMNAWAVE_SECRET_KEY` (должен быть `имя:значение` через двоеточие)
+- Убедитесь что значение совпадает с тем, что в nginx-конфигурации панели
+- Проверьте что `REMNAWAVE_API_KEY` валидный
+
+## Формат секретного ключа
+
+| Формат | Пример | Результат |
+| ------ | ------ | --------- |
+| `имя:значение` | `mysecret:abc123def` | Cookie: `mysecret=abc123def` |
+| `только_значение` | `secret_key_name` | Cookie: `secret_key_name=secret_key_name` |
+
+Рекомендуется формат `имя:значение`. Если в значении есть двоеточие — разделение происходит по **первому** двоеточию.
+
+## Открытие внешнего API
+
+По умолчанию eGames reverse-proxy блокирует внешний доступ к API панели. Если бот находится на **отдельном сервере** (не в одной Docker-сети с панелью), нужно открыть доступ к API.
+
+Добавьте в конфигурацию nginx на сервере с панелью:
+
+```nginx
+location ^~ /api/ {
+    proxy_http_version 1.1;
+    proxy_pass http://remnawave;
+    proxy_set_header Host $host;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection $connection_upgrade;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header X-Forwarded-Host $host;
+    proxy_set_header X-Forwarded-Port $server_port;
+    proxy_send_timeout 60s;
+    proxy_read_timeout 60s;
+}
+```
+
+<Warning>
+  После открытия внешнего API **обязательно** отключите документацию API на панели: установите `IS_DOCS_ENABLED=false` в `.env` файле Remnawave, чтобы Swagger-документация не была доступна из интернета.
+</Warning>
+
+## Отключение eGames авторизации
+
+Если вы хотите отключить cookie-защиту eGames и перейти на прямое подключение к панели:
+
+### Вариант 1: Бот в одной Docker-сети с панелью
+
+Используйте внутренний адрес без cookie:
+
+```env
+REMNAWAVE_API_URL=http://remnawave:3000
+REMNAWAVE_API_KEY=your_api_key_here
+REMNAWAVE_SECRET_KEY=
+```
+
+Бот обращается к панели напрямую через Docker-сеть, минуя reverse-proxy. Cookie не нужен.
+
+### Вариант 2: Бот на отдельном сервере
+
+Замените eGames reverse-proxy на Caddy с [caddy-security](https://github.com/remnawave/reverse-proxy):
+
+```env
+REMNAWAVE_API_URL=https://panel.example.com
+REMNAWAVE_API_KEY=your_api_key_here
+REMNAWAVE_AUTH_TYPE=caddy
+REMNAWAVE_CADDY_TOKEN=base64_encoded_credentials
+REMNAWAVE_SECRET_KEY=
+```
+
+Или используйте Basic Auth:
+
+```env
+REMNAWAVE_API_URL=https://panel.example.com
+REMNAWAVE_API_KEY=your_api_key_here
+REMNAWAVE_AUTH_TYPE=basic
+REMNAWAVE_USERNAME=admin
+REMNAWAVE_PASSWORD=password
+REMNAWAVE_SECRET_KEY=
+```
+
+### Вариант 3: Убрать reverse-proxy полностью
+
+Если панель доступна по прямому HTTPS (например, за Cloudflare):
+
+```env
+REMNAWAVE_API_URL=https://panel.example.com
+REMNAWAVE_API_KEY=your_api_key_here
+REMNAWAVE_SECRET_KEY=
+```
+
+<Warning>
+  Без reverse-proxy панель Remnawave остается без дополнительного слоя защиты. Убедитесь что доступ ограничен другими средствами (Cloudflare Access, IP whitelist, VPN).
+</Warning>
+
+## Все методы авторизации
+
+| Метод | `REMNAWAVE_AUTH_TYPE` | Дополнительные переменные | Когда использовать |
+| ----- | --------------------- | ------------------------- | ------------------ |
+| API Key | `api_key` (по умолчанию) | — | Прямое подключение без reverse-proxy |
+| eGames (cookie) | `api_key` | `REMNAWAVE_SECRET_KEY` | Панель за eGames reverse-proxy |
+| Basic Auth | `basic` | `REMNAWAVE_USERNAME`, `REMNAWAVE_PASSWORD` | Панель с Basic Auth защитой |
+| Caddy Security | `caddy` | `REMNAWAVE_CADDY_TOKEN` | Панель за Caddy с caddy-security |
+
+`REMNAWAVE_SECRET_KEY` работает **независимо** от `REMNAWAVE_AUTH_TYPE` — cookie отправляется при любом типе авторизации, если ключ заполнен.
+
+## Устранение проблем
+
+### 401 Unauthorized
+
+- Проверьте `REMNAWAVE_API_KEY` — скопируйте заново из панели
+- Проверьте `REMNAWAVE_SECRET_KEY` — формат `имя:значение`
+
+### 403 Forbidden
+
+- Reverse-proxy блокирует запрос. Убедитесь что cookie совпадает
+- Если бот на отдельном сервере — проверьте что nginx location `/api/` настроен
+
+### Connection refused / timeout
+
+- Проверьте доступность `REMNAWAVE_API_URL` с сервера бота:
+  ```bash
+  curl -v https://panel.example.com/api/health
+  ```
+- Если бот в Docker — убедитесь что сети пересекаются
+
+### Серверы не синхронизируются
+
+- Проверьте логи бота: `docker compose logs -f bot`
+- Попробуйте ручную синхронизацию через админ-панель
+- Убедитесь что API панели отвечает на запросы
+
+---
+
+<Info>
+  Источник: [eGames Wiki — External API Configuration](https://wiki.egam.es/configuration/external-api/)
+</Info>
