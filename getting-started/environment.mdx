@@ -12,12 +12,20 @@ description: "Полный справочник настроек .env файла
 | `REMNAWAVE_API_URL` | URL Remnawave панели | `https://panel.example.com` |
 | `REMNAWAVE_API_KEY` | API ключ панели | `your_api_key` |
 
+## Режим запуска
+
+| Переменная | Описание | По умолчанию |
+| ---------- | -------- | ------------ |
+| `BOT_RUN_MODE` | `polling` или `webhook` | `polling` |
+
 ## База данных
 
 | Переменная | Описание | По умолчанию |
 | ---------- | -------- | ------------ |
-| `DATABASE_MODE` | Режим БД | `postgresql` |
-| `DATABASE_URL` | Строка подключения PostgreSQL | `postgresql+asyncpg://user:pass@postgres:5432/db` |
+| `DATABASE_MODE` | Режим БД (`postgresql` / `auto`) | `auto` |
+| `DATABASE_URL` | Строка подключения PostgreSQL | — |
+| `POSTGRES_HOST` | Хост PostgreSQL | `postgres` |
+| `POSTGRES_PORT` | Порт PostgreSQL | `5432` |
 | `POSTGRES_DB` | Имя базы данных | `remnawave_bot` |
 | `POSTGRES_USER` | Пользователь БД | `remnawave_user` |
 | `POSTGRES_PASSWORD` | Пароль БД | — |
@@ -26,14 +34,20 @@ description: "Полный справочник настроек .env файла
 
 | Переменная | Описание | По умолчанию |
 | ---------- | -------- | ------------ |
-| `BOT_RUN_MODE` | Режим: `polling` или `webhook` | `polling` |
 | `WEBHOOK_URL` | Публичный HTTPS URL | — |
 | `WEBHOOK_PATH` | Путь для webhook | `/webhook` |
 | `WEBHOOK_SECRET_TOKEN` | Секретный токен Telegram | — |
+| `WEBHOOK_DROP_PENDING_UPDATES` | Очистить очередь при установке webhook | `true` |
+| `WEBHOOK_MAX_QUEUE_SIZE` | Размер очереди входящих обновлений | `1024` |
+| `WEBHOOK_WORKERS` | Количество воркеров обработки | `4` |
+| `WEBHOOK_ENQUEUE_TIMEOUT` | Таймаут постановки в очередь (сек) | `0.1` |
+| `WEBHOOK_WORKER_SHUTDOWN_TIMEOUT` | Таймаут завершения воркеров (сек) | `30.0` |
 | `WEB_API_ENABLED` | Включить веб-сервер | `false` |
+| `WEB_API_HOST` | Хост веб-сервера | `0.0.0.0` |
 | `WEB_API_PORT` | Порт веб-сервера | `8080` |
 | `WEB_API_ALLOWED_ORIGINS` | CORS origins через запятую | — |
 | `WEB_API_DEFAULT_TOKEN` | API токен для авторизации | — |
+| `WEB_API_DOCS_ENABLED` | Открыть Swagger UI и OpenAPI | `false` |
 
 ## Платежные системы
 
@@ -41,12 +55,12 @@ description: "Полный справочник настроек .env файла
 
 | Переменная | Описание | По умолчанию |
 | ---------- | -------- | ------------ |
-| `YOOKASSA_SHOP_ID` | ID магазина YooKassa | — |
+| `YOOKASSA_SHOP_ID` | ID магазина | — |
 | `YOOKASSA_SECRET_KEY` | Секретный ключ | — |
 | `YOOKASSA_RETURN_URL` | URL возврата после оплаты | `https://t.me/{bot}` |
 | `YOOKASSA_SBP_ENABLED` | Включить оплату через СБП | `false` |
-| `YOOKASSA_MIN_AMOUNT_KOPEKS` | Мин. сумма (копейки) | `5000` (50 руб) |
-| `YOOKASSA_MAX_AMOUNT_KOPEKS` | Макс. сумма (копейки) | `1000000` (10000 руб) |
+| `YOOKASSA_MIN_AMOUNT_KOPEKS` | Мин. сумма (копейки) | `5000` |
+| `YOOKASSA_MAX_AMOUNT_KOPEKS` | Макс. сумма (копейки) | `1000000` |
 | `YOOKASSA_DEFAULT_RECEIPT_EMAIL` | Email для чеков | — |
 | `YOOKASSA_VAT_CODE` | Код НДС (1-12) | `1` |
 
@@ -68,8 +82,133 @@ description: "Полный справочник настроек .env файла
 
 | Переменная | Описание | По умолчанию |
 | ---------- | -------- | ------------ |
+| `CLOUDPAYMENTS_ENABLED` | Включить CloudPayments | `false` |
 | `CLOUDPAYMENTS_PUBLIC_ID` | Public ID | — |
 | `CLOUDPAYMENTS_API_SECRET` | API секрет | — |
+| `CLOUDPAYMENTS_CURRENCY` | Валюта | `RUB` |
+
+### Freekassa
+
+| Переменная | Описание | По умолчанию |
+| ---------- | -------- | ------------ |
+| `FREEKASSA_ENABLED` | Включить Freekassa | `false` |
+| `FREEKASSA_SHOP_ID` | ID магазина | — |
+| `FREEKASSA_API_KEY` | API ключ | — |
+| `FREEKASSA_SECRET_WORD_1` | Секретное слово 1 | — |
+| `FREEKASSA_SECRET_WORD_2` | Секретное слово 2 | — |
+| `FREEKASSA_USE_API` | Использовать API (рекомендуется для NSPK) | `true` |
+| `FREEKASSA_PAYMENT_SYSTEM_ID` | ID платёжной системы (44=NSPK СБП) | `44` |
+
+### Platega
+
+| Переменная | Описание | По умолчанию |
+| ---------- | -------- | ------------ |
+| `PLATEGA_ENABLED` | Включить Platega | `false` |
+| `PLATEGA_MERCHANT_ID` | Merchant ID | — |
+| `PLATEGA_SECRET` | Секретный ключ | — |
+| `PLATEGA_RETURN_URL` | URL возврата | — |
+| `PLATEGA_FAILED_URL` | URL при ошибке | — |
+| `PLATEGA_ACTIVE_METHODS` | ID методов через запятую | `2,10,11` |
+| `PLATEGA_MIN_AMOUNT_KOPEKS` | Мин. сумма (копейки) | `100` |
+| `PLATEGA_MAX_AMOUNT_KOPEKS` | Макс. сумма (копейки) | `5000000` |
+
+### Heleket
+
+| Переменная | Описание | По умолчанию |
+| ---------- | -------- | ------------ |
+| `HELEKET_ENABLED` | Включить Heleket | `false` |
+| `HELEKET_MERCHANT_ID` | Merchant ID | — |
+| `HELEKET_API_KEY` | API ключ | — |
+
+### MulenPay
+
+| Переменная | Описание | По умолчанию |
+| ---------- | -------- | ------------ |
+| `MULENPAY_ENABLED` | Включить MulenPay | `false` |
+
+### PayPalych (Pal24)
+
+| Переменная | Описание | По умолчанию |
+| ---------- | -------- | ------------ |
+| `PAL24_ENABLED` | Включить PayPalych | `false` |
+
+### Tribute
+
+| Переменная | Описание | По умолчанию |
+| ---------- | -------- | ------------ |
+| `TRIBUTE_ENABLED` | Включить Tribute | `false` |
+
+## Подписки и продажи
+
+| Переменная | Описание | По умолчанию |
+| ---------- | -------- | ------------ |
+| `SALES_MODE` | Режим продаж: `classic` или `tariffs` | `classic` |
+| `TRAFFIC_SELECTION_MODE` | Режим трафика: `selectable` или `fixed` | `selectable` |
+| `TRAFFIC_PACKAGES_CONFIG` | Пакеты трафика (ГБ:копейки:безлимит) | — |
+| `FIXED_TRAFFIC_LIMIT_GB` | Фиксированный лимит ГБ (0=безлимит) | `100` |
+| `TRIAL_DEVICE_LIMIT` | Устройства в триал подписке | `1` |
+| `TRIAL_PAYMENT_ENABLED` | Требовать оплату за активацию триала | `false` |
+| `TRIAL_ACTIVATION_PRICE` | Стоимость активации триала (копейки) | `0` |
+| `DEFAULT_DEVICE_LIMIT` | Устройства в платной подписке | `3` |
+| `MAX_DEVICES_LIMIT` | Максимум устройств (0=без лимита) | `15` |
+
+## Реферальная программа
+
+| Переменная | Описание | По умолчанию |
+| ---------- | -------- | ------------ |
+| `REFERRAL_PROGRAM_ENABLED` | Включить реферальную программу | `true` |
+| `REFERRAL_MINIMUM_TOPUP_KOPEKS` | Мин. пополнение для активации бонусов | `10000` |
+| `REFERRAL_FIRST_TOPUP_BONUS_KOPEKS` | Бонус рефералу при первом пополнении | `10000` |
+| `REFERRAL_INVITER_BONUS_KOPEKS` | Бонус пригласившему | `10000` |
+| `REFERRAL_COMMISSION_PERCENT` | Процент комиссии с пополнений | `25` |
+| `REFERRAL_BONUS_KOPEKS` | Бонус рефереру при регистрации | `0` |
+| `REFERRAL_BONUS_DAYS` | Бонусные дни рефереру | `0` |
+
+## Remnawave интеграция
+
+| Переменная | Описание | По умолчанию |
+| ---------- | -------- | ------------ |
+| `REMNAWAVE_SECRET_KEY` | Ключ защиты панели (для remnawave-reverse-proxy) | — |
+| `REMNAWAVE_AUTO_SYNC_ENABLED` | Автосинхронизация серверов | `false` |
+| `REMNAWAVE_AUTO_SYNC_TIMES` | Время синхронизации (HH:MM через запятую) | `03:00,15:00` |
+| `REMNAWAVE_WEBHOOK_ENABLED` | Включить webhooks от панели | `false` |
+| `REMNAWAVE_WEBHOOK_PATH` | Путь для webhook | `/remnawave-webhook` |
+| `REMNAWAVE_WEBHOOK_SECRET` | Секрет для подписи (мин. 32 символа) | — |
+
+## Мониторинг серверов
+
+| Переменная | Описание | По умолчанию |
+| ---------- | -------- | ------------ |
+| `SERVER_STATUS_MODE` | Режим: `disabled`, `external_link`, `external_link_miniapp`, `xray` | `disabled` |
+| `SERVER_STATUS_EXTERNAL_URL` | Ссылка на внешний мониторинг | — |
+| `SERVER_STATUS_METRICS_URL` | URL метрик XrayChecker | — |
+| `MONITORING_INTERVAL` | Интервал проверки панели (секунды) | `60` |
+
+## Мониторинг и тех. работы
+
+| Переменная | Описание | По умолчанию |
+| ---------- | -------- | ------------ |
+| `MAINTENANCE_MODE` | Режим тех. работ | `false` |
+| `MAINTENANCE_AUTO_ENABLE` | Авто-включение при падении панели | `true` |
+| `MAINTENANCE_MONITORING_ENABLED` | Мониторинг доступности | `true` |
+| `MAINTENANCE_CHECK_INTERVAL` | Интервал проверки (секунды) | `30` |
+| `MAINTENANCE_RETRY_ATTEMPTS` | Число повторных попыток | `1` |
+
+## Логирование
+
+| Переменная | Описание | По умолчанию |
+| ---------- | -------- | ------------ |
+| `LOG_ROTATION_ENABLED` | Включить ротацию логов | `true` |
+| `LOG_ROTATION_MAX_SIZE_MB` | Макс. размер файла (МБ) | `100` |
+| `LOG_ROTATION_MAX_FILES` | Макс. число файлов | `10` |
+
+## Видимость интерфейса
+
+| Переменная | Описание | По умолчанию |
+| ---------- | -------- | ------------ |
+| `HIDE_TOPUP_BUTTONS` | Скрыть кнопки пополнения баланса | `false` |
+| `REFERRAL_PROGRAM_VISIBLE` | Показывать реферальную программу | `true` |
+| `CONTEST_BUTTON_VISIBLE` | Показывать кнопку конкурсов | `true` |
 
 ## Cabinet (Личный кабинет)
 
@@ -80,14 +219,18 @@ description: "Полный справочник настроек .env файла
 | `CABINET_ACCESS_TOKEN_EXPIRE_MINUTES` | Время жизни access token | `15` |
 | `CABINET_REFRESH_TOKEN_EXPIRE_DAYS` | Время жизни refresh token | `7` |
 | `CABINET_ALLOWED_ORIGINS` | CORS origins для кабинета | — |
+| `CABINET_EMAIL_VERIFICATION_ENABLED` | Верификация email | `false` |
+| `CABINET_EMAIL_VERIFICATION_EXPIRE_HOURS` | Время жизни токена верификации email | `24` |
+| `CABINET_PASSWORD_RESET_EXPIRE_HOURS` | Время жизни токена сброса пароля | `1` |
 
-## Реферальная программа
+## Уведомления администраторов
 
 | Переменная | Описание | По умолчанию |
 | ---------- | -------- | ------------ |
-| `REFERRAL_PROGRAM_ENABLED` | Включить реферальную программу | `true` |
-| `REFERRAL_BONUS_KOPEKS` | Бонус рефереру (копейки) | `0` |
-| `REFERRAL_BONUS_DAYS` | Бонусные дни рефереру | `0` |
+| `ADMIN_NOTIFICATIONS_ENABLED` | Включить уведомления | `false` |
+| `ADMIN_NOTIFICATIONS_CHAT_ID` | ID канала/группы | — |
+| `ADMIN_NOTIFICATIONS_TOPIC_ID` | ID топика для уведомлений | — |
+| `ADMIN_NOTIFICATIONS_TICKET_TOPIC_ID` | ID топика для тикетов | — |
 
 ## Redis
 
@@ -104,4 +247,5 @@ description: "Полный справочник настроек .env файла
 | `SMTP_USER` | Пользователь | — |
 | `SMTP_PASSWORD` | Пароль | — |
 | `SMTP_FROM_EMAIL` | Email отправителя | — |
+| `SMTP_FROM_NAME` | Имя отправителя | — |
 | `SMTP_USE_TLS` | Использовать TLS | `true` |

@@ -1,0 +1,88 @@
+---
+title: Первичная настройка
+description: "Что сделать после первого запуска бота"
+---
+
+## Шаг 1. Синхронизация серверов
+
+<Warning>
+  Без синхронизации серверов пользователи не смогут покупать подписки!
+</Warning>
+
+1. Откройте бота в Telegram
+2. Перейдите в **Админ панель** → **Подписки** → **Управление серверами**
+3. Нажмите **Синхронизация** и дождитесь завершения
+
+## Шаг 2. Синхронизация пользователей
+
+Если у вас уже есть пользователи в панели Remnawave:
+
+1. **Админ панель** → **Remnawave** → **Синхронизация**
+2. **Синхронизировать всех** → дождитесь импорта
+
+## Шаг 3. Настройка платёжных систем
+
+| Провайдер | Что сделать |
+| --------- | ----------- |
+| Telegram Stars | Работает автоматически |
+| YooKassa | Webhook: `https://hooks.domain.com/yookassa-webhook` |
+| CryptoBot | Webhook: `https://hooks.domain.com/cryptobot-webhook` |
+| Tribute | Webhook: `https://hooks.domain.com/tribute-webhook` |
+| Heleket | Webhook: `https://hooks.domain.com/heleket-webhook` |
+| MulenPay | Webhook: `https://hooks.domain.com/mulenpay-webhook` |
+| PayPalych | Result URL: `https://hooks.domain.com/pal24-webhook` |
+| Platega | Webhook: `https://hooks.domain.com/platega-webhook` |
+| WATA | Webhook: `https://hooks.domain.com/wata-webhook` |
+| Freekassa | Webhook: `https://hooks.domain.com/freekassa-webhook` |
+| CloudPayments | Pay/Fail: `https://hooks.domain.com/cloudpayments-webhook` |
+
+## Шаг 4. Настройка автосинхронизации (опционально)
+
+```env
+REMNAWAVE_AUTO_SYNC_ENABLED=true
+REMNAWAVE_AUTO_SYNC_TIMES=03:00,15:00
+```
+
+## Шаг 5. Уведомления в топики (опционально)
+
+### Создание канала
+
+1. Создайте приватный канал или супергруппу
+2. Добавьте бота как администратора с правами отправки сообщений
+3. Получите ID канала: перешлите сообщение боту @userinfobot
+
+### Настройка
+
+```env
+ADMIN_NOTIFICATIONS_ENABLED=true
+ADMIN_NOTIFICATIONS_CHAT_ID=-1001234567890
+ADMIN_NOTIFICATIONS_TOPIC_ID=123
+ADMIN_NOTIFICATIONS_TICKET_TOPIC_ID=126
+```
+
+### События уведомлений
+
+| Событие | Описание |
+| ------- | -------- |
+| Активация триала | Новый триал-пользователь |
+| Покупка подписки | Новая покупка |
+| Конверсия из триала | Триал → платная подписка |
+| Продление | Автоматическое продление |
+| Пополнение баланса | Новый платёж |
+| Тех. работы | Включение/выключение |
+| Новая версия | Обнаружена новая версия бота |
+
+## Шаг 6. Swagger документация (опционально)
+
+```env
+WEB_API_DOCS_ENABLED=true
+```
+
+После перезапуска доступны:
+- `/docs` — Swagger UI
+- `/redoc` — ReDoc
+- `/openapi.json` — OpenAPI спецификация
+
+<Warning>
+  В продакшне держите `WEB_API_DOCS_ENABLED=false`. Включайте временно или защищайте прокси авторизацией.
+</Warning>

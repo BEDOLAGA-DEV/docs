@@ -1,0 +1,105 @@
+---
+title: Устранение неполадок
+description: "Диагностика и решение типичных проблем"
+---
+
+## Health Check эндпоинты
+
+| Endpoint | Описание |
+| -------- | -------- |
+| `/health/unified` | Агрегированный статус (режим бота, очередь, платежи) |
+| `/health/telegram-webhook` | Состояние очереди Telegram webhook |
+| `/health/payment-webhooks` | Активированные платёжные интеграции |
+
+```bash
+curl -s https://hooks.domain.com/health/unified | jq
+```
+
+## Полезные команды
+
+```bash
+# Логи в реальном времени
+docker compose logs -f bot
+
+# Статус контейнеров
+docker compose ps
+
+# Перезапуск бота
+docker compose restart bot
+
+# Проверка PostgreSQL
+docker compose exec postgres pg_isready -U remnawave_user
+
+# Подключение к БД
+docker compose exec postgres psql -U remnawave_user -d remnawave_bot
+
+# Проверка Redis
+docker compose exec redis redis-cli ping
+
+# Использование ресурсов
+docker stats
+```
+
+## Частые проблемы
+
+| Проблема | Диагностика | Решение |
+| -------- | ----------- | ------- |
+| Бот не отвечает | `docker logs remnawave_bot` | Проверьте `BOT_TOKEN` и интернет |
+| Ошибки БД | `docker compose ps postgres` | Проверьте статус PostgreSQL |
+| Webhook не работает | `curl http://localhost:8080/health/telegram-webhook` | Проверьте `WEBHOOK_URL`, прокси и секрет |
+| API недоступен | Проверьте логи бота | Проверьте `REMNAWAVE_API_URL` |
+| Корзина не сохраняется | `docker compose ps redis` | Проверьте статус Redis |
+| Платежи не проходят | Проверьте webhook'и | Настройте URL в платёжных системах |
+
+## FAQ
+
+### Какие требования к серверу?
+
+**Минимальные:**
+- 1 vCPU, 512 MB RAM, 10 GB диск
+- Ubuntu 20.04+ или Debian 11+
+- Docker и Docker Compose
+
+**Рекомендуемые:**
+- 2+ vCPU, 2+ GB RAM, 50+ GB SSD
+
+### Таблица производительности
+
+| Пользователей | Память | CPU | Диск |
+| ------------- | ------ | --- | ---- |
+| 1,000 | 512MB | 1 vCPU | 10GB |
+| 10,000 | 2GB | 2 vCPU | 50GB |
+| 50,000 | 4GB | 4 vCPU | 100GB |
+| 100,000+ | 8GB+ | 8+ vCPU | 200GB+ |
+
+### Как обновить бота?
+
+```bash
+cd /root/remnawave-bedolaga-telegram-bot
+
+# Обновление до последней версии (main ветка)
+git pull origin main
+
+# Или до конкретной версии (стабильнее)
+git fetch --tags
+git checkout v2.7.0
+
+# Перезапуск
+make reload
+```
+
+### Как сделать бэкап?
+
+**Автоматически:** `BACKUP_AUTO_ENABLED=true` в `.env`
+
+**Через админ-панель:** Админ панель → Настройки → Бэкапы → Создать
+
+### Бот не отвечает, что делать?
+
+1. Проверьте статус: `docker compose ps`
+2. Посмотрите логи: `docker compose logs -f bot`
+3. Проверьте `BOT_TOKEN` в `.env`
+4. Убедитесь, что все контейнеры запущены
+5. Попробуйте перезапустить: `docker compose restart`
+
+Если не помогло — пишите в [чат поддержки](https://t.me/+wTdMtSWq8YdmZmVi).

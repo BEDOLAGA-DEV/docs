@@ -10,56 +10,113 @@ description: "Интеграция с VPN панелью Remnawave"
 ## Настройка подключения
 
 ```env
-REMNAWAVE_API_URL=https://panel.example.com/api
-REMNAWAVE_API_TOKEN=your_panel_api_token
+REMNAWAVE_API_URL=https://panel.example.com
+REMNAWAVE_API_KEY=your_panel_api_key
 ```
 
 <Warning>
-  Токен должен иметь полные права доступа к API панели.
+  Если бот и панель на одном сервере в Docker, используйте внутренний адрес: `REMNAWAVE_API_URL=http://remnawave:3000`
 </Warning>
 
-## Возможности интеграции
+## Защита панели
 
-| Функция | Описание |
+Для панелей, защищённых через [remnawave-reverse-proxy](https://github.com/eGamesAPI/remnawave-reverse-proxy):
+
+```env
+# Для панелей установленных скриптом eGames
+REMNAWAVE_SECRET_KEY=XXXXXXX:DDDDDDDD
+
+# Или если ключ и значение одинаковые
+REMNAWAVE_SECRET_KEY=secret_key_name
+```
+
+## Методы авторизации
+
+| Конфигурация | Authorization | X-Api-Key |
+| ------------ | ------------- | --------- |
+| Только API Key | `Bearer <api_key>` | `<api_key>` |
+| Basic Auth | `Bearer <api_key>` | `Basic <user:pass>` |
+| Caddy + API Key | `Basic <caddy_token>` | `<api_key>` |
+| Cookies (eGames) | `Bearer <api_key>` | `<api_key>` + cookies |
+
+## Автосинхронизация
+
+```env
+REMNAWAVE_AUTO_SYNC_ENABLED=true
+REMNAWAVE_AUTO_SYNC_TIMES=03:00,15:00
+```
+
+Бот синхронизирует данные с панелью:
+- **При старте бота** — полная синхронизация
+- **По расписанию** — в указанное время
+- **По команде** — через админ-панель
+
+Синхронизируются:
+- Серверы (сквады) и их статус
+- Пользователи — сопоставление Telegram ID с аккаунтами панели
+- Подписки — актуальные даты и параметры
+
+## Webhooks от панели (real-time события)
+
+Для мгновенной реакции на события подписок вместо периодической синхронизации.
+
+### Настройка
+
+**1. Переменные окружения:**
+
+```env
+REMNAWAVE_WEBHOOK_ENABLED=true
+REMNAWAVE_WEBHOOK_PATH=/remnawave-webhook
+REMNAWAVE_WEBHOOK_SECRET=your_secret_min_32_chars_here
+```
+
+Сгенерируйте секрет: `openssl rand -hex 32`
+
+**2. В панели Remnawave:**
+
+- URL: `https://hooks.domain.com/remnawave-webhook`
+- Secret: тот же, что в `REMNAWAVE_WEBHOOK_SECRET`
+
+**3. Проверка:**
+
+```bash
+curl -s https://hooks.domain.com/remnawave-webhook | jq
+# {"status": "ok", "service": "remnawave_webhook", "enabled": true}
+```
+
+### Поддерживаемые события
+
+| Событие | Описание |
 | ------- | -------- |
-| Создание пользователей | Автоматическое создание VPN-аккаунта при покупке подписки |
-| Управление подписками | Продление, отключение, изменение параметров |
-| Серверы и узлы | Просмотр статуса серверов, мониторинг нагрузки |
-| Трафик | Отслеживание использования, лимиты, сброс |
-| Устройства | Управление количеством подключённых устройств |
-| Сквады | Группировка серверов для распределения пользователей |
+| `user.expired` | Подписка истекла |
+| `user.disabled` | Подписка деактивирована |
+| `user.enabled` | Подписка активирована |
+| `user.limited` | Превышен лимит трафика |
+| `user.traffic_reset` | Трафик сброшен |
+| `user.modified` | Данные подписки изменены |
+| `user.deleted` | Пользователь удалён |
+| `user.revoked` | Ключи подписки отозваны |
+| `user.created` | Пользователь создан |
+| `user.expires_in_*` | Предупреждения об истечении (72/48/24ч) |
+| `user.first_connected` | Первое подключение |
+| `user.bandwidth_usage_threshold_reached` | Порог трафика достигнут |
+| `user_hwid_devices.*` | Устройство добавлено/удалено |
+| `node.*`, `service.*` | Административные события |
 
-## Архитектура
-
-```
-Telegram Bot  →  RemnaWaveAPI client  →  Remnawave Panel API
-                 (app/external/          (HTTPS REST)
-                  remnawave_api.py)
-```
-
-Клиент `RemnaWaveAPI` — асинхронный HTTP-клиент на базе `aiohttp`, поддерживающий:
-
-- Автоматическую авторизацию через токен
-- Retry при сетевых ошибках
-- Парсинг ответов в типизированные dataclass-объекты
-
-## Синхронизация
-
-Бот поддерживает синхронизацию данных с панелью:
-
-- **Серверы** — список доступных серверов и их статус
-- **Пользователи** — сопоставление Telegram ID с аккаунтами панели
-- **Подписки** — актуальные даты и параметры
-
-Синхронизация запускается:
-1. Автоматически при старте бота
-2. По команде администратора через админ-панель
-3. Периодически через фоновые задачи
+<Info>
+  При включённых webhooks бот защищает подписки от перезаписи данными из периодической синхронизации в течение 60 секунд после получения события.
+</Info>
 
 ## Мониторинг серверов
 
-Бот периодически проверяет состояние серверов и отправляет уведомления администраторам при:
+| Переменная | Описание |
+| ---------- | -------- |
+| `SERVER_STATUS_MODE` | `disabled`, `external_link`, `external_link_miniapp`, `xray` |
+| `SERVER_STATUS_EXTERNAL_URL` | Ссылка на внешний мониторинг |
+| `SERVER_STATUS_METRICS_URL` | URL метрик XrayChecker |
+| `MONITORING_INTERVAL` | Интервал проверки (секунды, по умолчанию 60) |
 
+Бот отправляет уведомления администраторам при:
 - Падении сервера (недоступен)
 - Высокой нагрузке CPU/RAM
 - Аномальном трафике

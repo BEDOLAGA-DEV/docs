@@ -5,30 +5,27 @@ description: "Подключение платёжных систем к Bedolaga
 
 ## Поддерживаемые провайдеры
 
-| Провайдер | Методы оплаты | Переменная вкл/выкл |
-| --------- | ------------- | -------------------- |
-| YooKassa | Карты, СБП | `YOOKASSA_SHOP_ID` + `YOOKASSA_SECRET_KEY` |
-| CryptoBot | Криптовалюта | `CRYPTOBOT_TOKEN` |
-| Telegram Stars | Звёзды Telegram | `TELEGRAM_STARS_ENABLED=true` |
-| CloudPayments | Карты, СБП | `CLOUDPAYMENTS_PUBLIC_ID` + `CLOUDPAYMENTS_API_SECRET` |
-| Freekassa | NSPK СБП, карты | `FREEKASSA_MERCHANT_ID` + секреты |
-| PayPalych | Карты, СБП | `PAYPALYCH_API_KEY` |
-| Platega | Карты, СБП | `PLATEGA_API_KEY` |
-| WATA | Карты | `WATA_API_KEY` |
-| Heleket | Криптовалюта | `HELEKET_API_KEY` |
-| MulenPay | Карты | `MULENPAY_API_KEY` |
-| Tribute | Telegram | `TRIBUTE_API_KEY` |
+| Провайдер | Методы оплаты | Webhook URL |
+| --------- | ------------- | ----------- |
+| YooKassa | Карты, СБП | `/yookassa-webhook` |
+| CryptoBot | USDT, TON, BTC | `/cryptobot-webhook` |
+| Telegram Stars | Звёзды Telegram | (встроенный) |
+| CloudPayments | Карты, СБП | `/cloudpayments-webhook` |
+| Freekassa | NSPK СБП, карты | `/freekassa-webhook` |
+| PayPalych (Pal24) | Карты, СБП | `/pal24-webhook` |
+| Platega | Карты, СБП | `/platega-webhook` |
+| WATA | Карты | `/wata-webhook` |
+| Heleket | Криптовалюта | `/heleket-webhook` |
+| MulenPay | Карты | `/mulenpay-webhook` |
+| Tribute | Telegram | `/tribute-webhook` |
+
+<Note>
+  Все webhook URL доступны на едином сервере бота (порт 8080). Укажите полный путь: `https://hooks.domain.com/<webhook-path>`.
+</Note>
 
 ## YooKassa
 
-Самый популярный провайдер для российского рынка.
-
-### Шаг 1. Регистрация
-
-1. Зарегистрируйтесь на [yookassa.ru](https://yookassa.ru)
-2. Создайте магазин и получите `Shop ID` и `Secret Key`
-
-### Шаг 2. Настройка .env
+Самый популярный провайдер для российского рынка. Поддерживает банковские карты и СБП.
 
 ```env
 YOOKASSA_SHOP_ID=123456
@@ -36,16 +33,10 @@ YOOKASSA_SECRET_KEY=live_xxxxxxxxxxxxx
 YOOKASSA_RETURN_URL=https://t.me/your_bot
 YOOKASSA_SBP_ENABLED=true
 YOOKASSA_DEFAULT_RECEIPT_EMAIL=receipts@example.com
+YOOKASSA_VAT_CODE=1
 ```
 
-### Шаг 3. Webhook (для standalone сервера)
-
-YooKassa отправляет уведомления о платежах на webhook URL. Бот принимает их на порту 8082 (standalone) или 8080 (unified).
-
-В личном кабинете YooKassa укажите URL webhook:
-```
-https://your-domain.com/yookassa-webhook
-```
+Webhook: `https://hooks.domain.com/yookassa-webhook`
 
 <Info>
   Бот проверяет IP-адреса YooKassa и отклоняет запросы с неизвестных адресов.
@@ -60,25 +51,90 @@ https://your-domain.com/yookassa-webhook
 
 ## CryptoBot
 
-### Настройка
-
-1. Получите API токен у [@CryptoBot](https://t.me/CryptoBot)
-2. Добавьте в `.env`:
-
 ```env
 CRYPTOBOT_TOKEN=your_token
 CRYPTOBOT_CURRENCY=RUB
 ```
 
-## Telegram Stars
+Поддерживаемые криптовалюты: USDT, TON, BTC, ETH. Курс конвертации обновляется автоматически через API CryptoBot.
 
-### Настройка
+Webhook: `https://hooks.domain.com/cryptobot-webhook`
+
+## Telegram Stars
 
 ```env
 TELEGRAM_STARS_ENABLED=true
 STARS_TO_KOPEKS_RATE=130
 ```
 
-<Note>
-  Telegram Stars работают только для пополнения баланса. Курс `130` означает 1 звезда = 1.30 руб.
-</Note>
+Курс `130` означает 1 звезда = 1.30 руб. Работает без внешних webhook — обрабатывается через Telegram Bot API.
+
+## CloudPayments
+
+```env
+CLOUDPAYMENTS_ENABLED=true
+CLOUDPAYMENTS_PUBLIC_ID=pk_xxxxxxxxxxxxx
+CLOUDPAYMENTS_API_SECRET=your_api_secret
+CLOUDPAYMENTS_CURRENCY=RUB
+```
+
+Поддерживает 3D-Secure. Webhook (Pay/Fail уведомления): `https://hooks.domain.com/cloudpayments-webhook`
+
+## Freekassa
+
+```env
+FREEKASSA_ENABLED=true
+FREEKASSA_SHOP_ID=12345
+FREEKASSA_API_KEY=your_api_key
+FREEKASSA_SECRET_WORD_1=secret1
+FREEKASSA_SECRET_WORD_2=secret2
+FREEKASSA_USE_API=true
+FREEKASSA_PAYMENT_SYSTEM_ID=44
+```
+
+- `FREEKASSA_USE_API=true` — использовать API для создания заказов (рекомендуется для NSPK)
+- `FREEKASSA_USE_API=false` — редирект на платежную форму
+- `FREEKASSA_PAYMENT_SYSTEM_ID=44` — для NSPK СБП (быстрее и надёжнее)
+
+Webhook: `https://hooks.domain.com/freekassa-webhook`
+
+## Platega
+
+```env
+PLATEGA_ENABLED=true
+PLATEGA_MERCHANT_ID=your_merchant_id
+PLATEGA_SECRET=your_secret_key
+PLATEGA_RETURN_URL=https://your-domain.com/payments/success
+PLATEGA_FAILED_URL=https://your-domain.com/payments/failed
+PLATEGA_ACTIVE_METHODS=2,10,11
+PLATEGA_MIN_AMOUNT_KOPEKS=100
+PLATEGA_MAX_AMOUNT_KOPEKS=5000000
+```
+
+В кабинете Platega укажите webhook: `https://hooks.domain.com/platega-webhook`
+
+## PayPalych (Pal24)
+
+Webhook: Result URL `https://hooks.domain.com/pal24-webhook` в кабинете Pal24.
+
+## Heleket
+
+```env
+HELEKET_ENABLED=true
+HELEKET_MERCHANT_ID=xxx
+HELEKET_API_KEY=xxx
+```
+
+Криптовалютный провайдер с поддержкой USDT. Webhook: `https://hooks.domain.com/heleket-webhook`
+
+## MulenPay
+
+Webhook: `https://hooks.domain.com/mulenpay-webhook`
+
+## Tribute
+
+Webhook: `https://hooks.domain.com/tribute-webhook`
+
+## WATA
+
+Webhook: `https://hooks.domain.com/wata-webhook`

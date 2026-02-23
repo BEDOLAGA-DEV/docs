@@ -42,7 +42,9 @@
               "getting-started/quickstart",
               "getting-started/requirements",
               "getting-started/docker-deployment",
-              "getting-started/environment"
+              "getting-started/environment",
+              "getting-started/initial-setup",
+              "getting-started/troubleshooting"
             ]
           },
           {
@@ -67,7 +69,6 @@
             "group": "Интеграции",
             "pages": [
               "integrations/remnawave",
-              "integrations/payment-providers",
               "integrations/webhooks"
             ]
           }
