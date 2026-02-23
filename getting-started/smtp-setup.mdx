@@ -1,0 +1,511 @@
+---
+title: "Настройка почтового сервера"
+description: "Полная настройка SMTP для отправки email из бота: Postfix, DNS, проверка портов, тестирование"
+---
+
+## Зачем нужен SMTP
+
+Email-уведомления используются в [Cabinet](/cabinet/overview) для:
+
+- Верификации email при регистрации
+- Сброса пароля
+- Уведомлений о платежах, подписках, автопродлении
+- Реферальных бонусов и партнёрских заявок
+- Заявок на вывод средств
+
+<Warning>
+  Email работает только при `CABINET_ENABLED=true`. Без Cabinet настройка SMTP не требуется.
+</Warning>
+
+## Варианты настройки
+
+| Вариант | Плюсы | Минусы |
+| ------- | ----- | ------ |
+| **Внешний SMTP** (Yandex, Gmail, Mailgun) | Простая настройка, высокая доставляемость | Лимиты на отправку, зависимость от сервиса |
+| **Свой Postfix** | Без лимитов, полный контроль | Сложная настройка, нужен чистый IP |
+
+## Проверка доступности почтовых портов
+
+Многие хостеры блокируют исходящие почтовые порты. Проверьте **до начала настройки**.
+
+### Проверка порта 25 (SMTP)
+
+```bash
+# Проверка через telnet
+telnet smtp.gmail.com 25
+
+# Или через nc (netcat)
+nc -zv smtp.gmail.com 25
+
+# Через timeout (если telnet/nc нет)
+timeout 5 bash -c 'echo > /dev/tcp/smtp.gmail.com/25' && echo "OK" || echo "BLOCKED"
+```
+
+### Проверка порта 587 (Submission/STARTTLS)
+
+```bash
+nc -zv smtp.gmail.com 587
+timeout 5 bash -c 'echo > /dev/tcp/smtp.gmail.com/587' && echo "OK" || echo "BLOCKED"
+```
+
+### Проверка порта 465 (SMTPS/SSL)
+
+```bash
+nc -zv smtp.gmail.com 465
+timeout 5 bash -c 'echo > /dev/tcp/smtp.gmail.com/465' && echo "OK" || echo "BLOCKED"
+```
+
+### Интерпретация результатов
+
+| Результат | Значение |
+| --------- | -------- |
+| `Connection to ... succeeded!` | Порт открыт |
+| `Connection timed out` | Порт заблокирован хостером |
+| `Connection refused` | Сервер не слушает этот порт (нормально, если проверяете свой сервер) |
+
+<Warning>
+  Если порт 25 заблокирован — свой Postfix не сможет доставлять почту напрямую. Используйте relay через внешний SMTP (порт 587) или обратитесь к хостеру для разблокировки.
+</Warning>
+
+### Проверка наличия обратной DNS-записи (PTR)
+
+```bash
+# Узнайте IP сервера
+curl -4 ifconfig.me
+
+# Проверьте PTR-запись
+dig -x YOUR_SERVER_IP +short
+```
+
+Если PTR-запись пустая или не совпадает с вашим доменом — многие почтовые серверы будут отклонять письма. Настройте PTR через панель хостера.
+
+## Вариант 1: Внешний SMTP (рекомендуется)
+
+### Yandex 360
+
+1. Подключите домен к [Yandex 360 для бизнеса](https://admin.yandex.ru/)
+2. Создайте почтовый ящик (например, `noreply@yourdomain.com`)
+3. Сгенерируйте пароль приложения: Yandex ID → Безопасность → Пароли приложений
+
+```env
+SMTP_HOST=smtp.yandex.ru
+SMTP_PORT=587
+SMTP_USER=noreply@yourdomain.com
+SMTP_PASSWORD=app_password_here
+SMTP_FROM_EMAIL=noreply@yourdomain.com
+SMTP_FROM_NAME=My VPN Service
+SMTP_USE_TLS=true
+```
+
+<Note>
+  Лимит Yandex 360: 500 писем в сутки на бесплатном тарифе.
+</Note>
+
+### Gmail
+
+1. Включите двухфакторную аутентификацию в Google-аккаунте
+2. Создайте пароль приложения: [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords)
+
+```env
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your_email@gmail.com
+SMTP_PASSWORD=app_password_here
+SMTP_FROM_EMAIL=your_email@gmail.com
+SMTP_FROM_NAME=My VPN Service
+SMTP_USE_TLS=true
+```
+
+<Note>
+  Лимит Gmail: 500 писем в сутки для обычного аккаунта, 2000 для Google Workspace.
+</Note>
+
+### Mailgun / Brevo / Resend
+
+Для массовых рассылок используйте транзакционные email-сервисы:
+
+```env
+# Пример для Mailgun
+SMTP_HOST=smtp.mailgun.org
+SMTP_PORT=587
+SMTP_USER=postmaster@mg.yourdomain.com
+SMTP_PASSWORD=mailgun_api_key
+SMTP_FROM_EMAIL=noreply@yourdomain.com
+SMTP_FROM_NAME=My VPN Service
+SMTP_USE_TLS=true
+```
+
+## Вариант 2: Свой Postfix
+
+### Требования
+
+- Чистый IP-адрес (не в спам-листах)
+- PTR-запись, совпадающая с доменом
+- Открытый порт 25 (исходящий)
+- Выделенный домен для почты
+
+### Шаг 1: Установка Postfix
+
+```bash
+# Debian/Ubuntu
+sudo apt update
+sudo apt install postfix mailutils -y
+```
+
+При установке выберите **Internet Site** и укажите ваш домен (например, `mail.yourdomain.com`).
+
+### Шаг 2: Настройка Postfix
+
+```bash
+sudo nano /etc/postfix/main.cf
+```
+
+Основные параметры:
+
+```ini
+# Имя хоста (должно совпадать с PTR-записью)
+myhostname = mail.yourdomain.com
+mydomain = yourdomain.com
+myorigin = $mydomain
+
+# Принимать подключения только с localhost
+inet_interfaces = loopback-only
+inet_protocols = ipv4
+
+# Домены для которых принимаем почту (только localhost)
+mydestination = $myhostname, localhost.$mydomain, localhost
+
+# Не ретранслировать чужую почту
+mynetworks = 127.0.0.0/8
+relay_domains =
+
+# Лимиты
+message_size_limit = 10240000
+mailbox_size_limit = 0
+
+# TLS для исходящей почты
+smtp_tls_security_level = may
+smtp_tls_loglevel = 1
+smtp_tls_CAfile = /etc/ssl/certs/ca-certificates.crt
+
+# Имя отправителя в HELO
+smtp_helo_name = mail.yourdomain.com
+
+# Заголовки
+header_size_limit = 4096000
+```
+
+Перезапустите:
+
+```bash
+sudo systemctl restart postfix
+sudo systemctl enable postfix
+```
+
+### Шаг 3: DNS-записи
+
+Добавьте в DNS вашего домена:
+
+#### MX-запись
+
+```
+yourdomain.com.  IN  MX  10  mail.yourdomain.com.
+```
+
+#### A-запись для почтового сервера
+
+```
+mail.yourdomain.com.  IN  A  YOUR_SERVER_IP
+```
+
+#### SPF-запись
+
+SPF указывает, какие серверы имеют право отправлять почту от имени домена.
+
+```
+yourdomain.com.  IN  TXT  "v=spf1 ip4:YOUR_SERVER_IP -all"
+```
+
+`-all` означает строгий режим: письма с других IP будут отклоняться.
+
+#### Проверка SPF
+
+```bash
+dig yourdomain.com TXT +short
+# Должно содержать: "v=spf1 ip4:YOUR_SERVER_IP -all"
+```
+
+### Шаг 4: DKIM (подпись писем)
+
+DKIM подписывает каждое письмо криптографическим ключом, подтверждая что оно отправлено вашим сервером.
+
+```bash
+# Установка OpenDKIM
+sudo apt install opendkim opendkim-tools -y
+```
+
+Создайте директории и ключи:
+
+```bash
+sudo mkdir -p /etc/opendkim/keys/yourdomain.com
+sudo opendkim-genkey -b 2048 -d yourdomain.com -D /etc/opendkim/keys/yourdomain.com -s mail -v
+sudo chown -R opendkim:opendkim /etc/opendkim
+```
+
+Настройте OpenDKIM:
+
+```bash
+sudo nano /etc/opendkim.conf
+```
+
+```ini
+Syslog          yes
+LogWhy          yes
+UMask           007
+Mode            sv
+Canonicalization relaxed/simple
+OversignHeaders From
+Domain          yourdomain.com
+Selector        mail
+KeyFile         /etc/opendkim/keys/yourdomain.com/mail.private
+Socket          inet:8891@localhost
+PidFile         /run/opendkim/opendkim.pid
+TrustAnchorFile /usr/share/dns/root.key
+```
+
+Подключите OpenDKIM к Postfix:
+
+```bash
+sudo nano /etc/postfix/main.cf
+```
+
+Добавьте в конец:
+
+```ini
+# OpenDKIM
+milter_default_action = accept
+milter_protocol = 6
+smtpd_milters = inet:localhost:8891
+non_smtpd_milters = inet:localhost:8891
+```
+
+Перезапустите сервисы:
+
+```bash
+sudo systemctl restart opendkim
+sudo systemctl restart postfix
+sudo systemctl enable opendkim
+```
+
+Добавьте DKIM DNS-запись. Посмотрите публичный ключ:
+
+```bash
+sudo cat /etc/opendkim/keys/yourdomain.com/mail.txt
+```
+
+Скопируйте содержимое и добавьте TXT-запись:
+
+```
+mail._domainkey.yourdomain.com.  IN  TXT  "v=DKIM1; h=sha256; k=rsa; p=MIIBIjANBg..."
+```
+
+#### Проверка DKIM
+
+```bash
+dig mail._domainkey.yourdomain.com TXT +short
+```
+
+### Шаг 5: DMARC
+
+DMARC объединяет SPF и DKIM, указывая получателям что делать с неподтверждёнными письмами.
+
+```
+_dmarc.yourdomain.com.  IN  TXT  "v=DMARC1; p=quarantine; rua=mailto:dmarc@yourdomain.com; pct=100"
+```
+
+| Параметр | Описание |
+| -------- | -------- |
+| `p=none` | Не блокировать (мониторинг) |
+| `p=quarantine` | Отправлять в спам |
+| `p=reject` | Отклонять |
+| `rua` | Email для отчётов |
+| `pct` | Процент писем для проверки |
+
+Рекомендация: начните с `p=none` для мониторинга, затем переключите на `p=quarantine`.
+
+#### Проверка DMARC
+
+```bash
+dig _dmarc.yourdomain.com TXT +short
+```
+
+### Шаг 6: Настройка .env бота
+
+```env
+SMTP_HOST=localhost
+SMTP_PORT=25
+SMTP_USER=
+SMTP_PASSWORD=
+SMTP_FROM_EMAIL=noreply@yourdomain.com
+SMTP_FROM_NAME=My VPN Service
+SMTP_USE_TLS=false
+```
+
+<Note>
+  При использовании локального Postfix аутентификация не нужна (`SMTP_USER` и `SMTP_PASSWORD` оставьте пустыми). TLS отключён, т.к. подключение локальное.
+</Note>
+
+### Postfix в Docker
+
+Если бот запущен в Docker, у него нет доступа к localhost хоста. Варианты:
+
+**Вариант A: host network**
+
+Добавьте в `docker-compose.yml` для сервиса бота:
+
+```yaml
+extra_hosts:
+  - "host.docker.internal:host-gateway"
+```
+
+В `.env`:
+
+```env
+SMTP_HOST=host.docker.internal
+```
+
+**Вариант B: Postfix в контейнере**
+
+```yaml docker-compose.postfix.yml
+services:
+  postfix:
+    image: boky/postfix
+    container_name: postfix
+    restart: unless-stopped
+    environment:
+      ALLOWED_SENDER_DOMAINS: yourdomain.com
+      HOSTNAME: mail.yourdomain.com
+    volumes:
+      # Если настроен DKIM
+      - /etc/opendkim/keys:/etc/opendkim/keys:ro
+    networks:
+      - bot_network
+
+networks:
+  bot_network:
+    external: true
+    name: remnawave_bot_network
+```
+
+В `.env`:
+
+```env
+SMTP_HOST=postfix
+SMTP_PORT=587
+SMTP_USE_TLS=false
+```
+
+## Тестирование
+
+### Отправка тестового письма через командную строку
+
+```bash
+# Через mailutils (если Postfix на хосте)
+echo "Test body" | mail -s "Test Subject" -r noreply@yourdomain.com your_real_email@gmail.com
+```
+
+### Отправка через SMTP напрямую
+
+```bash
+# Через swaks (Swiss Army Knife for SMTP)
+sudo apt install swaks -y
+
+# Тест локального Postfix
+swaks --to your_real_email@gmail.com \
+      --from noreply@yourdomain.com \
+      --server localhost \
+      --header "Subject: Test from Postfix"
+
+# Тест внешнего SMTP (Yandex)
+swaks --to your_real_email@gmail.com \
+      --from noreply@yourdomain.com \
+      --server smtp.yandex.ru:587 \
+      --auth LOGIN \
+      --auth-user noreply@yourdomain.com \
+      --auth-password "app_password" \
+      --tls
+```
+
+### Проверка логов Postfix
+
+```bash
+# Последние записи
+sudo tail -50 /var/log/mail.log
+
+# Только ошибки
+sudo grep -i "error\|reject\|bounce" /var/log/mail.log | tail -20
+
+# Очередь писем
+sudo mailq
+```
+
+### Проверка через бота
+
+После настройки SMTP перезапустите бота и проверьте:
+
+1. Откройте Cabinet
+2. Зарегистрируйтесь по email
+3. Проверьте что письмо верификации пришло
+
+Если письмо не пришло — проверьте логи бота и логи Postfix.
+
+## Проверка доставляемости
+
+### Онлайн-сервисы
+
+Отправьте тестовое письмо и проверьте оценку:
+
+- [mail-tester.com](https://www.mail-tester.com/) — оценка от 0 до 10, проверяет SPF/DKIM/DMARC, контент, блеклисты
+- [mxtoolbox.com](https://mxtoolbox.com/) — проверка DNS-записей, блеклистов, SMTP-сервера
+
+### Проверка IP в спам-листах
+
+```bash
+# Через mxtoolbox
+# Откройте: https://mxtoolbox.com/blacklists.aspx
+# Введите IP сервера
+
+# Через командную строку (пример для Spamhaus)
+dig +short YOUR_IP_REVERSED.zen.spamhaus.org
+# Пустой ответ = не в списке
+# Ответ 127.0.0.x = в списке
+```
+
+Чтобы получить reversed IP: `1.2.3.4` → `4.3.2.1`.
+
+### Проверка DNS-записей
+
+```bash
+# Все записи разом
+dig yourdomain.com MX +short
+dig yourdomain.com TXT +short
+dig mail._domainkey.yourdomain.com TXT +short
+dig _dmarc.yourdomain.com TXT +short
+dig -x YOUR_SERVER_IP +short
+```
+
+## Чеклист
+
+Перед запуском в продакшн убедитесь:
+
+- [ ] Порты 25/587 открыты (исходящие)
+- [ ] PTR-запись настроена и совпадает с `myhostname`
+- [ ] MX-запись указывает на почтовый сервер
+- [ ] SPF-запись добавлена (`v=spf1 ip4:... -all`)
+- [ ] DKIM настроен и DNS-запись добавлена
+- [ ] DMARC-запись добавлена (начните с `p=none`)
+- [ ] IP сервера нет в спам-листах
+- [ ] Тестовое письмо доставляется в inbox (не в спам)
+- [ ] `CABINET_ENABLED=true` в `.env` бота
+- [ ] `SMTP_*` переменные заполнены в `.env` бота
+- [ ] Письмо верификации из Cabinet приходит

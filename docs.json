@@ -44,6 +44,7 @@
               "getting-started/docker-deployment",
               "getting-started/environment",
               "getting-started/initial-setup",
+              "getting-started/smtp-setup",
               "getting-started/troubleshooting"
             ]
           },
