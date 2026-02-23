@@ -845,6 +845,37 @@ curl -s https://hooks.domain.com/health/unified | jq
 | `/health/telegram-webhook` | Состояние очереди Telegram webhook |
 | `/health/payment-webhooks` | Активированные платёжные интеграции |
 
+## Переключение на dev-ветку
+
+Для тестирования новых функций можно переключиться на ветку `dev`. Ваши данные БД и `.env` не затрагиваются.
+
+### Переключение на dev
+
+```bash
+cd /path/to/remnawave-bedolaga-telegram-bot
+
+git pull
+git fetch origin
+git checkout -b dev origin/dev
+```
+
+После переключения пересоберите контейнер:
+
+```bash
+docker compose up -d --build
+```
+
+### Возврат на main
+
+```bash
+git checkout main
+docker compose up -d --build
+```
+
+<Info>
+  Переключение ветки не затрагивает базу данных, `.env`, директории `data/` и `logs/` — они хранятся в Docker volumes и примонтированных папках.
+</Info>
+
 ## Рекомендации
 
 - Откройте входящие порты 80/443 в файерволе
