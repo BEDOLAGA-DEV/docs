@@ -1,0 +1,112 @@
+---
+title: "Обзор API"
+description: "Полное REST API бота Bedolaga — 528 эндпоинтов, 780 схем данных"
+---
+
+## Архитектура
+
+Bedolaga предоставляет единый FastAPI-сервер на порту `8080` с тремя областями API:
+
+| Область | Префикс | Авторизация | Назначение |
+| ------- | ------- | ----------- | ---------- |
+| **Web API** | `/api/v1/*` | `X-API-Key` | Программное администрирование бота |
+| **Cabinet API** | `/cabinet/*` | JWT Bearer | Личный кабинет пользователя |
+| **Cabinet Admin API** | `/cabinet/admin/*` | JWT Bearer (admin) | Управление через веб-кабинет |
+
+## Авторизация
+
+### Web API — API Key
+
+Все эндпоинты Web API требуют ключ в заголовке:
+
+```bash
+curl -H "X-API-Key: YOUR_TOKEN" https://your-domain.com/api/v1/users
+```
+
+Ключ создаётся через админ-панель бота или через API: `POST /api/v1/tokens`.
+
+### Cabinet API — JWT
+
+Cabinet использует JWT-токены (HS256):
+
+```bash
+curl -H "Authorization: Bearer ACCESS_TOKEN" https://your-domain.com/cabinet/subscription
+```
+
+Получение токена:
+- **Telegram WebApp**: `POST /cabinet/auth/telegram` — передать `initData`
+- **Telegram Widget**: `POST /cabinet/auth/telegram/widget` — данные виджета
+- **Email**: `POST /cabinet/auth/email/login` — email + пароль
+
+Обновление: `POST /cabinet/auth/refresh` с refresh-токеном.
+
+### Cabinet Admin API
+
+Те же JWT-токены, но пользователь должен быть в списке администраторов (`ADMIN_IDS` или `ADMIN_EMAILS`).
+
+## Статистика API
+
+<CardGroup cols={3}>
+  <Card title="528" icon="route">
+    Эндпоинтов
+  </Card>
+  <Card title="780" icon="code">
+    Pydantic-схем
+  </Card>
+  <Card title="73" icon="tags">
+    Групп (тегов)
+  </Card>
+</CardGroup>
+
+### По областям
+
+| Область | Эндпоинтов | Групп |
+| ------- | ---------- | ----- |
+| Web API | ~300 | 32 |
+| Cabinet User | ~112 | 16 |
+| Cabinet Admin | ~240 | 25 |
+
+## Быстрый старт
+
+### Health Check
+
+```bash
+curl https://your-domain.com/api/v1/health
+```
+
+### Получить список пользователей
+
+```bash
+curl -H "X-API-Key: YOUR_TOKEN" \
+  "https://your-domain.com/api/v1/users?page=1&per_page=20"
+```
+
+### Создать подписку
+
+```bash
+curl -X POST -H "X-API-Key: YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"user_id": 123, "period_days": 30, "traffic_limit_gb": 100}' \
+  https://your-domain.com/api/v1/subscriptions
+```
+
+## WebSocket
+
+Два WebSocket-эндпоинта для real-time обновлений:
+
+| Путь | Авторизация | Назначение |
+| ---- | ----------- | ---------- |
+| `/ws?token=API_KEY` | API Key | Дашборд админ-панели |
+| `/cabinet/ws?token=JWT` | JWT | Уведомления Cabinet |
+
+## Документация на сервере
+
+При включённом `IS_DOCS_ENABLED=true` доступны:
+
+- **Swagger UI**: `https://your-domain.com/docs`
+- **ReDoc**: `https://your-domain.com/redoc`
+- **OpenAPI JSON**: `https://your-domain.com/openapi.json`
+
+<Warning>
+  В продакшене рекомендуется отключить документацию: `IS_DOCS_ENABLED=false`
+</Warning>
