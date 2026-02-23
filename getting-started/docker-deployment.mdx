@@ -7,46 +7,68 @@ description: "Продакшн-установка с webhook и обратным
 
 | `BOT_RUN_MODE` | Описание | Когда использовать |
 | -------------- | -------- | ------------------ |
-| `polling` | Бот опрашивает Telegram через long polling | Локальная отладка |
-| `webhook` | Aiogram получает апдейты через webhook | Продакшн за HTTPS |
+| `polling` | Бот опрашивает Telegram через long polling. HTTP-сервер можно не поднимать. | Локальная отладка или отсутствие внешнего HTTPS |
+| `webhook` | Aiogram получает апдейты только через webhook | Продакшн за HTTPS-прокси |
 
 ## Настройка webhook
 
 ### Минимальный .env для webhook
 
 ```env
+# Обязательные базовые настройки
 BOT_TOKEN=1234567890:AABBCCdd...
-ADMIN_IDS=123456789
+ADMIN_IDS=123456789,987654321
 
+# Настройки webhook
 BOT_RUN_MODE=webhook
 WEBHOOK_URL=https://hooks.domain.com
 WEBHOOK_PATH=/webhook
 WEBHOOK_SECRET_TOKEN=super-secret-token
 
+# Настройки Web API
 WEB_API_ENABLED=true
 WEB_API_PORT=8080
+WEB_API_ALLOWED_ORIGINS=https://miniapp.domain.com
+WEB_API_DEFAULT_TOKEN=super-secret-token
 
+# Настройки Remnawave
 REMNAWAVE_API_URL=https://your-panel.com
 REMNAWAVE_API_KEY=your_api_key
 ```
 
 <Warning>
-  Обязательно сгенерируйте `WEBHOOK_SECRET_TOKEN` командой `openssl rand -hex 32`.
+  Сгенерируйте `WEBHOOK_SECRET_TOKEN` и `WEB_API_DEFAULT_TOKEN` командой `openssl rand -hex 32`. `WEBHOOK_URL` должен быть доступен извне по HTTPS.
 </Warning>
 
 ### Полные настройки webhook
 
 ```env
+BOT_RUN_MODE=webhook
+WEBHOOK_URL=https://hooks.domain.com
+WEBHOOK_PATH=/webhook
+WEBHOOK_SECRET_TOKEN=super-secret-token
 WEBHOOK_DROP_PENDING_UPDATES=true
 WEBHOOK_MAX_QUEUE_SIZE=1024
 WEBHOOK_WORKERS=4
 WEBHOOK_ENQUEUE_TIMEOUT=0.1
 WEBHOOK_WORKER_SHUTDOWN_TIMEOUT=30.0
+
+WEB_API_ENABLED=true
+WEB_API_HOST=0.0.0.0
+WEB_API_PORT=8080
+WEB_API_ALLOWED_ORIGINS=https://miniapp.domain.com
 ```
+
+- `WEBHOOK_URL` — публичный HTTPS-домен прокси. К нему автоматически добавляется путь из `WEBHOOK_PATH`.
+- `WEBHOOK_SECRET_TOKEN` — защитный токен Telegram, обязательно задайте своё значение.
+- Очередь можно тюнить через `WEBHOOK_MAX_QUEUE_SIZE`, `WEBHOOK_WORKERS`, `WEBHOOK_ENQUEUE_TIMEOUT` и `WEBHOOK_WORKER_SHUTDOWN_TIMEOUT`.
+- Если миниапка или админка доступны по другим доменам, перечислите их через запятую в `WEB_API_ALLOWED_ORIGINS`.
+
+После изменения `.env` перезапустите сервис: `docker compose up -d remnawave_bot`.
 
 ## Docker Compose
 
-### Бот на отдельном сервере
+### Вариант 1: Бот на отдельном сервере
 
 ```yaml docker-compose.yml
 services:
@@ -58,93 +80,773 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-remnawave_bot}
       POSTGRES_USER: ${POSTGRES_USER:-remnawave_user}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secure_password_123}
+      POSTGRES_INITDB_ARGS: '--encoding=UTF8 --locale=C'
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - bot_network
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'pg_isready -U ${POSTGRES_USER:-remnawave_user} -d ${POSTGRES_DB:-remnawave_bot}',
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
-  remnawave_bot:
-    image: ghcr.io/bedolaga-dev/remnawave-bedolaga-telegram-bot:latest
+  redis:
+    image: redis:7-alpine
+    container_name: remnawave_bot_redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    networks:
+      - bot_network
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  bot:
+    build: .
     container_name: remnawave_bot
     restart: unless-stopped
-    env_file: .env
-    ports:
-      - "8080:8080"
-    volumes:
-      - ./logs:/app/logs
-      - ./data:/app/data
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      DOCKER_ENV: 'true'
+      DATABASE_MODE: 'auto'
+      POSTGRES_HOST: 'postgres'
+      POSTGRES_PORT: '5432'
+      POSTGRES_DB: '${POSTGRES_DB:-remnawave_bot}'
+      POSTGRES_USER: '${POSTGRES_USER:-remnawave_user}'
+      POSTGRES_PASSWORD: '${POSTGRES_PASSWORD:-secure_password_123}'
+      REDIS_URL: 'redis://redis:6379/0'
+      TZ: 'Europe/Moscow'
+      LOCALES_PATH: '${LOCALES_PATH:-/app/locales}'
+    volumes:
+      - ./logs:/app/logs:rw
+      - ./data:/app/data:rw
+      - ./locales:/app/locales:rw
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+      - ./vpn_logo.png:/app/vpn_logo.png:ro
+    ports:
+      - '${WEB_API_PORT:-8080}:8080'
+    networks:
+      - bot_network
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'python -c "import requests, os; requests.get(''http://localhost:8080/health'', headers={''X-API-Key'': os.environ.get(''WEB_API_DEFAULT_TOKEN'')}, timeout=5) or exit(1)"',
+        ]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  bot_network:
+    name: remnawave_bot_network
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+          gateway: 172.20.0.1
+    driver_opts:
+      com.docker.network.driver.mtu: 1350
+```
+
+**Docker Compose для Caddy** (отдельный файл):
+
+```yaml docker-compose.caddy.yml
+services:
+  caddy:
+    image: caddy:2-alpine
+    container_name: remnawave_caddy
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
     networks:
       - bot_network
 
 volumes:
-  postgres_data:
+  caddy_data:
+  caddy_config:
 
 networks:
   bot_network:
-    driver: bridge
+    name: remnawave_bot_network
+    external: true
 ```
 
-### Бот на том же сервере что и Remnawave
+### Вариант 2: Бот на одном сервере с панелью
 
-Подключитесь к сети панели:
+Если бот и панель Remnawave на одном сервере, подключите бота к сети панели:
 
-```yaml docker-compose.yml
+```yaml docker-compose.local.yml
 services:
-  remnawave_bot:
-    # ...
+  postgres:
+    image: postgres:15-alpine
+    container_name: remnawave_bot_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-remnawave_bot}
+      POSTGRES_USER: ${POSTGRES_USER:-remnawave_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secure_password_123}
+      POSTGRES_INITDB_ARGS: '--encoding=UTF8 --locale=C'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
     networks:
       - bot_network
-      - remnawave_network
+      - remnawave-network
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'pg_isready -U ${POSTGRES_USER:-remnawave_user} -d ${POSTGRES_DB:-remnawave_bot}',
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  redis:
+    image: redis:7-alpine
+    container_name: remnawave_bot_redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    networks:
+      - bot_network
+      - remnawave-network
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  bot:
+    build: .
+    container_name: remnawave_bot
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      DOCKER_ENV: 'true'
+      DATABASE_MODE: 'auto'
+      POSTGRES_HOST: 'postgres'
+      POSTGRES_PORT: '5432'
+      POSTGRES_DB: '${POSTGRES_DB:-remnawave_bot}'
+      POSTGRES_USER: '${POSTGRES_USER:-remnawave_user}'
+      POSTGRES_PASSWORD: '${POSTGRES_PASSWORD:-secure_password_123}'
+      REDIS_URL: 'redis://redis:6379/0'
+      TZ: 'Europe/Moscow'
+      LOCALES_PATH: '${LOCALES_PATH:-/app/locales}'
+    volumes:
+      - ./logs:/app/logs:rw
+      - ./data:/app/data:rw
+      - ./locales:/app/locales:rw
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+      - ./vpn_logo.png:/app/vpn_logo.png:ro
+    ports:
+      - '${WEB_API_PORT:-8080}:8080'
+    networks:
+      - bot_network
+      - remnawave-network
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'python -c "import requests, os; requests.get(''http://localhost:8080/health'', headers={''X-API-Key'': os.environ.get(''WEB_API_DEFAULT_TOKEN'')}, timeout=5) or exit(1)"',
+        ]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
 
 networks:
   bot_network:
     driver: bridge
-  remnawave_network:
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+          gateway: 172.20.0.1
+    driver_opts:
+      com.docker.network.driver.mtu: 1350
+
+  remnawave-network:
+    name: remnawave-network
     external: true
-    name: remnawave_network
 ```
+
+<Info>
+  Сеть `remnawave-network` должна быть создана панелью Remnawave. В `.env` укажите `REMNAWAVE_API_URL=http://remnawave:3000` — обращение через Docker-сеть без внешних запросов.
+</Info>
 
 ## Обратный прокси
 
 ### Caddy (рекомендуется)
 
+Caddy автоматически получает и продлевает SSL-сертификаты через Let's Encrypt.
+
 ```caddy Caddyfile
+# Hooks + API
 hooks.domain.com {
-    reverse_proxy remnawave_bot:8080
+    encode gzip zstd
+
+    # Webhook пути для платежных систем
+    handle /yookassa-webhook {
+        reverse_proxy remnawave_bot:8080 {
+            header_up Host {host}
+            header_up X-Real-IP {remote_host}
+            transport http {
+                read_buffer 0
+            }
+        }
+    }
+
+    handle /platega-webhook {
+        reverse_proxy remnawave_bot:8080 {
+            header_up Host {host}
+            header_up X-Real-IP {remote_host}
+            transport http {
+                read_buffer 0
+            }
+        }
+    }
+
+    handle /cryptobot-webhook {
+        reverse_proxy remnawave_bot:8080 {
+            header_up Host {host}
+            header_up X-Real-IP {remote_host}
+            transport http {
+                read_buffer 0
+            }
+        }
+    }
+
+    handle /wata-webhook {
+        reverse_proxy remnawave_bot:8080 {
+            header_up Host {host}
+            header_up X-Real-IP {remote_host}
+            transport http {
+                read_buffer 0
+            }
+        }
+    }
+
+    handle /heleket-webhook {
+        reverse_proxy remnawave_bot:8080 {
+            header_up Host {host}
+            header_up X-Real-IP {remote_host}
+            transport http {
+                read_buffer 0
+            }
+        }
+    }
+
+    handle /tribute-webhook {
+        reverse_proxy remnawave_bot:8080 {
+            header_up Host {host}
+            header_up X-Real-IP {remote_host}
+            transport http {
+                read_buffer 0
+            }
+        }
+    }
+
+    handle /pal24-webhook {
+        reverse_proxy remnawave_bot:8080 {
+            header_up Host {host}
+            header_up X-Real-IP {remote_host}
+            transport http {
+                read_buffer 0
+            }
+        }
+    }
+
+    handle /mulenpay-webhook {
+        reverse_proxy remnawave_bot:8080 {
+            header_up Host {host}
+            header_up X-Real-IP {remote_host}
+            transport http {
+                read_buffer 0
+            }
+        }
+    }
+
+    handle /freekassa-webhook {
+        reverse_proxy remnawave_bot:8080 {
+            header_up Host {host}
+            header_up X-Real-IP {remote_host}
+            transport http {
+                read_buffer 0
+            }
+        }
+    }
+
+    handle /cloudpayments-webhook {
+        reverse_proxy remnawave_bot:8080 {
+            header_up Host {host}
+            header_up X-Real-IP {remote_host}
+            transport http {
+                read_buffer 0
+            }
+        }
+    }
+
+    handle /remnawave-webhook {
+        reverse_proxy remnawave_bot:8080 {
+            header_up Host {host}
+            header_up X-Real-IP {remote_host}
+            transport http {
+                read_buffer 0
+            }
+        }
+    }
+
+    # app-config.json с CORS
+    handle /app-config.json {
+        header Access-Control-Allow-Origin "*"
+        reverse_proxy remnawave_bot:8080 {
+            header_up Host {host}
+            header_up X-Real-IP {remote_host}
+            transport http {
+                read_buffer 0
+            }
+        }
+    }
+
+    # Все остальные запросы
+    handle {
+        reverse_proxy remnawave_bot:8080 {
+            header_up Host {host}
+            header_up X-Real-IP {remote_host}
+            transport http {
+                read_buffer 0
+            }
+        }
+    }
 }
-```
 
-### Nginx
+# Статика для miniapp
+miniapp.domain.com {
+    encode gzip zstd
 
-```nginx nginx.conf
-server {
-    listen 443 ssl;
-    server_name hooks.domain.com;
+    # API эндпоинты /miniapp/* в приложение
+    handle /miniapp/* {
+        reverse_proxy remnawave_bot:8080 {
+            header_up Host {host}
+            header_up X-Real-IP {remote_host}
+            transport http {
+                read_buffer 0
+            }
+        }
+    }
 
-    ssl_certificate /etc/letsencrypt/live/hooks.domain.com/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/hooks.domain.com/privkey.pem;
+    # app-config.json с CORS
+    handle /app-config.json {
+        header Access-Control-Allow-Origin "*"
+        reverse_proxy remnawave_bot:8080 {
+            header_up Host {host}
+            header_up X-Real-IP {remote_host}
+            transport http {
+                read_buffer 0
+            }
+        }
+    }
 
-    location / {
-        proxy_pass http://remnawave_bot:8080;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
+    # Статические файлы
+    handle {
+        root * /var/www/remnawave-miniapp
+        try_files {path} /index.html
+        file_server
     }
 }
 ```
 
-## Проверка
+<Note>
+  Если прокси запускается на том же сервере (без Docker-сети), замените `remnawave_bot:8080` на `localhost:8080`.
+</Note>
 
-После запуска проверьте health endpoint:
+### Nginx
+
+```nginx nginx.conf
+events {}
+http {
+    include /etc/nginx/mime.types;
+    sendfile on;
+
+    upstream remnawave_bot_unified {
+        server remnawave_bot:8080;
+    }
+
+    # Hooks + API домен
+    server {
+        listen 80;
+        listen 443 ssl http2;
+        server_name hooks.domain.com;
+
+        ssl_certificate /etc/ssl/private/hooks.fullchain.pem;
+        ssl_certificate_key /etc/ssl/private/hooks.privkey.pem;
+
+        client_max_body_size 32m;
+
+        # Webhook пути для платежных систем
+        location = /yookassa-webhook {
+            proxy_pass http://remnawave_bot_unified;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_read_timeout 120s;
+            proxy_send_timeout 120s;
+            proxy_buffering off;
+            proxy_request_buffering off;
+        }
+
+        location = /platega-webhook {
+            proxy_pass http://remnawave_bot_unified;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_read_timeout 120s;
+            proxy_send_timeout 120s;
+            proxy_buffering off;
+            proxy_request_buffering off;
+        }
+
+        location = /cryptobot-webhook {
+            proxy_pass http://remnawave_bot_unified;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_read_timeout 120s;
+            proxy_send_timeout 120s;
+            proxy_buffering off;
+            proxy_request_buffering off;
+        }
+
+        location = /wata-webhook {
+            proxy_pass http://remnawave_bot_unified;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_read_timeout 120s;
+            proxy_send_timeout 120s;
+            proxy_buffering off;
+            proxy_request_buffering off;
+        }
+
+        location = /heleket-webhook {
+            proxy_pass http://remnawave_bot_unified;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_read_timeout 120s;
+            proxy_send_timeout 120s;
+            proxy_buffering off;
+            proxy_request_buffering off;
+        }
+
+        location = /tribute-webhook {
+            proxy_pass http://remnawave_bot_unified;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_read_timeout 120s;
+            proxy_send_timeout 120s;
+            proxy_buffering off;
+            proxy_request_buffering off;
+        }
+
+        location = /pal24-webhook {
+            proxy_pass http://remnawave_bot_unified;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_read_timeout 120s;
+            proxy_send_timeout 120s;
+            proxy_buffering off;
+            proxy_request_buffering off;
+        }
+
+        location = /mulenpay-webhook {
+            proxy_pass http://remnawave_bot_unified;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_read_timeout 120s;
+            proxy_send_timeout 120s;
+            proxy_buffering off;
+            proxy_request_buffering off;
+        }
+
+        location = /freekassa-webhook {
+            proxy_pass http://remnawave_bot_unified;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_read_timeout 120s;
+            proxy_send_timeout 120s;
+            proxy_buffering off;
+            proxy_request_buffering off;
+        }
+
+        location = /cloudpayments-webhook {
+            proxy_pass http://remnawave_bot_unified;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_read_timeout 120s;
+            proxy_send_timeout 120s;
+            proxy_buffering off;
+            proxy_request_buffering off;
+        }
+
+        location = /remnawave-webhook {
+            proxy_pass http://remnawave_bot_unified;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_read_timeout 120s;
+            proxy_send_timeout 120s;
+            proxy_buffering off;
+            proxy_request_buffering off;
+        }
+
+        # app-config.json с CORS
+        location = /app-config.json {
+            add_header Access-Control-Allow-Origin "*";
+            proxy_pass http://remnawave_bot_unified;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+
+        # Все остальные запросы
+        location / {
+            proxy_pass http://remnawave_bot_unified;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_read_timeout 120s;
+            proxy_send_timeout 120s;
+            proxy_buffering off;
+            proxy_request_buffering off;
+        }
+    }
+
+    # Miniapp домен (статика + API)
+    server {
+        listen 80;
+        listen 443 ssl http2;
+        server_name miniapp.domain.com;
+
+        ssl_certificate /etc/ssl/private/miniapp.fullchain.pem;
+        ssl_certificate_key /etc/ssl/private/miniapp.privkey.pem;
+
+        client_max_body_size 32m;
+
+        # API эндпоинты /miniapp/*
+        location /miniapp/ {
+            proxy_pass http://remnawave_bot_unified;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_read_timeout 120s;
+            proxy_send_timeout 120s;
+            proxy_buffering off;
+            proxy_request_buffering off;
+        }
+
+        # app-config.json с CORS
+        location = /app-config.json {
+            add_header Access-Control-Allow-Origin "*";
+            proxy_pass http://remnawave_bot_unified;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+
+        # Статические файлы
+        location / {
+            root /var/www/remnawave-miniapp;
+            try_files $uri $uri/ /index.html;
+
+            expires 1h;
+            add_header Cache-Control "public, immutable";
+        }
+    }
+}
+```
+
+**Docker Compose для Nginx:**
+
+```yaml docker-compose.nginx.yml
+services:
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - /etc/ssl/private:/etc/ssl/private:ro
+      - /var/www/remnawave-miniapp:/var/www/remnawave-miniapp:ro
+    networks:
+      - remnawave-network
+    restart: unless-stopped
+
+networks:
+  remnawave-network:
+    external: true
+```
+
+<Note>
+  Если прокси запускается на том же сервере (без Docker-сети), замените `remnawave_bot:8080` на `localhost:8080`.
+</Note>
+
+## Настройка SSL для Nginx
+
+Caddy получает сертификаты автоматически. Для Nginx нужно настроить вручную через Certbot.
+
+### 1. Установка Certbot
 
 ```bash
-curl https://hooks.domain.com/health
+sudo apt update && sudo apt install certbot -y
 ```
 
-Ожидаемый ответ:
-```json
-{"status": "ok", "service": "unified_web_server"}
+### 2. Генерация сертификатов
+
+```bash
+# Остановите Nginx Docker контейнер (порт 80 должен быть свободен)
+docker compose down
+
+# Сгенерируйте сертификаты
+sudo certbot certonly --standalone -d hooks.domain.com \
+  --agree-tos --email your-email@example.com --non-interactive
+
+sudo certbot certonly --standalone -d miniapp.domain.com \
+  --agree-tos --email your-email@example.com --non-interactive
 ```
+
+### 3. Копирование сертификатов
+
+```bash
+sudo mkdir -p /etc/ssl/private
+
+sudo cp /etc/letsencrypt/live/hooks.domain.com/fullchain.pem /etc/ssl/private/hooks.fullchain.pem
+sudo cp /etc/letsencrypt/live/hooks.domain.com/privkey.pem /etc/ssl/private/hooks.privkey.pem
+sudo cp /etc/letsencrypt/live/miniapp.domain.com/fullchain.pem /etc/ssl/private/miniapp.fullchain.pem
+sudo cp /etc/letsencrypt/live/miniapp.domain.com/privkey.pem /etc/ssl/private/miniapp.privkey.pem
+
+sudo chmod 600 /etc/ssl/private/*.pem
+```
+
+### 4. Запуск Nginx
+
+```bash
+docker compose up -d
+```
+
+### 5. Автообновление сертификатов
+
+```bash
+# Создайте скрипт обновления
+sudo tee /opt/renew-certs.sh > /dev/null <<'EOF'
+#!/bin/bash
+docker compose -f /path/to/docker-compose.yml down
+certbot renew --quiet
+cp /etc/letsencrypt/live/hooks.domain.com/fullchain.pem /etc/ssl/private/hooks.fullchain.pem
+cp /etc/letsencrypt/live/hooks.domain.com/privkey.pem /etc/ssl/private/hooks.privkey.pem
+cp /etc/letsencrypt/live/miniapp.domain.com/fullchain.pem /etc/ssl/private/miniapp.fullchain.pem
+cp /etc/letsencrypt/live/miniapp.domain.com/privkey.pem /etc/ssl/private/miniapp.privkey.pem
+chmod 600 /etc/ssl/private/*.pem
+docker compose -f /path/to/docker-compose.yml up -d
+EOF
+
+sudo chmod +x /opt/renew-certs.sh
+
+# Добавьте в cron (каждый день в 3:00)
+echo "0 3 * * * /opt/renew-certs.sh" | sudo crontab -
+```
+
+### 6. Проверка SSL
+
+```bash
+curl -I https://hooks.domain.com
+curl -I https://miniapp.domain.com
+```
+
+<Warning>
+  Замените `domain.com` и `your-email@example.com` на свои данные. Замените `/path/to/docker-compose.yml` на реальный путь. Убедитесь, что DNS-записи для доменов указывают на IP вашего сервера.
+</Warning>
+
+## Проверка здоровья
+
+```bash
+curl -s https://hooks.domain.com/health/unified | jq
+```
+
+| Endpoint | Описание |
+| -------- | -------- |
+| `/health/unified` | Агрегированный статус (режим бота, очередь Telegram, платежи). Если административное API отключено, тот же статус на `/health` |
+| `/health/telegram-webhook` | Состояние очереди Telegram webhook |
+| `/health/payment-webhooks` | Активированные платёжные интеграции |
+
+## Рекомендации
+
+- Откройте входящие порты 80/443 в файерволе
+- Если используете Cloudflare/анти-DDoS, разрешите метод `POST` и заголовок `X-Telegram-Bot-Api-Secret-Token`
+- После развёртывания перезапустите бот (`make reload`), чтобы он заново зарегистрировал webhook
