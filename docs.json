@@ -74,6 +74,7 @@
               "bot/interface-settings",
               "bot/maintenance",
               "bot/nalogo-setup",
+              "bot/admin-notifications",
               "bot/admin-panel"
             ]
           },
