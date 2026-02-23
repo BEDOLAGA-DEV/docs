@@ -118,8 +118,7 @@
             "pages": [
               "development/architecture",
               "development/database",
-              "development/contributing",
-              "development/api-reference"
+              "development/contributing"
             ]
           }
         ]
