@@ -72,7 +72,8 @@
               "cabinet/overview",
               "cabinet/setup",
               "cabinet/proxy-config",
-              "cabinet/oauth-setup"
+              "cabinet/oauth-setup",
+              "cabinet/analytics-setup"
             ]
           },
           {
