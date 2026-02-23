@@ -60,6 +60,7 @@
               "bot/contests",
               "bot/notifications",
               "bot/support-system",
+              "bot/interface-settings",
               "bot/maintenance",
               "bot/admin-panel"
             ]

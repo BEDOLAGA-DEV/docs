@@ -1,0 +1,472 @@
+---
+title: Интерфейс и брендирование
+description: "Настройка внешнего вида бота, меню, кнопок, локализации и контента"
+---
+
+## Обзор
+
+Бот предоставляет обширные возможности кастомизации интерфейса: от логотипа и структуры меню до цветов кнопок и шаблонов email. Настройки применяются через переменные окружения, а многие из них можно изменить без перезапуска через админ-панель.
+
+<Warning>
+  Часть функций работает только при установленном [Cabinet WebApp](/cabinet/overview). Такие настройки отмечены значком 🔗 Cabinet.
+</Warning>
+
+## Логотип и брендинг
+
+### Логотип бота
+
+Бот может отправлять логотип вместе с каждым сообщением — изображение прикрепляется автоматически.
+
+| Переменная | По умолчанию | Описание |
+| ---------- | ------------ | -------- |
+| `ENABLE_LOGO_MODE` | `true` | Прикреплять логотип к сообщениям. При `false` — только текст |
+| `LOGO_FILE` | `vpn_logo.png` | Путь к файлу логотипа. После первой отправки `file_id` кэшируется |
+
+### Названия сервиса
+
+| Переменная | По умолчанию | Описание |
+| ---------- | ------------ | -------- |
+| `PAYMENT_SERVICE_NAME` | `Интернет-сервис` | Название в описаниях платежей (чеки, квитанции) |
+| `SMTP_FROM_NAME` | `VPN Service` | Имя отправителя в email (🔗 Cabinet) |
+| `MINIAPP_SERVICE_NAME_RU` | `Bedolaga VPN` | Название сервиса в MiniApp (RU) (🔗 Cabinet) |
+| `MINIAPP_SERVICE_NAME_EN` | `Bedolaga VPN` | Название сервиса в MiniApp (EN) (🔗 Cabinet) |
+| `MINIAPP_SERVICE_DESCRIPTION_RU` | `Безопасное и быстрое подключение` | Описание в MiniApp (RU) (🔗 Cabinet) |
+| `MINIAPP_SERVICE_DESCRIPTION_EN` | `Secure & Fast Connection` | Описание в MiniApp (EN) (🔗 Cabinet) |
+
+### Брендинг Cabinet (🔗 Cabinet)
+
+При установленном Cabinet доступна полная кастомизация через API `/cabinet/branding/*`:
+
+| Параметр | По умолчанию | Описание |
+| -------- | ------------ | -------- |
+| Название проекта | `Cabinet` | Отображается в шапке кабинета |
+| Логотип | Буквенный | Загрузка кастомного (PNG, JPEG, WebP, SVG, до 5 МБ) |
+| Цвета темы | 12 цветов | Accent, фоны, текст, success/warning/error |
+| Доступные темы | Dark + Light | Минимум одна тема должна быть активна |
+| Анимации | Включены | CSS-анимации интерфейса |
+| Полноэкранный режим | Выключен | Развернуть WebApp на весь экран |
+| Lite-режим | Выключен | Упрощённый дашборд |
+
+Цвета темы по умолчанию:
+
+```
+accent:            #3b82f6    darkBackground:    #0a0f1a
+darkSurface:       #0f172a    darkText:          #f1f5f9
+darkTextSecondary: #94a3b8    lightBackground:   #F7E7CE
+lightSurface:      #FEF9F0    lightText:         #1F1A12
+lightTextSecondary:#7D6B48    success:           #22c55e
+warning:           #f59e0b    error:             #ef4444
+```
+
+## Режим главного меню
+
+Бот поддерживает два режима отображения главного меню.
+
+```env
+MAIN_MENU_MODE=default
+```
+
+### Режим `default`
+
+Классический режим — все кнопки работают как стандартные инлайн-кнопки Telegram с callback-обработчиками внутри бота.
+
+### Режим `cabinet`
+
+Кнопки меню становятся WebApp-кнопками и открывают соответствующие разделы Cabinet MiniApp.
+
+<Warning>
+  Режим `cabinet` требует установленного Cabinet и заполненного `MINIAPP_CUSTOM_URL`.
+</Warning>
+
+| Кнопка | Путь в Cabinet |
+| ------ | -------------- |
+| Баланс | `/balance` |
+| Подписка | `/subscription` |
+| Купить | `/tariffs` |
+| Партнёрка | `/referral` |
+| Пополнить | `/balance` |
+| Настройки | `/settings` |
+| Подключиться | `/subscription` |
+| Конкурсы | `/contests` |
+
+**Алиасы режимов** (для обратной совместимости):
+- `classic`, `full`, `standard` → `default`
+- `text`, `text_only`, `minimal` → `cabinet`
+
+### Стиль кнопок (Bot API 9.4)
+
+В режиме `cabinet` кнопки поддерживают цветовое оформление:
+
+```env
+CABINET_BUTTON_STYLE=
+```
+
+| Значение | Цвет |
+| -------- | ---- |
+| `primary` | Синий |
+| `success` | Зелёный |
+| `danger` | Красный |
+| *(пусто)* | Автоматический цвет для каждой секции |
+
+Автоматические цвета по секциям: Баланс — синий, Подписка — зелёный, Купить — зелёный, Партнёрка — синий, Подключиться — зелёный.
+
+Приоритет стиля: параметр кнопки → переопределение в БД → `CABINET_BUTTON_STYLE` → стандартный цвет секции.
+
+### Динамическое меню
+
+```env
+MENU_LAYOUT_ENABLED=false
+```
+
+При включении структура меню управляется через API, а не задаётся в коде.
+
+## Кнопка «Подключиться»
+
+5 режимов работы кнопки подключения:
+
+```env
+CONNECT_BUTTON_MODE=miniapp_subscription
+```
+
+| Режим | Описание |
+| ----- | -------- |
+| `guide` | Открывает гайд подключения (из `app-config.json`) |
+| `miniapp_subscription` | Открывает ссылку подписки в MiniApp |
+| `miniapp_custom` | Открывает `MINIAPP_CUSTOM_URL` в MiniApp |
+| `link` | Открывает ссылку напрямую в браузере |
+| `happ_cryptolink` | Выводит cryptoLink-ссылку на подписку Happ |
+
+### Настройки для Happ
+
+| Переменная | По умолчанию | Описание |
+| ---------- | ------------ | -------- |
+| `CONNECT_BUTTON_HAPP_DOWNLOAD_ENABLED` | `false` | Показывать кнопки скачивания клиента |
+| `HAPP_DOWNLOAD_LINK_IOS` | — | Ссылка для iOS |
+| `HAPP_DOWNLOAD_LINK_ANDROID` | — | Ссылка для Android |
+| `HAPP_DOWNLOAD_LINK_MACOS` | — | Ссылка для macOS |
+| `HAPP_DOWNLOAD_LINK_WINDOWS` | — | Ссылка для Windows |
+| `HAPP_DOWNLOAD_LINK_PC` | — | Универсальная ссылка для ПК |
+| `HAPP_CRYPTOLINK_REDIRECT_TEMPLATE` | — | URL-шаблон редиректа (`happ://` не поддерживается в Telegram) |
+
+### Гайд подключения
+
+```env
+APP_CONFIG_PATH=app-config.json
+ENABLE_DEEP_LINKS=true
+APP_CONFIG_CACHE_TTL=3600
+```
+
+Файл `app-config.json` содержит конфигурацию приложений для инструкции подключения. Кэшируется на время `APP_CONFIG_CACHE_TTL` секунд.
+
+## Видимость кнопок и разделов
+
+### Переключатели интерфейса
+
+| Переменная | По умолчанию | Что показывает/скрывает |
+| ---------- | ------------ | ----------------------- |
+| `HIDE_SUBSCRIPTION_LINK` | `false` | При `true` — скрывает ссылку подписки |
+| `BUY_TRAFFIC_BUTTON_VISIBLE` | `true` | Кнопка «Докупить трафик» |
+| `ACTIVATE_BUTTON_VISIBLE` | `false` | Кнопка ручной активации подписки |
+| `CONTESTS_BUTTON_VISIBLE` | `false` | Кнопка конкурсов в меню |
+| `DISABLE_TOPUP_BUTTONS` | `false` | При `true` — скрывает кнопки пополнения |
+| `DISABLE_WEB_PAGE_PREVIEW` | `false` | При `true` — отключает превью ссылок |
+| `PAL24_SBP_BUTTON_VISIBLE` | `true` | Кнопка СБП в PayPalych |
+| `PAL24_CARD_BUTTON_VISIBLE` | `true` | Кнопка карты в PayPalych |
+
+### Переключатели функций (влияют на интерфейс)
+
+| Переменная | По умолчанию | Что скрывается при отключении |
+| ---------- | ------------ | ----------------------------- |
+| `SUPPORT_MENU_ENABLED` | `true` | Раздел поддержки |
+| `REFERRAL_PROGRAM_ENABLED` | `true` | Раздел партнёрки |
+| `REFERRAL_WITHDRAWAL_ENABLED` | `false` | Кнопка вывода средств |
+| `ENABLE_AUTOPAY` | `false` | Все элементы автопродления |
+| `DEVICES_SELECTION_ENABLED` | `true` | Выбор устройств при покупке |
+| `TRAFFIC_TOPUP_ENABLED` | `true` | Кнопка докупки трафика |
+| `SUPPORT_TOPUP_ENABLED` | `true` | Пополнение через поддержку |
+| `LANGUAGE_SELECTION_ENABLED` | `true` | Выбор языка при регистрации и в настройках |
+| `SIMPLE_SUBSCRIPTION_ENABLED` | `false` | Упрощённая покупка одной кнопкой |
+| `CONTESTS_ENABLED` | `false` | Система конкурсов |
+| `CHANNEL_IS_REQUIRED_SUB` | `false` | Проверка подписки на канал |
+| `YOOKASSA_QUICK_AMOUNT_SELECTION_ENABLED` | `false` | Кнопки быстрого выбора суммы |
+| `AUTO_PURCHASE_AFTER_TOPUP_ENABLED` | `false` | Авторедирект к покупке после пополнения |
+
+## Режим продаж
+
+```env
+SALES_MODE=tariffs
+```
+
+| Режим | Описание |
+| ----- | -------- |
+| `classic` | Конструктор: пользователь выбирает период, серверы, трафик, устройства отдельно |
+| `tariffs` | Готовые тарифы: пользователь выбирает предсозданный пакет |
+
+### Простая покупка
+
+```env
+SIMPLE_SUBSCRIPTION_ENABLED=true
+SIMPLE_SUBSCRIPTION_PERIOD_DAYS=30
+SIMPLE_SUBSCRIPTION_DEVICE_LIMIT=1
+SIMPLE_SUBSCRIPTION_TRAFFIC_GB=0
+```
+
+Упрощённый режим покупки в одно нажатие с фиксированными параметрами.
+
+### Выбор трафика
+
+```env
+TRAFFIC_SELECTION_MODE=selectable
+```
+
+| Режим | Описание |
+| ----- | -------- |
+| `selectable` | Пользователь выбирает из пакетов трафика |
+| `fixed` | Фиксированный лимит (`FIXED_TRAFFIC_LIMIT_GB`) |
+
+## Описания платежей
+
+Описания в чеках и платёжных системах настраиваются для избежания блокировок:
+
+| Переменная | По умолчанию | Описание |
+| ---------- | ------------ | -------- |
+| `PAYMENT_SERVICE_NAME` | `Интернет-сервис` | Название сервиса |
+| `PAYMENT_BALANCE_DESCRIPTION` | `Пополнение баланса` | Описание пополнения |
+| `PAYMENT_SUBSCRIPTION_DESCRIPTION` | `Оплата подписки` | Описание покупки |
+| `PAYMENT_BALANCE_TEMPLATE` | `{service_name} - {description}` | Шаблон для пополнения |
+| `PAYMENT_SUBSCRIPTION_TEMPLATE` | `{service_name} - {description}` | Шаблон для покупки |
+
+### Display Name провайдеров
+
+Название каждого провайдера в интерфейсе настраивается:
+
+| Переменная | По умолчанию |
+| ---------- | ------------ |
+| `MULENPAY_DISPLAY_NAME` | `Mulen Pay` |
+| `PLATEGA_DISPLAY_NAME` | `Platega` |
+| `FREEKASSA_DISPLAY_NAME` | `Freekassa` |
+| `KASSA_AI_DISPLAY_NAME` | `KassaAI` |
+| `CLOUDPAYMENTS_SKIN` | `mini` (варианты: `mini`, `classic`, `modern`) |
+
+## Локализация
+
+### Языки
+
+```env
+DEFAULT_LANGUAGE=ru
+AVAILABLE_LANGUAGES=ru,en,ua,zh,fa
+LANGUAGE_SELECTION_ENABLED=true
+LOCALES_PATH=./locales
+```
+
+| Переменная | По умолчанию | Описание |
+| ---------- | ------------ | -------- |
+| `DEFAULT_LANGUAGE` | `ru` | Язык по умолчанию |
+| `AVAILABLE_LANGUAGES` | `ru,en,ua,zh,fa` | Доступные языки (через запятую) |
+| `LANGUAGE_SELECTION_ENABLED` | `true` | Выбор языка при регистрации и в настройках |
+| `LOCALES_PATH` | `./locales` | Путь к файлам локализаций |
+
+Пользователь может переключить язык в любой момент через настройки.
+
+### Валюта и форматирование
+
+```env
+PRICE_ROUNDING_ENABLED=true
+TZ=Europe/Moscow
+```
+
+| Переменная | По умолчанию | Описание |
+| ---------- | ------------ | -------- |
+| `PRICE_ROUNDING_ENABLED` | `true` | Округление цен: ≤50 коп вниз, >50 коп вверх. При `false` — точные суммы с копейками |
+| `TZ` | `Europe/Moscow` | Часовой пояс для отображения дат и расписаний |
+
+Все цены хранятся в копейках. Валюта — рубли (зашита в код).
+
+## Процесс регистрации
+
+Шаги при первом запуске бота (/start):
+
+1. **Выбор языка** — если `LANGUAGE_SELECTION_ENABLED=true`
+2. **Правила использования** — если `SKIP_RULES_ACCEPT=false`
+3. **Политика конфиденциальности**
+4. **Реферальный код** — если `SKIP_REFERRAL_CODE=false`
+5. **Главное меню**
+
+| Переменная | По умолчанию | Описание |
+| ---------- | ------------ | -------- |
+| `SKIP_RULES_ACCEPT` | `false` | Пропустить принятие правил |
+| `SKIP_REFERRAL_CODE` | `false` | Пропустить ввод реферального кода |
+
+### Обязательная подписка на канал
+
+| Переменная | По умолчанию | Описание |
+| ---------- | ------------ | -------- |
+| `CHANNEL_SUB_ID` | — | ID канала для проверки (-100...) |
+| `CHANNEL_IS_REQUIRED_SUB` | `false` | Обязательная подписка |
+| `CHANNEL_LINK` | — | Ссылка на канал |
+| `CHANNEL_REQUIRED_FOR_ALL` | `false` | Требовать для всех (не только триал) |
+| `CHANNEL_DISABLE_TRIAL_ON_UNSUBSCRIBE` | `true` | Отключать триал при отписке |
+
+## Управление контентом
+
+Текстовый контент (правила, FAQ, оферта, политика конфиденциальности) управляется через две системы:
+
+### Файлы локализаций
+
+Директория `locales/` содержит тексты для каждого языка. Бот загружает их при запуске.
+
+### Переопределение через админ-панель
+
+Администратор может изменять тексты контента через бота без перезапуска. Значения сохраняются в базе данных (`SystemSetting`) и применяются поверх файлов локализаций.
+
+Редактируемый контент:
+- Правила использования
+- FAQ
+- Оферта / договор
+- Политика конфиденциальности
+
+## Статус серверов
+
+```env
+SERVER_STATUS_MODE=disabled
+```
+
+| Режим | Описание |
+| ----- | -------- |
+| `disabled` | Кнопка статуса скрыта |
+| `external_link` | Открывает внешнюю страницу мониторинга в браузере |
+| `external_link_miniapp` | Открывает внешнюю страницу в MiniApp |
+| `xray` | Интеграция с XrayChecker — метрики нод прямо в боте |
+
+**Алиасы:** `off`/`none` → `disabled`, `external`/`link` → `external_link`, `miniapp`/`webapp` → `external_link_miniapp`, `xraychecker`/`metrics` → `xray`.
+
+| Переменная | По умолчанию | Описание |
+| ---------- | ------------ | -------- |
+| `SERVER_STATUS_EXTERNAL_URL` | — | URL внешнего мониторинга |
+| `SERVER_STATUS_METRICS_URL` | — | URL метрик XrayChecker |
+| `SERVER_STATUS_METRICS_USERNAME` | — | Basic Auth пользователь |
+| `SERVER_STATUS_METRICS_PASSWORD` | — | Basic Auth пароль |
+| `SERVER_STATUS_METRICS_VERIFY_SSL` | `true` | Проверка SSL при запросе |
+| `SERVER_STATUS_REQUEST_TIMEOUT` | `10` | Таймаут запроса (секунды) |
+| `SERVER_STATUS_ITEMS_PER_PAGE` | `10` | Серверов на странице |
+
+## Шаблоны в Remnawave
+
+Настройка отображения пользователей в панели Remnawave:
+
+```env
+REMNAWAVE_USER_DESCRIPTION_TEMPLATE="Bot user: {full_name} {username}"
+REMNAWAVE_USER_USERNAME_TEMPLATE="user_{telegram_id}"
+```
+
+Доступные плейсхолдеры:
+
+| Плейсхолдер | Описание |
+| ----------- | -------- |
+| `{full_name}` | Имя и фамилия из Telegram |
+| `{username}` | @логин (с @) |
+| `{username_clean}` | Логин (без @) |
+| `{telegram_id}` | Telegram ID |
+
+Username автоматически очищается до `[A-Za-z0-9_-]`, максимум 36 символов.
+
+## Сообщения и уведомления
+
+### Кастомизация сообщений бана (BedolagaBan)
+
+| Переменная | Плейсхолдеры |
+| ---------- | ------------ |
+| `BAN_MSG_PUNISHMENT` | `{ip_count}`, `{limit}`, `{ban_minutes}`, `{node_info}` |
+| `BAN_MSG_ENABLED` | *(статический текст)* |
+| `BAN_MSG_WIFI` | `{ban_minutes}`, `{network_info}`, `{node_info}` |
+| `BAN_MSG_MOBILE` | `{ban_minutes}`, `{network_info}`, `{node_info}` |
+| `BAN_MSG_WARNING` | `{warning_message}` |
+
+### Сообщение техработ
+
+```env
+MAINTENANCE_MESSAGE=Ведутся технические работы. Сервис временно недоступен. Попробуйте позже.
+```
+
+## Email-уведомления (🔗 Cabinet)
+
+<Note>
+  Email-уведомления работают только при `CABINET_ENABLED=true` и настроенном SMTP.
+</Note>
+
+### SMTP
+
+| Переменная | По умолчанию | Описание |
+| ---------- | ------------ | -------- |
+| `SMTP_HOST` | — | SMTP-сервер |
+| `SMTP_PORT` | `587` | Порт |
+| `SMTP_USER` | — | Логин |
+| `SMTP_PASSWORD` | — | Пароль |
+| `SMTP_FROM_EMAIL` | — | Email отправителя |
+| `SMTP_FROM_NAME` | `VPN Service` | Имя отправителя |
+| `SMTP_USE_TLS` | `true` | TLS-шифрование |
+
+### Типы email-уведомлений
+
+Бот поддерживает 22+ типа email-уведомлений:
+
+| Тип | Описание |
+| --- | -------- |
+| `email_verification` | Верификация email |
+| `password_reset` | Сброс пароля |
+| `balance_topup` | Пополнение баланса |
+| `payment_received` | Платёж получен |
+| `subscription_activated` | Подписка активирована |
+| `subscription_expiring` | Подписка скоро истекает |
+| `subscription_expired` | Подписка истекла |
+| `subscription_renewed` | Подписка продлена |
+| `autopay_success` | Автоплатёж успешен |
+| `autopay_failed` | Автоплатёж не удался |
+| `autopay_insufficient` | Недостаточно средств для автоплатежа |
+| `daily_debit` | Ежедневное списание |
+| `ban` / `unban` / `warning` | Блокировка / разблокировка / предупреждение |
+| `referral_bonus` | Реферальный бонус |
+| `referral_registered` | Новый реферал зарегистрировался |
+| `partner_approved` / `partner_rejected` | Статус партнёрской заявки |
+| `withdrawal_approved` / `withdrawal_rejected` | Статус заявки на вывод |
+
+### Кастомизация шаблонов
+
+Каждый тип уведомления имеет встроенный HTML-шаблон с поддержкой всех языков. Администратор может переопределить шаблон через Cabinet API для конкретного типа и языка.
+
+Доступные переменные в шаблонах: `{username}`, `{amount}`, `{period}`, `{days_left}`, `{reason}`, `{verification_url}`, `{reset_url}`, `{referral_name}`, `{required}`, `{warning_message}`.
+
+Все шаблоны содержат кнопку «Открыть кабинет» со ссылкой на `CABINET_URL`.
+
+## OAuth-авторизация (🔗 Cabinet)
+
+| Переменная | По умолчанию | Описание |
+| ---------- | ------------ | -------- |
+| `OAUTH_GOOGLE_ENABLED` | `false` | Вход через Google |
+| `OAUTH_YANDEX_ENABLED` | `false` | Вход через Яндекс |
+| `OAUTH_DISCORD_ENABLED` | `false` | Вход через Discord |
+| `OAUTH_VK_ENABLED` | `false` | Вход через VK |
+
+Для каждого провайдера нужны `*_CLIENT_ID` и `*_CLIENT_SECRET`.
+
+## Аналитика (🔗 Cabinet)
+
+| Переменная | По умолчанию | Описание |
+| ---------- | ------------ | -------- |
+| Yandex Metrika ID | — | Счётчик Яндекс Метрики |
+| Google Ads ID | — | Google Ads Conversion ID (формат `AW-*`) |
+| Google Ads Label | — | Метка конверсии |
+
+Настраиваются через Cabinet API `/cabinet/branding/*`.
+
+## Три уровня конфигурации
+
+Бот использует трёхуровневую систему настроек:
+
+1. **Переменные окружения** (`.env`) — основной источник, ~200+ параметров
+2. **БД-переопределения** (`SystemSetting`) — администратор меняет настройки без перезапуска через [админ-панель](/bot/admin-panel)
+3. **Cabinet Branding** (`SystemSetting`) — настройки темы и брендинга кабинета через REST API (🔗 Cabinet)
+
+<Info>
+  Многие настройки из `.env` можно изменить в рантайме через админ-панель бота. Они сохраняются в БД и применяются поверх переменных окружения.
+</Info>
