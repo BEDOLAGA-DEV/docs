@@ -1,87 +1,314 @@
 ---
 title: Настройка платежей
-description: "Подключение платёжных систем к Bedolaga Bot"
+description: "Подключение платёжных систем, настройки баланса, автооплаты и webhook"
+---
+
+Бот поддерживает 12 платёжных провайдеров одновременно. Каждый провайдер включается отдельно, все работают параллельно через единый веб-сервер на порту `8080`.
+
+## Общая архитектура
+
+Все платежи проходят через **баланс**: пользователь пополняет баланс любым доступным способом, затем покупает подписку с баланса.
+
+Единственное исключение -- **Telegram Stars** и **простая подписка** (`SIMPLE_SUBSCRIPTION_ENABLED`), которые могут проводить оплату напрямую, минуя баланс.
+
+```
+Пользователь → Выбор способа оплаты → Провайдер → Webhook → Зачисление на баланс
+                                                                      ↓
+                                                         Автопокупка (если включена)
+                                                                      ↓
+                                                         Активация подписки
+```
+
+### Приоритет отображения
+
+Способы оплаты отображаются в фиксированном порядке:
+1. Telegram Stars
+2. YooKassa СБП (если `YOOKASSA_SBP_ENABLED=true`)
+3. YooKassa карты
+4. Tribute
+5. MulenPay
+6. WATA
+7. PayPalych (Pal24)
+8. CryptoBot
+9. Heleket
+10. Platega
+11. CloudPayments
+12. Freekassa
+13. Kassa AI
+14. Через поддержку (всегда последний)
+
 ---
 
 ## Поддерживаемые провайдеры
 
-| Провайдер | Методы оплаты | Webhook URL |
-| --------- | ------------- | ----------- |
-| YooKassa | Карты, СБП | `/yookassa-webhook` |
-| CryptoBot | USDT, TON, BTC | `/cryptobot-webhook` |
-| Telegram Stars | Звёзды Telegram | (встроенный) |
-| CloudPayments | Карты, СБП | `/cloudpayments-webhook` |
-| Freekassa | NSPK СБП, карты | `/freekassa-webhook` |
-| PayPalych (Pal24) | Карты, СБП | `/pal24-webhook` |
-| Platega | Карты, СБП | `/platega-webhook` |
-| WATA | Карты | `/wata-webhook` |
-| Heleket | Криптовалюта | `/heleket-webhook` |
-| MulenPay | Карты | `/mulenpay-webhook` |
-| Tribute | Telegram | `/tribute-webhook` |
-| Kassa AI | СБП, карты, SberPay | `/kassa-ai-webhook` |
+| Провайдер | Методы оплаты | Webhook URL | Валюта |
+| --------- | ------------- | ----------- | ------ |
+| Telegram Stars | Звёзды Telegram | (встроенный) | XTR |
+| YooKassa | Карты, СБП | `/yookassa-webhook` | RUB |
+| CryptoBot | USDT, TON, BTC, ETH | `/cryptobot-webhook` | Крипто |
+| CloudPayments | Карты, 3D-Secure | `/cloudpayments-webhook` | RUB |
+| Freekassa | NSPK СБП, карты | `/freekassa-webhook` | RUB |
+| Kassa AI | СБП, карты, SberPay | `/kassa-ai-webhook` | RUB |
+| PayPalych (Pal24) | Карты, СБП | `/pal24-webhook` | RUB |
+| Platega | Карты, СБП, крипто | `/platega-webhook` | RUB |
+| WATA | Карты | `/wata-webhook` | RUB |
+| Heleket | Криптовалюта | `/heleket-webhook` | Крипто |
+| MulenPay | Карты | `/mulenpay-webhook` | RUB |
+| Tribute | Telegram | `/tribute-webhook` | RUB |
 
 <Note>
-  Все webhook URL доступны на едином сервере бота (порт 8080). Укажите полный путь: `https://hooks.domain.com/<webhook-path>`.
+  Все webhook URL доступны на едином сервере бота (порт 8080). Укажите полный путь: `https://hooks.domain.com/<webhook-path>`. Для CloudPayments дополнительно доступны суб-роуты `/check`, `/pay`, `/fail`.
 </Note>
 
-## YooKassa
+---
 
-Самый популярный провайдер для российского рынка. Поддерживает банковские карты и СБП.
+## Общие настройки платежей
 
-```env
-YOOKASSA_SHOP_ID=123456
-YOOKASSA_SECRET_KEY=live_xxxxxxxxxxxxx
-YOOKASSA_RETURN_URL=https://t.me/your_bot
-YOOKASSA_SBP_ENABLED=true
-YOOKASSA_DEFAULT_RECEIPT_EMAIL=receipts@example.com
-YOOKASSA_VAT_CODE=1
-```
+Эти переменные влияют на все платёжные системы.
 
-Webhook: `https://hooks.domain.com/yookassa-webhook`
-
-<Info>
-  Бот проверяет IP-адреса YooKassa и отклоняет запросы с неизвестных адресов.
-</Info>
-
-### Лимиты
-
-| Параметр | Переменная | По умолчанию |
-| -------- | ---------- | ------------ |
-| Мин. сумма | `YOOKASSA_MIN_AMOUNT_KOPEKS` | 5000 (50 руб) |
-| Макс. сумма | `YOOKASSA_MAX_AMOUNT_KOPEKS` | 1000000 (10000 руб) |
-
-## CryptoBot
+### Описания и шаблоны платежей
 
 ```env
-CRYPTOBOT_TOKEN=your_token
-CRYPTOBOT_CURRENCY=RUB
+# Название сервиса в описании платежа
+PAYMENT_SERVICE_NAME=Интернет-сервис
+
+# Описания для разных типов платежей
+PAYMENT_BALANCE_DESCRIPTION=Пополнение баланса
+PAYMENT_SUBSCRIPTION_DESCRIPTION=Оплата подписки
+
+# Шаблоны формирования описания (переменные: {service_name}, {description})
+PAYMENT_BALANCE_TEMPLATE={service_name} - {description}
+PAYMENT_SUBSCRIPTION_TEMPLATE={service_name} - {description}
 ```
 
-Поддерживаемые криптовалюты: USDT, TON, BTC, ETH. Курс конвертации обновляется автоматически через API CryptoBot.
+### Управление интерфейсом
 
-Webhook: `https://hooks.domain.com/cryptobot-webhook`
+| Переменная | Тип | По умолчанию | Описание |
+| ---------- | --- | ------------ | -------- |
+| `DISABLE_TOPUP_BUTTONS` | `bool` | `false` | Скрыть кнопки быстрого пополнения |
+| `SUPPORT_TOPUP_ENABLED` | `bool` | `true` | Показывать кнопку "Через поддержку" |
+| `PRICE_ROUNDING_ENABLED` | `bool` | `true` | Округление цен (<=50 коп вниз, >50 коп вверх) |
+
+### Автопроверка платежей
+
+```env
+# Автоматическая проверка статуса незавершённых платежей (YooKassa)
+PAYMENT_VERIFICATION_AUTO_CHECK_ENABLED=false
+PAYMENT_VERIFICATION_AUTO_CHECK_INTERVAL_MINUTES=10
+```
+
+### Автопокупка после пополнения
+
+```env
+# Автоматически оформить подписку из сохранённой корзины после пополнения баланса
+AUTO_PURCHASE_AFTER_TOPUP_ENABLED=false
+```
+
+Подробнее -- см. [Автопокупка и корзина](/bot/auto-purchase).
+
+### Автооплата (автопродление)
+
+| Переменная | Тип | По умолчанию | Описание |
+| ---------- | --- | ------------ | -------- |
+| `ENABLE_AUTOPAY` | `bool` | `false` | Глобальное включение системы автопродления |
+| `DEFAULT_AUTOPAY_ENABLED` | `bool` | `false` | Автооплата включена у новых пользователей по умолчанию |
+| `DEFAULT_AUTOPAY_DAYS_BEFORE` | `int` | `3` | За сколько дней до окончания подписки списывать |
+| `MIN_BALANCE_FOR_AUTOPAY_KOPEKS` | `int` | `10000` | Минимальный баланс для срабатывания (100 руб) |
+| `SUBSCRIPTION_RENEWAL_BALANCE_THRESHOLD_KOPEKS` | `int` | `20000` | Порог баланса для автопродления (200 руб) |
+| `AUTOPAY_WARNING_DAYS` | `str` | `3,1` | Дни для отправки предупреждений (через запятую) |
+
+---
 
 ## Telegram Stars
 
+Встроенная платёжная система Telegram. Не требует webhook -- платежи обрабатываются через Telegram Bot API.
+
+### Настройки
+
+| Переменная | Тип | По умолчанию | Описание |
+| ---------- | --- | ------------ | -------- |
+| `TELEGRAM_STARS_ENABLED` | `bool` | `true` | Включить оплату звёздами |
+| `TELEGRAM_STARS_RATE_RUB` | `float` | `1.3` | Курс: 1 звезда = X рублей |
+| `TELEGRAM_STARS_DISPLAY_NAME` | `str` | `Telegram Stars` | Отображаемое название |
+
+<Info>
+  Telegram Stars -- единственный провайдер, включённый по умолчанию. Курс `1.3` означает: 1 звезда = 1.30 руб. Количество звёзд рассчитывается автоматически на основе суммы в рублях.
+</Info>
+
+### Особенности
+
+- Работает без внешних webhook и API-ключей
+- Поддерживает как пополнение баланса, так и прямую оплату простых подписок
+- Валюта: `XTR` (Telegram Stars)
+- Минимум: 1 звезда
+
+---
+
+## YooKassa
+
+Самый популярный провайдер для российского рынка. Поддерживает банковские карты, СБП, и фискализацию через НалоGo.
+
+### Обязательные настройки
+
 ```env
-TELEGRAM_STARS_ENABLED=true
-STARS_TO_KOPEKS_RATE=130
+YOOKASSA_ENABLED=true
+YOOKASSA_SHOP_ID=123456
+YOOKASSA_SECRET_KEY=live_xxxxxxxxxxxxx
 ```
 
-Курс `130` означает 1 звезда = 1.30 руб. Работает без внешних webhook — обрабатывается через Telegram Bot API.
+### Все переменные
+
+| Переменная | Тип | По умолчанию | Описание |
+| ---------- | --- | ------------ | -------- |
+| `YOOKASSA_ENABLED` | `bool` | `false` | Включить YooKassa |
+| `YOOKASSA_SHOP_ID` | `str` | -- | **Обязательно**. ID магазина |
+| `YOOKASSA_SECRET_KEY` | `str` | -- | **Обязательно**. Секретный ключ |
+| `YOOKASSA_DISPLAY_NAME` | `str` | `YooKassa` | Отображаемое название |
+| `YOOKASSA_RETURN_URL` | `str` | -- | URL возврата после оплаты (по умолчанию `WEBHOOK_URL/payment-success` или `https://t.me/`) |
+| `YOOKASSA_DEFAULT_RECEIPT_EMAIL` | `str` | -- | Email для отправки чеков (54-ФЗ) |
+| `YOOKASSA_VAT_CODE` | `int` | `1` | Код НДС (1=без НДС, 2=0%, 3=10%, 4=20%) |
+| `YOOKASSA_SBP_ENABLED` | `bool` | `false` | Включить оплату через СБП (отдельная кнопка) |
+| `YOOKASSA_PAYMENT_MODE` | `str` | `full_payment` | Режим оплаты для чеков |
+| `YOOKASSA_PAYMENT_SUBJECT` | `str` | `service` | Тип предмета расчёта для чеков |
+| `YOOKASSA_WEBHOOK_PATH` | `str` | `/yookassa-webhook` | Путь webhook |
+| `YOOKASSA_WEBHOOK_HOST` | `str` | `0.0.0.0` | Хост для webhook |
+| `YOOKASSA_WEBHOOK_PORT` | `int` | `8082` | Порт (устаревший, используется 8080) |
+| `YOOKASSA_TRUSTED_PROXY_NETWORKS` | `str` | -- | Доверенные сети прокси (через запятую) |
+| `YOOKASSA_MIN_AMOUNT_KOPEKS` | `int` | `5000` | Минимальная сумма (50 руб) |
+| `YOOKASSA_MAX_AMOUNT_KOPEKS` | `int` | `1000000` | Максимальная сумма (10 000 руб) |
+| `YOOKASSA_QUICK_AMOUNT_SELECTION_ENABLED` | `bool` | `false` | Кнопки быстрого выбора суммы |
+
+### Webhook
+
+Укажите в кабинете YooKassa: `https://hooks.domain.com/yookassa-webhook`
+
+<Info>
+  Бот проверяет IP-адреса YooKassa и отклоняет запросы с неизвестных адресов. При использовании reverse proxy укажите сети прокси в `YOOKASSA_TRUSTED_PROXY_NETWORKS`.
+</Info>
+
+### Фискализация (НалоGo)
+
+YooKassa поддерживает автоматическую отправку чеков через НалоGo (для самозанятых):
+
+```env
+NALOGO_ENABLED=true
+NALOGO_INN=123456789012
+NALOGO_PASSWORD=your_password
+NALOGO_DEVICE_ID=optional_device_id
+NALOGO_STORAGE_PATH=./nalogo_tokens.json
+```
+
+| Переменная | Тип | По умолчанию | Описание |
+| ---------- | --- | ------------ | -------- |
+| `NALOGO_ENABLED` | `bool` | `false` | Включить отправку чеков |
+| `NALOGO_INN` | `str` | -- | **Обязательно**. ИНН самозанятого |
+| `NALOGO_PASSWORD` | `str` | -- | **Обязательно**. Пароль от ЛК Мой Налог |
+| `NALOGO_DEVICE_ID` | `str` | -- | ID устройства (генерируется автоматически) |
+| `NALOGO_STORAGE_PATH` | `str` | `./nalogo_tokens.json` | Путь хранения токенов |
+
+Настройки очереди чеков:
+
+| Переменная | Тип | По умолчанию | Описание |
+| ---------- | --- | ------------ | -------- |
+| `NALOGO_QUEUE_CHECK_INTERVAL` | `int` | `300` | Интервал проверки очереди (секунды) |
+| `NALOGO_QUEUE_RECEIPT_DELAY` | `int` | `3` | Задержка между отправкой чеков (секунды) |
+| `NALOGO_QUEUE_MAX_ATTEMPTS` | `int` | `10` | Максимум попыток отправки чека |
+
+---
+
+## CryptoBot
+
+Криптовалютные платежи через [CryptoBot](https://t.me/CryptoBot).
+
+### Обязательные настройки
+
+```env
+CRYPTOBOT_ENABLED=true
+CRYPTOBOT_API_TOKEN=your_token
+```
+
+### Все переменные
+
+| Переменная | Тип | По умолчанию | Описание |
+| ---------- | --- | ------------ | -------- |
+| `CRYPTOBOT_ENABLED` | `bool` | `false` | Включить CryptoBot |
+| `CRYPTOBOT_API_TOKEN` | `str` | -- | **Обязательно**. API-токен из @CryptoBot |
+| `CRYPTOBOT_DISPLAY_NAME` | `str` | `CryptoBot` | Отображаемое название |
+| `CRYPTOBOT_WEBHOOK_SECRET` | `str` | -- | Секрет для проверки webhook |
+| `CRYPTOBOT_BASE_URL` | `str` | `https://pay.crypt.bot` | Базовый URL API |
+| `CRYPTOBOT_TESTNET` | `bool` | `false` | Использовать тестовую сеть (`testnet-pay.crypt.bot`) |
+| `CRYPTOBOT_WEBHOOK_PATH` | `str` | `/cryptobot-webhook` | Путь webhook |
+| `CRYPTOBOT_WEBHOOK_PORT` | `int` | `8083` | Порт (устаревший, используется 8080) |
+| `CRYPTOBOT_DEFAULT_ASSET` | `str` | `USDT` | Криптовалюта по умолчанию |
+| `CRYPTOBOT_ASSETS` | `str` | `USDT,TON,BTC,ETH` | Доступные криптовалюты (через запятую) |
+| `CRYPTOBOT_INVOICE_EXPIRES_HOURS` | `int` | `24` | Время жизни инвойса (часы) |
+
+### Тестовый режим
+
+```env
+CRYPTOBOT_TESTNET=true
+```
+
+При `CRYPTOBOT_TESTNET=true` все запросы идут на `testnet-pay.crypt.bot`. Используйте для тестирования без реальных средств.
+
+### Webhook
+
+Укажите в @CryptoBot -> My Apps -> Webhook: `https://hooks.domain.com/cryptobot-webhook`
+
+---
 
 ## CloudPayments
+
+Платежи через виджет CloudPayments с поддержкой 3D-Secure.
+
+### Обязательные настройки
 
 ```env
 CLOUDPAYMENTS_ENABLED=true
 CLOUDPAYMENTS_PUBLIC_ID=pk_xxxxxxxxxxxxx
 CLOUDPAYMENTS_API_SECRET=your_api_secret
-CLOUDPAYMENTS_CURRENCY=RUB
 ```
 
-Поддерживает 3D-Secure. Webhook (Pay/Fail уведомления): `https://hooks.domain.com/cloudpayments-webhook`
+### Все переменные
+
+| Переменная | Тип | По умолчанию | Описание |
+| ---------- | --- | ------------ | -------- |
+| `CLOUDPAYMENTS_ENABLED` | `bool` | `false` | Включить CloudPayments |
+| `CLOUDPAYMENTS_PUBLIC_ID` | `str` | -- | **Обязательно**. Public ID магазина |
+| `CLOUDPAYMENTS_API_SECRET` | `str` | -- | **Обязательно**. API Secret |
+| `CLOUDPAYMENTS_DISPLAY_NAME` | `str` | `CloudPayments` | Отображаемое название |
+| `CLOUDPAYMENTS_API_URL` | `str` | `https://api.cloudpayments.ru` | URL API |
+| `CLOUDPAYMENTS_WIDGET_URL` | `str` | `https://widget.cloudpayments.ru/show` | URL виджета оплаты |
+| `CLOUDPAYMENTS_DESCRIPTION` | `str` | `Пополнение баланса` | Описание платежа |
+| `CLOUDPAYMENTS_CURRENCY` | `str` | `RUB` | Валюта |
+| `CLOUDPAYMENTS_MIN_AMOUNT_KOPEKS` | `int` | `5000` | Минимальная сумма (50 руб) |
+| `CLOUDPAYMENTS_MAX_AMOUNT_KOPEKS` | `int` | `10000000` | Максимальная сумма (100 000 руб) |
+| `CLOUDPAYMENTS_WEBHOOK_PATH` | `str` | `/cloudpayments-webhook` | Путь webhook |
+| `CLOUDPAYMENTS_WEBHOOK_HOST` | `str` | `0.0.0.0` | Хост для webhook |
+| `CLOUDPAYMENTS_WEBHOOK_PORT` | `int` | `8087` | Порт (устаревший, используется 8080) |
+| `CLOUDPAYMENTS_RETURN_URL` | `str` | -- | URL возврата после оплаты |
+| `CLOUDPAYMENTS_SKIN` | `str` | `mini` | Стиль виджета: `mini`, `classic`, `modern` |
+| `CLOUDPAYMENTS_REQUIRE_EMAIL` | `bool` | `false` | Требовать email при оплате |
+| `CLOUDPAYMENTS_TEST_MODE` | `bool` | `false` | Тестовый режим (без реальных списаний) |
+
+### Webhook
+
+CloudPayments использует несколько суб-роутов:
+
+| Путь | Назначение |
+| ---- | ---------- |
+| `{WEBHOOK_PATH}` | Универсальный обработчик (рекомендуется) |
+| `{WEBHOOK_PATH}/check` | Проверка перед списанием |
+| `{WEBHOOK_PATH}/pay` | Успешная оплата |
+| `{WEBHOOK_PATH}/fail` | Неуспешная оплата |
+
+В кабинете CloudPayments укажите: `https://hooks.domain.com/cloudpayments-webhook`
+
+---
 
 ## Freekassa
+
+### Обязательные настройки
 
 ```env
 FREEKASSA_ENABLED=true
@@ -89,69 +316,398 @@ FREEKASSA_SHOP_ID=12345
 FREEKASSA_API_KEY=your_api_key
 FREEKASSA_SECRET_WORD_1=secret1
 FREEKASSA_SECRET_WORD_2=secret2
+```
+
+### Все переменные
+
+| Переменная | Тип | По умолчанию | Описание |
+| ---------- | --- | ------------ | -------- |
+| `FREEKASSA_ENABLED` | `bool` | `false` | Включить Freekassa |
+| `FREEKASSA_SHOP_ID` | `int` | -- | **Обязательно**. ID магазина |
+| `FREEKASSA_API_KEY` | `str` | -- | **Обязательно**. API-ключ |
+| `FREEKASSA_SECRET_WORD_1` | `str` | -- | **Обязательно**. Секретное слово 1 (для формы оплаты) |
+| `FREEKASSA_SECRET_WORD_2` | `str` | -- | **Обязательно**. Секретное слово 2 (для webhook) |
+| `FREEKASSA_DISPLAY_NAME` | `str` | `Freekassa` | Отображаемое название |
+| `FREEKASSA_CURRENCY` | `str` | `RUB` | Валюта |
+| `FREEKASSA_MIN_AMOUNT_KOPEKS` | `int` | `10000` | Минимальная сумма (100 руб) |
+| `FREEKASSA_MAX_AMOUNT_KOPEKS` | `int` | `100000000` | Максимальная сумма (1 000 000 руб) |
+| `FREEKASSA_PAYMENT_TIMEOUT_SECONDS` | `int` | `3600` | Таймаут ожидания оплаты (секунды) |
+| `FREEKASSA_WEBHOOK_PATH` | `str` | `/freekassa-webhook` | Путь webhook |
+| `FREEKASSA_WEBHOOK_HOST` | `str` | `0.0.0.0` | Хост для webhook |
+| `FREEKASSA_WEBHOOK_PORT` | `int` | `8088` | Порт (устаревший, используется 8080) |
+| `FREEKASSA_PAYMENT_SYSTEM_ID` | `int` | -- | Способ оплаты: `42` = обычный СБП, `44` = NSPK СБП |
+| `FREEKASSA_USE_API` | `bool` | `false` | Использовать API для создания заказов |
+| `SERVER_PUBLIC_IP` | `str` | -- | Публичный IP сервера (для Freekassa API, определяется автоматически) |
+
+### Режимы создания платежей
+
+- `FREEKASSA_USE_API=false` -- редирект на платёжную форму Freekassa (по умолчанию)
+- `FREEKASSA_USE_API=true` -- создание заказа через API (рекомендуется для NSPK СБП)
+
+```env
+# Для NSPK СБП (QR-код, быстрее и надёжнее)
 FREEKASSA_USE_API=true
 FREEKASSA_PAYMENT_SYSTEM_ID=44
 ```
 
-- `FREEKASSA_USE_API=true` — использовать API для создания заказов (рекомендуется для NSPK)
-- `FREEKASSA_USE_API=false` — редирект на платежную форму
-- `FREEKASSA_PAYMENT_SYSTEM_ID=44` — для NSPK СБП (быстрее и надёжнее)
+### Webhook
 
-Webhook: `https://hooks.domain.com/freekassa-webhook`
+В кабинете Freekassa укажите: `https://hooks.domain.com/freekassa-webhook`
 
-## Platega
-
-```env
-PLATEGA_ENABLED=true
-PLATEGA_MERCHANT_ID=your_merchant_id
-PLATEGA_SECRET=your_secret_key
-PLATEGA_RETURN_URL=https://your-domain.com/payments/success
-PLATEGA_FAILED_URL=https://your-domain.com/payments/failed
-PLATEGA_ACTIVE_METHODS=2,10,11
-PLATEGA_MIN_AMOUNT_KOPEKS=100
-PLATEGA_MAX_AMOUNT_KOPEKS=5000000
-```
-
-В кабинете Platega укажите webhook: `https://hooks.domain.com/platega-webhook`
-
-## PayPalych (Pal24)
-
-Webhook: Result URL `https://hooks.domain.com/pal24-webhook` в кабинете Pal24.
-
-## Heleket
-
-```env
-HELEKET_ENABLED=true
-HELEKET_MERCHANT_ID=xxx
-HELEKET_API_KEY=xxx
-```
-
-Криптовалютный провайдер с поддержкой USDT. Webhook: `https://hooks.domain.com/heleket-webhook`
-
-## MulenPay
-
-Webhook: `https://hooks.domain.com/mulenpay-webhook`
-
-## Tribute
-
-Webhook: `https://hooks.domain.com/tribute-webhook`
-
-## WATA
-
-Webhook: `https://hooks.domain.com/wata-webhook`
+---
 
 ## Kassa AI
 
-Отдельная платёжная система (api.fk.life), работает параллельно с Freekassa.
+Отдельная платёжная система (`api.fk.life`), работает параллельно с Freekassa.
+
+### Обязательные настройки
 
 ```env
 KASSA_AI_ENABLED=true
 KASSA_AI_SHOP_ID=12345
 KASSA_AI_API_KEY=your_api_key
 KASSA_AI_SECRET_WORD_2=secret2
-KASSA_AI_PAYMENT_SYSTEM_ID=44
 ```
 
-- `KASSA_AI_PAYMENT_SYSTEM_ID=44` — СБП QR, `36` — Карты РФ, `43` — SberPay
+### Все переменные
 
-Webhook: `https://hooks.domain.com/kassa-ai-webhook`
+| Переменная | Тип | По умолчанию | Описание |
+| ---------- | --- | ------------ | -------- |
+| `KASSA_AI_ENABLED` | `bool` | `false` | Включить Kassa AI |
+| `KASSA_AI_SHOP_ID` | `int` | -- | **Обязательно**. ID магазина |
+| `KASSA_AI_API_KEY` | `str` | -- | **Обязательно**. API-ключ |
+| `KASSA_AI_SECRET_WORD_2` | `str` | -- | **Обязательно**. Секретное слово (для webhook) |
+| `KASSA_AI_DISPLAY_NAME` | `str` | `KassaAI` | Отображаемое название |
+| `KASSA_AI_CURRENCY` | `str` | `RUB` | Валюта |
+| `KASSA_AI_MIN_AMOUNT_KOPEKS` | `int` | `10000` | Минимальная сумма (100 руб) |
+| `KASSA_AI_MAX_AMOUNT_KOPEKS` | `int` | `100000000` | Максимальная сумма (1 000 000 руб) |
+| `KASSA_AI_WEBHOOK_PATH` | `str` | `/kassa-ai-webhook` | Путь webhook |
+| `KASSA_AI_WEBHOOK_HOST` | `str` | `0.0.0.0` | Хост для webhook |
+| `KASSA_AI_WEBHOOK_PORT` | `int` | `8089` | Порт (устаревший, используется 8080) |
+| `KASSA_AI_PAYMENT_SYSTEM_ID` | `int` | `44` | Способ оплаты: `44` = СБП QR, `36` = Карты РФ, `43` = SberPay |
+
+### Webhook
+
+В кабинете Kassa AI укажите: `https://hooks.domain.com/kassa-ai-webhook`
+
+---
+
+## PayPalych (Pal24)
+
+Платежи через PayPalych (СБП и банковские карты).
+
+### Обязательные настройки
+
+```env
+PAL24_ENABLED=true
+PAL24_API_TOKEN=your_api_token
+PAL24_SHOP_ID=your_shop_id
+```
+
+### Все переменные
+
+| Переменная | Тип | По умолчанию | Описание |
+| ---------- | --- | ------------ | -------- |
+| `PAL24_ENABLED` | `bool` | `false` | Включить PayPalych |
+| `PAL24_API_TOKEN` | `str` | -- | **Обязательно**. API-токен |
+| `PAL24_SHOP_ID` | `str` | -- | **Обязательно**. ID магазина |
+| `PAL24_DISPLAY_NAME` | `str` | `PAL24` | Отображаемое название |
+| `PAL24_SIGNATURE_TOKEN` | `str` | -- | Токен для проверки подписи webhook |
+| `PAL24_BASE_URL` | `str` | `https://pal24.pro/api/v1/` | Базовый URL API |
+| `PAL24_WEBHOOK_PATH` | `str` | `/pal24-webhook` | Путь webhook |
+| `PAL24_PAYMENT_DESCRIPTION` | `str` | `Пополнение баланса` | Описание платежа |
+| `PAL24_MIN_AMOUNT_KOPEKS` | `int` | `10000` | Минимальная сумма (100 руб) |
+| `PAL24_MAX_AMOUNT_KOPEKS` | `int` | `100000000` | Максимальная сумма (1 000 000 руб) |
+| `PAL24_REQUEST_TIMEOUT` | `int` | `30` | Таймаут запросов к API (секунды) |
+| `PAL24_SBP_BUTTON_TEXT` | `str` | -- | Текст кнопки СБП (по умолчанию из локализации) |
+| `PAL24_CARD_BUTTON_TEXT` | `str` | -- | Текст кнопки карты (по умолчанию из локализации) |
+| `PAL24_SBP_BUTTON_VISIBLE` | `bool` | `true` | Показывать кнопку СБП |
+| `PAL24_CARD_BUTTON_VISIBLE` | `bool` | `true` | Показывать кнопку карты |
+
+### Webhook
+
+В кабинете Pal24 укажите Result URL: `https://hooks.domain.com/pal24-webhook`
+
+---
+
+## Platega
+
+Поддерживает несколько методов оплаты: СБП, карты, международные карты и криптовалюту.
+
+### Обязательные настройки
+
+```env
+PLATEGA_ENABLED=true
+PLATEGA_MERCHANT_ID=your_merchant_id
+PLATEGA_SECRET=your_secret_key
+```
+
+### Все переменные
+
+| Переменная | Тип | По умолчанию | Описание |
+| ---------- | --- | ------------ | -------- |
+| `PLATEGA_ENABLED` | `bool` | `false` | Включить Platega |
+| `PLATEGA_MERCHANT_ID` | `str` | -- | **Обязательно**. ID мерчанта |
+| `PLATEGA_SECRET` | `str` | -- | **Обязательно**. Секретный ключ |
+| `PLATEGA_DISPLAY_NAME` | `str` | `Platega` | Отображаемое название |
+| `PLATEGA_BASE_URL` | `str` | `https://app.platega.io` | Базовый URL API |
+| `PLATEGA_RETURN_URL` | `str` | -- | URL возврата после оплаты |
+| `PLATEGA_FAILED_URL` | `str` | -- | URL возврата при ошибке |
+| `PLATEGA_CURRENCY` | `str` | `RUB` | Валюта |
+| `PLATEGA_ACTIVE_METHODS` | `str` | `2,10,11,12,13` | Коды активных методов оплаты (через запятую) |
+| `PLATEGA_MIN_AMOUNT_KOPEKS` | `int` | `10000` | Минимальная сумма (100 руб) |
+| `PLATEGA_MAX_AMOUNT_KOPEKS` | `int` | `100000000` | Максимальная сумма (1 000 000 руб) |
+| `PLATEGA_WEBHOOK_PATH` | `str` | `/platega-webhook` | Путь webhook |
+| `PLATEGA_WEBHOOK_HOST` | `str` | `0.0.0.0` | Хост для webhook |
+| `PLATEGA_WEBHOOK_PORT` | `int` | `8086` | Порт (устаревший, используется 8080) |
+
+### Методы оплаты
+
+Коды для `PLATEGA_ACTIVE_METHODS`:
+
+| Код | Метод |
+| --- | ----- |
+| `2` | СБП (QR) |
+| `10` | Банковские карты (RUB) |
+| `11` | Банковские карты |
+| `12` | Международные карты |
+| `13` | Криптовалюта |
+
+```env
+# Только СБП и карты RUB
+PLATEGA_ACTIVE_METHODS=2,10
+```
+
+### Webhook
+
+В кабинете Platega укажите: `https://hooks.domain.com/platega-webhook`
+
+---
+
+## WATA
+
+Платежи картами через WATA.
+
+### Обязательные настройки
+
+```env
+WATA_ENABLED=true
+WATA_ACCESS_TOKEN=your_access_token
+WATA_TERMINAL_PUBLIC_ID=your_terminal_id
+```
+
+### Все переменные
+
+| Переменная | Тип | По умолчанию | Описание |
+| ---------- | --- | ------------ | -------- |
+| `WATA_ENABLED` | `bool` | `false` | Включить WATA |
+| `WATA_ACCESS_TOKEN` | `str` | -- | **Обязательно**. Токен доступа |
+| `WATA_TERMINAL_PUBLIC_ID` | `str` | -- | **Обязательно**. Public ID терминала |
+| `WATA_DISPLAY_NAME` | `str` | `Wata` | Отображаемое название |
+| `WATA_BASE_URL` | `str` | `https://api.wata.pro/api/h2h` | Базовый URL API |
+| `WATA_PAYMENT_DESCRIPTION` | `str` | `Пополнение баланса` | Описание платежа |
+| `WATA_PAYMENT_TYPE` | `str` | `OneTime` | Тип платежа |
+| `WATA_SUCCESS_REDIRECT_URL` | `str` | -- | URL после успешной оплаты |
+| `WATA_FAIL_REDIRECT_URL` | `str` | -- | URL после ошибки |
+| `WATA_LINK_TTL_MINUTES` | `int` | -- | Время жизни ссылки на оплату (минуты) |
+| `WATA_MIN_AMOUNT_KOPEKS` | `int` | `10000` | Минимальная сумма (100 руб) |
+| `WATA_MAX_AMOUNT_KOPEKS` | `int` | `100000000` | Максимальная сумма (1 000 000 руб) |
+| `WATA_REQUEST_TIMEOUT` | `int` | `30` | Таймаут запросов (секунды) |
+| `WATA_WEBHOOK_PATH` | `str` | `/wata-webhook` | Путь webhook |
+| `WATA_WEBHOOK_HOST` | `str` | `0.0.0.0` | Хост для webhook |
+| `WATA_WEBHOOK_PORT` | `int` | `8085` | Порт (устаревший, используется 8080) |
+| `WATA_PUBLIC_KEY_URL` | `str` | -- | URL публичного ключа для проверки подписи |
+| `WATA_PUBLIC_KEY_CACHE_SECONDS` | `int` | `3600` | Время кэширования публичного ключа (секунды) |
+
+### Webhook
+
+В кабинете WATA укажите: `https://hooks.domain.com/wata-webhook`
+
+---
+
+## Heleket
+
+Криптовалютный провайдер с поддержкой USDT и других валют.
+
+### Обязательные настройки
+
+```env
+HELEKET_ENABLED=true
+HELEKET_MERCHANT_ID=your_merchant_id
+HELEKET_API_KEY=your_api_key
+```
+
+### Все переменные
+
+| Переменная | Тип | По умолчанию | Описание |
+| ---------- | --- | ------------ | -------- |
+| `HELEKET_ENABLED` | `bool` | `false` | Включить Heleket |
+| `HELEKET_MERCHANT_ID` | `str` | -- | **Обязательно**. ID мерчанта |
+| `HELEKET_API_KEY` | `str` | -- | **Обязательно**. API-ключ |
+| `HELEKET_DISPLAY_NAME` | `str` | `Heleket Crypto` | Отображаемое название |
+| `HELEKET_BASE_URL` | `str` | `https://api.heleket.com/v1` | Базовый URL API |
+| `HELEKET_DEFAULT_CURRENCY` | `str` | `USDT` | Валюта по умолчанию |
+| `HELEKET_DEFAULT_NETWORK` | `str` | -- | Сеть по умолчанию |
+| `HELEKET_INVOICE_LIFETIME` | `int` | `3600` | Время жизни инвойса (секунды, 300-43200) |
+| `HELEKET_MARKUP_PERCENT` | `float` | `0.0` | Наценка в процентах |
+| `HELEKET_WEBHOOK_PATH` | `str` | `/heleket-webhook` | Путь webhook |
+| `HELEKET_WEBHOOK_HOST` | `str` | `0.0.0.0` | Хост для webhook |
+| `HELEKET_WEBHOOK_PORT` | `int` | `8086` | Порт (устаревший, используется 8080) |
+| `HELEKET_CALLBACK_URL` | `str` | -- | URL для callback (по умолчанию `WEBHOOK_URL + HELEKET_WEBHOOK_PATH`) |
+| `HELEKET_RETURN_URL` | `str` | -- | URL возврата после оплаты |
+| `HELEKET_SUCCESS_URL` | `str` | -- | URL успешной оплаты |
+
+### Webhook
+
+В кабинете Heleket укажите Callback URL: `https://hooks.domain.com/heleket-webhook`
+
+---
+
+## MulenPay
+
+### Обязательные настройки
+
+```env
+MULENPAY_ENABLED=true
+MULENPAY_API_KEY=your_api_key
+MULENPAY_SECRET_KEY=your_secret_key
+MULENPAY_SHOP_ID=12345
+```
+
+### Все переменные
+
+| Переменная | Тип | По умолчанию | Описание |
+| ---------- | --- | ------------ | -------- |
+| `MULENPAY_ENABLED` | `bool` | `false` | Включить MulenPay |
+| `MULENPAY_API_KEY` | `str` | -- | **Обязательно**. API-ключ |
+| `MULENPAY_SECRET_KEY` | `str` | -- | **Обязательно**. Секретный ключ (для HMAC подписи webhook) |
+| `MULENPAY_SHOP_ID` | `int` | -- | **Обязательно**. ID магазина |
+| `MULENPAY_DISPLAY_NAME` | `str` | `Mulen Pay` | Отображаемое название |
+| `MULENPAY_BASE_URL` | `str` | `https://mulenpay.ru/api` | Базовый URL API |
+| `MULENPAY_WEBHOOK_PATH` | `str` | `/mulenpay-webhook` | Путь webhook |
+| `MULENPAY_DESCRIPTION` | `str` | `Пополнение баланса` | Описание платежа |
+| `MULENPAY_LANGUAGE` | `str` | `ru` | Язык формы оплаты |
+| `MULENPAY_VAT_CODE` | `int` | `0` | Код НДС |
+| `MULENPAY_PAYMENT_SUBJECT` | `int` | `4` | Тип предмета расчёта |
+| `MULENPAY_PAYMENT_MODE` | `int` | `4` | Режим расчёта |
+| `MULENPAY_MIN_AMOUNT_KOPEKS` | `int` | `10000` | Минимальная сумма (100 руб) |
+| `MULENPAY_MAX_AMOUNT_KOPEKS` | `int` | `10000000` | Максимальная сумма (100 000 руб) |
+| `MULENPAY_IFRAME_EXPECTED_ORIGIN` | `str` | -- | Ожидаемый origin iframe (для CORS, определяется из BASE_URL) |
+| `MULENPAY_WEBSITE_URL` | `str` | -- | URL сайта магазина |
+
+### Webhook
+
+В кабинете MulenPay укажите: `https://hooks.domain.com/mulenpay-webhook`
+
+Поддерживается проверка подписи через несколько форматов: HMAC-SHA256 (hex, base64), Bearer-токен, кастомные заголовки.
+
+---
+
+## Tribute
+
+Платежи через Telegram-платформу Tribute. Поддерживает как разовые, так и рекуррентные донаты.
+
+### Обязательные настройки
+
+```env
+TRIBUTE_ENABLED=true
+TRIBUTE_API_KEY=your_api_key
+TRIBUTE_DONATE_LINK=https://tribute.ru/your_link
+```
+
+### Все переменные
+
+| Переменная | Тип | По умолчанию | Описание |
+| ---------- | --- | ------------ | -------- |
+| `TRIBUTE_ENABLED` | `bool` | `false` | Включить Tribute |
+| `TRIBUTE_API_KEY` | `str` | -- | **Обязательно**. API-ключ (для проверки webhook) |
+| `TRIBUTE_DONATE_LINK` | `str` | -- | Ссылка на страницу доната |
+| `TRIBUTE_WEBHOOK_PATH` | `str` | `/tribute-webhook` | Путь webhook |
+| `TRIBUTE_WEBHOOK_HOST` | `str` | `0.0.0.0` | Хост для webhook |
+| `TRIBUTE_WEBHOOK_PORT` | `int` | `8081` | Порт (устаревший, используется 8080) |
+
+### Особенности
+
+- Обрабатывает события `new_donation` и `recurrent_donation`
+- Поддерживает возврат средств (refund) через API
+
+### Webhook
+
+В кабинете Tribute укажите: `https://hooks.domain.com/tribute-webhook`
+
+---
+
+## Активация провайдера
+
+Каждый провайдер считается **включённым** только при выполнении двух условий:
+
+1. Флаг `*_ENABLED=true`
+2. Заполнены все **обязательные** поля (ключи, токены, ID)
+
+<Warning>
+  Если включить флаг, но не заполнить обязательные поля, провайдер **не активируется** и не появится в списке способов оплаты.
+</Warning>
+
+| Провайдер | Условия активации |
+| --------- | ----------------- |
+| Telegram Stars | `TELEGRAM_STARS_ENABLED=true` (включён по умолчанию) |
+| YooKassa | `YOOKASSA_ENABLED` + `SHOP_ID` + `SECRET_KEY` |
+| CryptoBot | `CRYPTOBOT_ENABLED` + `API_TOKEN` |
+| CloudPayments | `CLOUDPAYMENTS_ENABLED` + `PUBLIC_ID` + `API_SECRET` |
+| Freekassa | `FREEKASSA_ENABLED` + `SHOP_ID` + `API_KEY` + `SECRET_WORD_1` + `SECRET_WORD_2` |
+| Kassa AI | `KASSA_AI_ENABLED` + `SHOP_ID` + `API_KEY` + `SECRET_WORD_2` |
+| PayPalych | `PAL24_ENABLED` + `API_TOKEN` + `SHOP_ID` |
+| Platega | `PLATEGA_ENABLED` + `MERCHANT_ID` + `SECRET` |
+| WATA | `WATA_ENABLED` + `ACCESS_TOKEN` + `TERMINAL_PUBLIC_ID` |
+| Heleket | `HELEKET_ENABLED` + `MERCHANT_ID` + `API_KEY` |
+| MulenPay | `MULENPAY_ENABLED` + `API_KEY` + `SECRET_KEY` + `SHOP_ID` |
+| Tribute | `TRIBUTE_ENABLED` (проверяется только флаг) |
+
+---
+
+## Health-check
+
+Для проверки состояния webhook доступен эндпоинт:
+
+```
+GET /health/payment-webhooks
+```
+
+Возвращает JSON со статусом каждого провайдера:
+
+```json
+{
+  "status": "ok",
+  "tribute_enabled": false,
+  "mulenpay_enabled": false,
+  "cryptobot_enabled": true,
+  "yookassa_enabled": true,
+  "wata_enabled": false,
+  "heleket_enabled": false,
+  "pal24_enabled": false,
+  "platega_enabled": false,
+  "cloudpayments_enabled": false,
+  "freekassa_enabled": false,
+  "kassa_ai_enabled": false
+}
+```
+
+---
+
+## Настройка webhook через reverse proxy
+
+Все webhook обрабатываются единым FastAPI-сервером на порту `8080`. Рекомендуемая настройка через Caddy/Nginx:
+
+```
+hooks.domain.com {
+    reverse_proxy bot:8080
+}
+```
+
+В `.env` укажите:
+
+```env
+WEBHOOK_URL=https://hooks.domain.com
+```
+
+Этот URL используется для формирования callback URL (Heleket, Platega) и return URL (YooKassa, CloudPayments).
