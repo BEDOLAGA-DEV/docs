@@ -1,27 +1,178 @@
 ---
 title: Обзор Cabinet
-description: "Веб-интерфейс личного кабинета пользователя"
+description: "Веб-интерфейс личного кабинета — полнофункциональная альтернатива Telegram-боту"
 ---
 
 ## Что такое Cabinet?
 
-**Bedolaga Cabinet** — веб-приложение для управления VPN подписками через браузер. Работает как frontend к backend-API бота.
+**Bedolaga Cabinet** — веб-приложение для управления VPN подписками через браузер. Работает как полноценный личный кабинет с авторизацией через Telegram, email или OAuth-провайдеров (Google, Яндекс, Discord, VK). Включает встроенную админ-панель для управления всем сервисом.
 
-## Требования
+<CardGroup cols={3}>
+  <Card title="Telegram + Email + OAuth" icon="right-to-bracket">
+    4 способа авторизации, включая вход без Telegram
+  </Card>
+  <Card title="Админ-панель" icon="gauge">
+    Полное управление сервисом через веб-интерфейс
+  </Card>
+  <Card title="Real-time" icon="bolt">
+    WebSocket-уведомления и мгновенные обновления
+  </Card>
+</CardGroup>
 
-- Docker и Docker Compose
-- Запущенный backend бота с включённым Cabinet API
-- Обратный прокси (Caddy / Nginx / Traefik)
+## Возможности для пользователей
 
-## Возможности
+<CardGroup cols={2}>
+  <Card title="Подписки" icon="key">
+    Покупка, продление, смена тарифа, приостановка. Выбор серверов и стран. Управление устройствами (HWID).
+  </Card>
+  <Card title="Баланс и платежи" icon="wallet">
+    Пополнение через любую подключённую платёжную систему. История транзакций с фильтрацией. Telegram Stars.
+  </Card>
+  <Card title="Подключение к VPN" icon="wifi">
+    Ключи подключения, QR-коды, инструкции по настройке. Deep-ссылки для автоматического импорта в VPN-клиенты.
+  </Card>
+  <Card title="Реферальная программа" icon="users">
+    Реферальная ссылка, список рефералов, история начислений. Заявка на партнёрство, вывод средств.
+  </Card>
+  <Card title="Поддержка" icon="headset">
+    Создание тикетов, переписка с поддержкой, уведомления о статусе.
+  </Card>
+  <Card title="Дополнительно" icon="gamepad">
+    Промокоды, рекламные предложения, конкурсы, мини-игры, колесо фортуны, опросы.
+  </Card>
+</CardGroup>
 
-- Авторизация через Telegram
-- Просмотр активных подписок
-- Пополнение баланса
-- Покупка и продление подписок
-- Просмотр истории транзакций
-- Мультиязычность (RU/EN)
-- Адаптивный дизайн
+## Авторизация
+
+Cabinet поддерживает 4 независимых способа входа. Пользователи могут регистрироваться и использовать сервис **без Telegram**.
+
+### Telegram
+
+| Способ | Описание |
+| ------ | -------- |
+| **WebApp (Mini App)** | Автоматический вход при открытии внутри Telegram — валидация `initData` с HMAC-SHA256 |
+| **Login Widget** | Кнопка «Войти через Telegram» на веб-странице для браузерного доступа |
+
+### Email
+
+Классическая регистрация с email + пароль:
+
+1. Регистрация с валидацией (блокировка одноразовых email)
+2. Верификация через ссылку в письме
+3. Вход по email + паролю
+4. Сброс пароля через email
+5. Смена email с подтверждением кодом
+
+Подробнее: [Email-авторизация](/cabinet/email-auth)
+
+### OAuth 2.0
+
+<CardGroup cols={4}>
+  <Card title="Google" icon="google">
+    `openid email profile`
+  </Card>
+  <Card title="Яндекс" icon="y">
+    `login:info login:email`
+  </Card>
+  <Card title="Discord" icon="discord">
+    `identify email`
+  </Card>
+  <Card title="VK" icon="vk">
+    `email`
+  </Card>
+</CardGroup>
+
+Аккаунты автоматически привязываются при совпадении верифицированного email. Подробнее: [Настройка OAuth](/cabinet/oauth-setup)
+
+### JWT-токены
+
+| Токен | Срок жизни | Хранение |
+| ----- | ---------- | -------- |
+| Access | 15 мин (настраивается) | sessionStorage |
+| Refresh | 7 дней (настраивается) | localStorage, SHA-256 хеш в БД |
+
+Автообновление: access-токен обновляется автоматически через refresh. Параллельные запросы ожидают один refresh без дублирования.
+
+## Админ-панель
+
+Полнофункциональная веб-панель администратора доступна прямо в Cabinet.
+
+### Доступ
+
+```env
+# Telegram-админы (по user ID)
+ADMIN_IDS=123456789,987654321
+
+# Email-админы (для пользователей без Telegram)
+ADMIN_EMAILS=admin@example.com,manager@example.com
+```
+
+Достаточно одного из двух — Telegram ID или email в списке администраторов.
+
+### Разделы
+
+<CardGroup cols={2}>
+  <Card title="Дашборд" icon="chart-line">
+    Аналитика, статистика пользователей, подписок и доходов
+  </Card>
+  <Card title="Пользователи" icon="users">
+    Поиск, просмотр профилей, управление данными, история действий
+  </Card>
+  <Card title="Тарифы" icon="tags">
+    Создание, редактирование, включение/выключение тарифов, статистика
+  </Card>
+  <Card title="Серверы" icon="server">
+    Управление серверами, синхронизация с RemnaWave, статистика нагрузки
+  </Card>
+  <Card title="Платежи" icon="credit-card">
+    Все транзакции, поиск по ID, настройка отображения платёжных методов
+  </Card>
+  <Card title="Рассылки" icon="paper-plane">
+    Массовые сообщения пользователям с фильтрацией и шаблонами
+  </Card>
+  <Card title="Промокоды" icon="ticket">
+    Создание и управление промокодами, промогруппами (периодические скидки), статистика
+  </Card>
+  <Card title="Рекламные кампании" icon="bullhorn">
+    Создание кампаний с deep-ссылками и отслеживанием конверсий
+  </Card>
+  <Card title="Партнёры" icon="handshake">
+    Заявки на партнёрство, настройка комиссий, управление партнёрами
+  </Card>
+  <Card title="Выводы средств" icon="money-bill-transfer">
+    Обработка запросов на вывод реферальных средств (одобрение / отказ / завершение)
+  </Card>
+  <Card title="Поддержка" icon="headset">
+    Управление тикетами, настройка уведомлений о SLA
+  </Card>
+  <Card title="Настройки" icon="gear">
+    Live-редактирование конфигурации бота без перезапуска
+  </Card>
+  <Card title="RemnaWave" icon="network-wired">
+    Статус панели, ноды, сквады, синхронизация, миграции пользователей между сквадами
+  </Card>
+  <Card title="Трафик" icon="chart-area">
+    Мониторинг потребления трафика по пользователям
+  </Card>
+  <Card title="Рекламные предложения" icon="gift">
+    Шаблоны промо-предложений, персональные рассылки
+  </Card>
+  <Card title="Email-шаблоны" icon="envelope">
+    Редактирование шаблонов писем (верификация, сброс пароля) с предпросмотром и тестовой отправкой
+  </Card>
+  <Card title="Приложения" icon="mobile">
+    Настройка VPN-приложений для скачивания, deep-ссылки по платформам, брендирование
+  </Card>
+  <Card title="Колесо фортуны" icon="dharmachakra">
+    Настройка призов, стоимости вращения, лимитов
+  </Card>
+  <Card title="Закреплённые сообщения" icon="thumbtack">
+    Создание сообщений, отображаемых всем пользователям в кабинете
+  </Card>
+  <Card title="Обновления" icon="rotate">
+    Проверка новых версий бота и кабинета
+  </Card>
+</CardGroup>
 
 ## Архитектура
 
@@ -34,6 +185,26 @@ Frontend — статические файлы (HTML, JS, CSS). Обратный
 1. Раздаёт статику frontend
 2. Проксирует `/api/*` на backend бота (с удалением префикса `/api`)
 
+Два режима главного меню бота:
+
+| Режим | `MAIN_MENU_MODE` | Описание |
+| ----- | ----------------- | -------- |
+| Стандартный | `default` | Полноценный Telegram-бот с inline-кнопками |
+| Кабинет | `cabinet` | Минимальное текстовое меню с перенаправлением в веб-кабинет |
+
+## Стек технологий
+
+| Технология | Назначение |
+| ---------- | ---------- |
+| React 18 | UI фреймворк |
+| TypeScript | Типизация |
+| Vite | Сборка |
+| Tailwind CSS | Стили |
+| Zustand | State management |
+| i18next | Мультиязычность (RU/EN/CN/UA/FA) |
+| Telegram WebApp SDK | Авторизация через Telegram |
+| WebSocket | Real-time уведомления |
+
 ## Переменные окружения
 
 ### Build-time (вшиваются в JS при сборке)
@@ -45,32 +216,44 @@ Frontend — статические файлы (HTML, JS, CSS). Обратный
 | `VITE_APP_NAME` | Название в шапке и вкладке | `Cabinet` |
 | `VITE_APP_LOGO` | Текст логотипа (1-2 символа) | `V` |
 
-### Runtime (только для Docker контейнера)
-
-| Переменная | Описание | По умолчанию |
-| ---------- | -------- | ------------ |
-| `CABINET_PORT` | Порт контейнера на хосте | `3020` |
-
 ### Backend бота (.env бота)
 
 | Переменная | Описание | По умолчанию |
 | ---------- | -------- | ------------ |
 | `CABINET_ENABLED` | Включить Cabinet API | `false` |
-| `CABINET_JWT_SECRET` | Секретный ключ для JWT | `BOT_TOKEN` |
+| `CABINET_URL` | Базовый URL кабинета (для ссылок в email и OAuth) | — |
+| `CABINET_JWT_SECRET` | Секретный ключ для JWT | — |
 | `CABINET_ALLOWED_ORIGINS` | CORS origins (через запятую) | — |
 | `CABINET_ACCESS_TOKEN_EXPIRE_MINUTES` | Время жизни access token | `15` |
 | `CABINET_REFRESH_TOKEN_EXPIRE_DAYS` | Время жизни refresh token | `7` |
+| `CABINET_EMAIL_AUTH_ENABLED` | Включить email-вход | `true` |
+| `CABINET_EMAIL_VERIFICATION_ENABLED` | Требовать верификацию email | `true` |
+| `CABINET_BUTTON_STYLE` | Стиль кнопок: `primary`, `success`, `danger` | — |
+| `MAIN_MENU_MODE` | Режим меню: `default` или `cabinet` | `default` |
 
-## Стек технологий
+## Быстрый старт
 
-| Технология | Назначение |
-| ---------- | ---------- |
-| React 18 | UI фреймворк |
-| TypeScript | Типизация |
-| Vite | Сборка |
-| Tailwind CSS | Стили |
-| i18next | Мультиязычность |
-| Telegram WebApp SDK | Авторизация |
+<Steps>
+  <Step title="Включите Cabinet API">
+    Добавьте в `.env` бота:
+    ```env
+    CABINET_ENABLED=true
+    CABINET_URL=https://cabinet.example.com
+    CABINET_JWT_SECRET=your_secret_here
+    CABINET_ALLOWED_ORIGINS=https://cabinet.example.com
+    ```
+  </Step>
+  <Step title="Разверните frontend">
+    Подробная инструкция: [Установка Cabinet](/cabinet/setup)
+  </Step>
+  <Step title="Настройте прокси">
+    Caddy, Nginx или Traefik: [Настройка прокси](/cabinet/proxy-config)
+  </Step>
+  <Step title="Добавьте авторизацию (опционально)">
+    - [Email-авторизация](/cabinet/email-auth) — вход без Telegram
+    - [OAuth-провайдеры](/cabinet/oauth-setup) — Google, Яндекс, Discord, VK
+  </Step>
+</Steps>
 
 ## Структура проекта
 
@@ -81,8 +264,10 @@ bedolaga-cabinet/
 │   ├── components/    # React компоненты (UI kit)
 │   ├── contexts/      # React контексты (auth, theme)
 │   ├── hooks/         # Custom hooks
-│   ├── locales/       # Переводы (i18n)
+│   ├── locales/       # Переводы (i18n) — 5 языков
 │   ├── pages/         # Страницы приложения
+│   │   └── admin/     # Страницы админ-панели (20+ модулей)
+│   ├── store/         # Zustand stores (auth, settings)
 │   ├── types/         # TypeScript типы
 │   └── utils/         # Утилиты
 ├── public/            # Статические файлы
