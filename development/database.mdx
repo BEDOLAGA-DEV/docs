@@ -1,25 +1,11 @@
 ---
-title: База данных
-description: "Модели, миграции и работа с PostgreSQL"
+title: "База данных"
+description: "Полная схема базы данных: 68 таблиц, модели, связи и миграции"
 ---
 
 ## Обзор
 
-Бот использует PostgreSQL через SQLAlchemy 2.x async ORM. Все модели определены в `app/database/models.py`.
-
-## Основные модели
-
-| Модель | Описание |
-| ------ | -------- |
-| `User` | Пользователь Telegram |
-| `Subscription` | VPN подписка |
-| `Transaction` | Финансовая транзакция |
-| `PromoCode` | Промо-код |
-| `PromoGroup` | Группа с настройками скидок |
-| `Ticket` | Тикет поддержки |
-| `YooKassaPayment` | Платёж через YooKassa |
-| `CryptoBotPayment` | Платёж через CryptoBot |
-| `MainMenuButton` | Кастомная кнопка меню |
+Бот использует PostgreSQL через SQLAlchemy 2.x async ORM. Все модели определены в `app/database/models.py` (68 таблиц, включая 3 связующие M2M).
 
 ## Миграции (Alembic)
 
@@ -45,6 +31,14 @@ make migrate-history
   Для существующих production баз после перехода на Alembic выполните `make migrate-stamp` один раз.
 </Note>
 
+## Настройка подключения
+
+```env
+DATABASE_URL=postgresql+asyncpg://user:password@localhost:5432/bedolaga
+```
+
+Бот поддерживает как PostgreSQL, так и SQLite (для разработки).
+
 ## CRUD операции
 
 Каждая сущность имеет свой CRUD-модуль в `app/database/crud/`:
@@ -56,10 +50,329 @@ async with get_session() as session:
     user = await get_user_by_telegram_id(session, telegram_id=123456)
 ```
 
-## Настройка подключения
+## Enum-типы
 
-```env
-DATABASE_URL=postgresql+asyncpg://user:password@localhost:5432/bedolaga
-```
+| Enum | Значения |
+| ---- | -------- |
+| `UserStatus` | `active`, `blocked`, `deleted` |
+| `SubscriptionStatus` | `trial`, `active`, `expired`, `disabled`, `pending` |
+| `TransactionType` | `deposit`, `withdrawal`, `subscription_payment`, `refund`, `referral_reward`, `poll_reward` |
+| `PromoCodeType` | `balance`, `subscription_days`, `trial_subscription`, `promo_group`, `discount` |
+| `PaymentMethod` | `telegram_stars`, `tribute`, `yookassa`, `cryptobot`, `heleket`, `mulenpay`, `pal24`, `wata`, `platega`, `cloudpayments`, `freekassa`, `kassa_ai`, `manual`, `balance` |
+| `TicketStatus` | `open`, `answered`, `closed`, `pending` |
+| `PartnerStatus` | `none`, `pending`, `approved`, `rejected` |
+| `WithdrawalRequestStatus` | `pending`, `approved`, `rejected`, `completed`, `cancelled` |
+| `GameType` | `quest_buttons`, `lock_hack`, `letter_cipher`, `server_lottery`, `blitz_reaction`, `emoji_guess`, `anagram` |
 
-Бот поддерживает как PostgreSQL, так и SQLite (для разработки).
+## Схема по доменам
+
+### Пользователи (3 таблицы)
+
+**`users`** — центральная таблица, к ней привязаны все остальные сущности.
+
+| Группа полей | Ключевые поля |
+| ------------ | ------------- |
+| Идентификация | `id`, `telegram_id` (UNIQUE, nullable), `auth_type` (`telegram`/`email`) |
+| Профиль | `username`, `first_name`, `last_name`, `language`, `status` |
+| Баланс | `balance_kopeks`, `has_had_paid_subscription`, `has_made_first_topup` |
+| Реферал | `referred_by_id` (FK self), `referral_code` (UNIQUE), `referral_commission_percent` |
+| RemnaWave | `remnawave_uuid` (UNIQUE), `trojan_password`, `vless_uuid`, `ss_password` |
+| Email-авторизация | `email` (UNIQUE), `email_verified`, `password_hash`, `email_verification_token` |
+| OAuth | `google_id`, `yandex_id`, `discord_id`, `vk_id` (все UNIQUE) |
+| Промо | `promo_group_id` (FK), `promo_offer_discount_percent`, `auto_promo_group_assigned` |
+| Ограничения | `restriction_topup`, `restriction_subscription`, `restriction_reason` |
+| Партнер | `partner_status` |
+
+Связи: `subscription` (1:1), `transactions` (1:N), `referrals` (self 1:N), `user_promo_groups` (1:N), `tickets` (1:N), `referral_earnings` (1:N), `discount_offers` (1:N)
+
+**`cabinet_refresh_tokens`** — JWT refresh-токены для Cabinet.
+
+| Поле | Описание |
+| ---- | -------- |
+| `user_id` | FK -> users |
+| `token_hash` | SHA-256 хеш (UNIQUE) |
+| `expires_at` | Срок действия |
+| `revoked_at` | Время отзыва (nullable) |
+
+**`partner_applications`** — заявки на партнерскую программу.
+
+| Поле | Описание |
+| ---- | -------- |
+| `user_id` | FK -> users |
+| `company_name`, `website_url`, `telegram_channel` | Данные заявки |
+| `status` | PartnerStatus |
+| `approved_commission_percent` | Утвержденная комиссия |
+
+### Подписки (5 таблиц)
+
+**`subscriptions`** — VPN-подписка (1:1 с пользователем).
+
+| Группа полей | Ключевые поля |
+| ------------ | ------------- |
+| Основные | `user_id` (UNIQUE FK), `status`, `is_trial`, `start_date`, `end_date` |
+| Трафик | `traffic_limit_gb` (0 = безлимит), `traffic_used_gb`, `purchased_traffic_gb`, `traffic_reset_at` |
+| Устройства | `device_limit`, `modem_enabled` |
+| Серверы | `connected_squads` (JSON), `subscription_url`, `subscription_crypto_link` |
+| Автоплатеж | `autopay_enabled`, `autopay_days_before` |
+| Тариф | `tariff_id` (FK, SET NULL) |
+| Суточный | `is_daily_paused`, `last_daily_charge_at` |
+
+**`subscription_servers`** — привязка подписки к серверам.
+
+| Поле | Описание |
+| ---- | -------- |
+| `subscription_id` | FK -> subscriptions |
+| `server_squad_id` | FK -> server_squads |
+| `paid_price_kopeks` | Цена за подключение к серверу |
+
+**`subscription_conversions`** — конверсия триала в платную подписку.
+
+**`subscription_events`** — журнал событий подписки (`event_type`, `amount_kopeks`, `message`, `extra` JSON).
+
+**`traffic_purchases`** — докупки трафика (`traffic_gb`, `expires_at` = дата покупки + 30 дней).
+
+### Платежи и транзакции (14 таблиц)
+
+**`transactions`** — единый финансовый реестр.
+
+| Поле | Описание |
+| ---- | -------- |
+| `user_id` | FK -> users |
+| `type` | TransactionType |
+| `amount_kopeks` | Сумма в копейках |
+| `payment_method` | PaymentMethod |
+| `external_id` | ID во внешней системе |
+| `is_completed` | Завершена ли |
+| `receipt_uuid` | UUID фискального чека NaloGO |
+
+**12 таблиц платежных провайдеров** — по одной на каждый провайдер. Все содержат: `user_id`, `status`, `transaction_id`, сумму и ID во внешней системе.
+
+| Таблица | Провайдер | Уникальный ID |
+| ------- | --------- | ------------- |
+| `yookassa_payments` | YooKassa | `yookassa_payment_id` |
+| `cryptobot_payments` | CryptoBot | `invoice_id` |
+| `heleket_payments` | Heleket | `uuid`, `order_id` |
+| `mulenpay_payments` | MulenPay | `uuid` |
+| `pal24_payments` | PayPalych | `bill_id` |
+| `wata_payments` | WATA | `payment_link_id` |
+| `platega_payments` | Platega | `platega_transaction_id`, `correlation_id` |
+| `cloudpayments_payments` | CloudPayments | `transaction_id_cp`, `invoice_id` |
+| `freekassa_payments` | Freekassa | `order_id`, `freekassa_order_id` |
+| `kassa_ai_payments` | Kassa AI | `order_id`, `kassa_ai_order_id` |
+
+**`payment_method_configs`** — настройки отображения платежных методов в Cabinet.
+
+| Поле | Описание |
+| ---- | -------- |
+| `method_id` | ID метода (UNIQUE) |
+| `sort_order` | Порядок сортировки |
+| `is_enabled` | Включен ли |
+| `sub_options` | JSON: `{"card": true, "sbp": false}` |
+| `min_amount_kopeks`, `max_amount_kopeks` | Лимиты сумм |
+| `user_type_filter` | `all`, `telegram`, `email` |
+
+### Промо-система (8 таблиц + 3 M2M)
+
+**`promo_groups`** — группы со скидками.
+
+| Поле | Описание |
+| ---- | -------- |
+| `name` | Название (UNIQUE) |
+| `priority` | Приоритет (выше = важнее) |
+| `server_discount_percent`, `traffic_discount_percent`, `device_discount_percent` | Скидки 0-100% |
+| `period_discounts` | JSON: `{"30": 10, "90": 15}` |
+| `auto_assign_total_spent_kopeks` | Порог автоназначения |
+| `is_default` | Группа по умолчанию |
+
+M2M связи: `server_squads`, `tariffs`, `payment_method_configs`
+
+**`user_promo_groups`** — пользователь может состоять в нескольких группах (`user_id` + `promo_group_id` составной PK).
+
+**`promocodes`** — промокоды (5 типов).
+
+| Поле | Описание |
+| ---- | -------- |
+| `code` | Код (UNIQUE) |
+| `type` | PromoCodeType |
+| `balance_bonus_kopeks`, `subscription_days` | Параметры бонуса |
+| `max_uses`, `current_uses` | Лимиты использования |
+| `valid_until` | Срок действия |
+| `first_purchase_only` | Только для первой покупки |
+| `promo_group_id` | FK -> promo_groups (дополнительная привязка) |
+
+**`promocode_uses`** — журнал активаций (`promocode_id`, `user_id`, `used_at`).
+
+**`discount_offers`** — персональные скидочные предложения.
+
+| Поле | Описание |
+| ---- | -------- |
+| `user_id` | FK -> users |
+| `discount_percent` | Процент скидки |
+| `expires_at` | Срок действия |
+| `is_active`, `claimed_at` | Статус |
+| `effect_type` | Тип эффекта |
+| `extra_data` | JSON с доп. параметрами |
+
+**`promo_offer_templates`** — шаблоны предложений (тип, текст сообщения, кнопка, часы действия, серверы для test_access).
+
+**`subscription_temporary_access`** — временный доступ к серверам через промо-предложения.
+
+**`promo_offer_logs`** — журнал действий с предложениями (`claimed`, `consumed`, `disabled`).
+
+### Реферальная система (3 таблицы)
+
+**`referral_earnings`** — начисления реферальных комиссий.
+
+| Поле | Описание |
+| ---- | -------- |
+| `user_id` | FK -> users (реферер) |
+| `referral_id` | FK -> users (приглашенный) |
+| `amount_kopeks` | Сумма комиссии |
+| `reason` | Причина начисления |
+| `campaign_id` | FK -> advertising_campaigns (nullable) |
+
+**`withdrawal_requests`** — заявки на вывод средств.
+
+| Поле | Описание |
+| ---- | -------- |
+| `user_id` | FK -> users |
+| `amount_kopeks` | Сумма |
+| `status` | WithdrawalRequestStatus |
+| `risk_score` | 0-100 (антифрод) |
+| `risk_analysis` | JSON с деталями анализа |
+
+**`sent_notifications`** — трекинг отправленных уведомлений (предотвращает дублирование).
+
+### Поддержка (5 таблиц)
+
+**`tickets`** — тикеты поддержки (`status`, `priority`, `user_reply_block_permanent`, `user_reply_block_until`).
+
+**`ticket_messages`** — сообщения в тикетах (текст, медиа-вложения с `media_file_id`).
+
+**`ticket_notifications`** — уведомления для Cabinet (`notification_type`: new_ticket, admin_reply, user_reply).
+
+**`support_audit_logs`** — журнал действий модераторов (`action`, `actor_user_id`, `target_user_id`, `details` JSON).
+
+**`broadcast_history`** — история рассылок.
+
+| Поле | Описание |
+| ---- | -------- |
+| `target_type` | Сегмент аудитории |
+| `channel` | `telegram`, `email`, `both` |
+| `total_count`, `sent_count`, `failed_count`, `blocked_count` | Статистика доставки |
+| `status` | Статус рассылки |
+
+### Конкурсы (6 таблиц)
+
+**`referral_contests`** — реферальные конкурсы (`title`, `contest_type`, `start_at`/`end_at`, `daily_summary_times`).
+
+**`referral_contest_events`** — события конкурса (UNIQUE: `contest_id` + `referral_id`).
+
+**`referral_contest_virtual_participants`** — виртуальные участники для буста лидерборда.
+
+**`contest_templates`** — шаблоны ежедневных игр (7 типов).
+
+| Поле | Описание |
+| ---- | -------- |
+| `slug` | Уникальный идентификатор игры |
+| `prize_type` | `days`, `balance`, `custom` |
+| `schedule_times` | Расписание (CSV "HH:MM") |
+| `payload` | JSON с конфигурацией игры |
+
+**`contest_rounds`** — раунды игр (`status`: active/finished, `winners_count`).
+
+**`contest_attempts`** — попытки участия (UNIQUE: `round_id` + `user_id`).
+
+### Кампании (2 таблицы)
+
+**`advertising_campaigns`** — рекламные кампании с deep-link.
+
+| Поле | Описание |
+| ---- | -------- |
+| `start_parameter` | Deep-link параметр (UNIQUE) |
+| `bonus_type` | `balance`, `subscription`, `tariff`, `none` |
+| `tariff_id` | FK -> tariffs (для тарифных бонусов) |
+| `partner_user_id` | FK -> users (привязка к партнеру) |
+
+**`advertising_campaign_registrations`** — регистрации через кампании (UNIQUE: `campaign_id` + `user_id`).
+
+### Опросы (5 таблиц)
+
+Цепочка: `polls` -> `poll_questions` -> `poll_options` -> `poll_answers`.
+
+**`polls`** — опросы (`title`, `reward_enabled`, `reward_amount_kopeks`).
+
+**`poll_responses`** — участие пользователя в опросе (UNIQUE: `poll_id` + `user_id`, `reward_given`).
+
+### Колесо фортуны (3 таблицы)
+
+**`wheel_configs`** — конфигурация колеса (`rtp_percent`, `spin_cost_stars`, `daily_spin_limit`).
+
+**`wheel_prizes`** — призы (`prize_type`: subscription_days/balance_bonus/traffic_gb/promocode/nothing, `manual_probability`).
+
+**`wheel_spins`** — история вращений (`user_id`, `prize_id`, `payment_type`, `is_applied`).
+
+### Серверы и тарифы (3 таблицы)
+
+**`tariffs`** — тарифные планы (см. [Управление тарифами](/bot/tariffs)).
+
+**`server_squads`** — серверные группы.
+
+| Поле | Описание |
+| ---- | -------- |
+| `squad_uuid` | UUID из RemnaWave (UNIQUE) |
+| `display_name`, `original_name` | Названия |
+| `country_code` | Код страны |
+| `is_available`, `is_trial_eligible` | Доступность |
+| `price_kopeks` | Цена подключения |
+| `max_users`, `current_users` | Лимиты |
+
+**`squads`** — устаревшая таблица серверов (заменена на `server_squads`).
+
+### Системные и контентные (11 таблиц)
+
+| Таблица | Описание |
+| ------- | -------- |
+| `system_settings` | Key-value хранилище рантайм-настроек |
+| `service_rules` | Правила сервиса (по языкам) |
+| `privacy_policies` | Политика конфиденциальности (по языкам) |
+| `public_offers` | Публичная оферта (по языкам) |
+| `faq_settings` | Настройки FAQ (по языкам) |
+| `faq_pages` | Страницы FAQ |
+| `user_messages` | Пользовательские сообщения от админа |
+| `welcome_texts` | Приветственные тексты |
+| `pinned_messages` | Закрепленные сообщения (текст, медиа) |
+| `main_menu_buttons` | Кастомные кнопки главного меню |
+| `monitoring_logs` | Журнал мониторинга |
+
+### Вебхуки (2 таблицы)
+
+**`webhooks`** — настройки вебхуков (`url`, `secret`, `event_type`, `failure_count`, `success_count`).
+
+**`webhook_deliveries`** — история доставок (`status`: pending/success/failed, `attempt_number`, `next_retry_at`).
+
+### Web API и Cabinet (2 таблицы)
+
+**`web_api_tokens`** — API-ключи (`token_hash` UNIQUE, `token_prefix`, `expires_at`, `is_active`).
+
+**`button_click_logs`** — журнал кликов по кнопкам меню (аналитика).
+
+## Сводка по доменам
+
+| Домен | Таблиц | Основные сущности |
+| ----- | ------ | ----------------- |
+| Пользователи | 3 | users, cabinet_refresh_tokens, partner_applications |
+| Подписки | 5 | subscriptions, subscription_servers, subscription_conversions, subscription_events, traffic_purchases |
+| Платежи | 14 | transactions + 12 провайдеров + payment_method_configs |
+| Промо | 8 + 3 M2M | promo_groups, user_promo_groups, promocodes, discount_offers, promo_offer_templates |
+| Реферал | 3 | referral_earnings, withdrawal_requests, sent_notifications |
+| Поддержка | 5 | tickets, ticket_messages, ticket_notifications, support_audit_logs, broadcast_history |
+| Конкурсы | 6 | contest_templates, contest_rounds, contest_attempts, referral_contests |
+| Кампании | 2 | advertising_campaigns, advertising_campaign_registrations |
+| Опросы | 5 | polls, poll_questions, poll_options, poll_responses, poll_answers |
+| Колесо фортуны | 3 | wheel_configs, wheel_prizes, wheel_spins |
+| Серверы и тарифы | 3 | tariffs, server_squads, squads |
+| Системные | 11 | system_settings, service_rules, privacy_policies, faq_pages, main_menu_buttons и др. |
+| Вебхуки | 2 | webhooks, webhook_deliveries |
+| Web API | 2 | web_api_tokens, button_click_logs |
+| **Итого** | **68** | |

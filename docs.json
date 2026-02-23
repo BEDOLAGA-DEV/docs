@@ -55,6 +55,8 @@
               "bot/user-onboarding",
               "bot/payments",
               "bot/subscriptions",
+              "bot/tariffs",
+              "bot/auto-purchase",
               "bot/promo-system",
               "bot/referral-program",
               "bot/campaigns",
@@ -63,6 +65,7 @@
               "bot/support-system",
               "bot/interface-settings",
               "bot/maintenance",
+              "bot/nalogo-setup",
               "bot/admin-panel"
             ]
           },
@@ -72,6 +75,7 @@
               "cabinet/overview",
               "cabinet/setup",
               "cabinet/proxy-config",
+              "cabinet/email-auth",
               "cabinet/oauth-setup",
               "cabinet/analytics-setup"
             ]
