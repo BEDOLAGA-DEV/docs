@@ -1,0 +1,65 @@
+---
+title: База данных
+description: "Модели, миграции и работа с PostgreSQL"
+---
+
+## Обзор
+
+Бот использует PostgreSQL через SQLAlchemy 2.x async ORM. Все модели определены в `app/database/models.py`.
+
+## Основные модели
+
+| Модель | Описание |
+| ------ | -------- |
+| `User` | Пользователь Telegram |
+| `Subscription` | VPN подписка |
+| `Transaction` | Финансовая транзакция |
+| `PromoCode` | Промо-код |
+| `PromoGroup` | Группа с настройками скидок |
+| `Ticket` | Тикет поддержки |
+| `YooKassaPayment` | Платёж через YooKassa |
+| `CryptoBotPayment` | Платёж через CryptoBot |
+| `MainMenuButton` | Кастомная кнопка меню |
+
+## Миграции (Alembic)
+
+Миграции хранятся в `migrations/alembic/versions/`.
+
+```bash
+# Применить миграции
+make migrate
+
+# Создать новую миграцию
+make migration m="add_new_table"
+
+# Отметить текущую БД как актуальную (без DDL)
+make migrate-stamp
+
+# История миграций
+make migrate-history
+```
+
+При запуске бот автоматически выполняет `alembic upgrade head` через `app/database/migrations.py`.
+
+<Note>
+  Для существующих production баз после перехода на Alembic выполните `make migrate-stamp` один раз.
+</Note>
+
+## CRUD операции
+
+Каждая сущность имеет свой CRUD-модуль в `app/database/crud/`:
+
+```python
+from app.database.crud.user import create_user, get_user_by_telegram_id
+
+async with get_session() as session:
+    user = await get_user_by_telegram_id(session, telegram_id=123456)
+```
+
+## Настройка подключения
+
+```env
+DATABASE_URL=postgresql+asyncpg://user:password@localhost:5432/bedolaga
+```
+
+Бот поддерживает как PostgreSQL, так и SQLite (для разработки).

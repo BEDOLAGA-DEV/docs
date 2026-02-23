@@ -1,0 +1,150 @@
+---
+title: Docker развёртывание
+description: "Продакшн-установка с webhook и обратным прокси"
+---
+
+## Режимы запуска
+
+| `BOT_RUN_MODE` | Описание | Когда использовать |
+| -------------- | -------- | ------------------ |
+| `polling` | Бот опрашивает Telegram через long polling | Локальная отладка |
+| `webhook` | Aiogram получает апдейты через webhook | Продакшн за HTTPS |
+
+## Настройка webhook
+
+### Минимальный .env для webhook
+
+```env
+BOT_TOKEN=1234567890:AABBCCdd...
+ADMIN_IDS=123456789
+
+BOT_RUN_MODE=webhook
+WEBHOOK_URL=https://hooks.domain.com
+WEBHOOK_PATH=/webhook
+WEBHOOK_SECRET_TOKEN=super-secret-token
+
+WEB_API_ENABLED=true
+WEB_API_PORT=8080
+
+REMNAWAVE_API_URL=https://your-panel.com
+REMNAWAVE_API_KEY=your_api_key
+```
+
+<Warning>
+  Обязательно сгенерируйте `WEBHOOK_SECRET_TOKEN` командой `openssl rand -hex 32`.
+</Warning>
+
+### Полные настройки webhook
+
+```env
+WEBHOOK_DROP_PENDING_UPDATES=true
+WEBHOOK_MAX_QUEUE_SIZE=1024
+WEBHOOK_WORKERS=4
+WEBHOOK_ENQUEUE_TIMEOUT=0.1
+WEBHOOK_WORKER_SHUTDOWN_TIMEOUT=30.0
+```
+
+## Docker Compose
+
+### Бот на отдельном сервере
+
+```yaml docker-compose.yml
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: remnawave_bot_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-remnawave_bot}
+      POSTGRES_USER: ${POSTGRES_USER:-remnawave_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secure_password_123}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - bot_network
+
+  remnawave_bot:
+    image: ghcr.io/bedolaga-dev/remnawave-bedolaga-telegram-bot:latest
+    container_name: remnawave_bot
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./logs:/app/logs
+      - ./data:/app/data
+    depends_on:
+      - postgres
+    networks:
+      - bot_network
+
+volumes:
+  postgres_data:
+
+networks:
+  bot_network:
+    driver: bridge
+```
+
+### Бот на том же сервере что и Remnawave
+
+Подключитесь к сети панели:
+
+```yaml docker-compose.yml
+services:
+  remnawave_bot:
+    # ...
+    networks:
+      - bot_network
+      - remnawave_network
+
+networks:
+  bot_network:
+    driver: bridge
+  remnawave_network:
+    external: true
+    name: remnawave_network
+```
+
+## Обратный прокси
+
+### Caddy (рекомендуется)
+
+```caddy Caddyfile
+hooks.domain.com {
+    reverse_proxy remnawave_bot:8080
+}
+```
+
+### Nginx
+
+```nginx nginx.conf
+server {
+    listen 443 ssl;
+    server_name hooks.domain.com;
+
+    ssl_certificate /etc/letsencrypt/live/hooks.domain.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/hooks.domain.com/privkey.pem;
+
+    location / {
+        proxy_pass http://remnawave_bot:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
+
+## Проверка
+
+После запуска проверьте health endpoint:
+
+```bash
+curl https://hooks.domain.com/health
+```
+
+Ожидаемый ответ:
+```json
+{"status": "ok", "service": "unified_web_server"}
+```

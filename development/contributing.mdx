@@ -1,0 +1,82 @@
+---
+title: Разработка
+description: "Руководство для разработчиков"
+---
+
+## Подготовка окружения
+
+### Требования
+
+- Python 3.13+
+- [uv](https://docs.astral.sh/uv/) — менеджер пакетов
+- PostgreSQL 15+
+- Redis (опционально)
+
+### Установка
+
+```bash
+git clone https://github.com/BEDOLAGA-DEV/remnawave-bedolaga-telegram-bot.git
+cd remnawave-bedolaga-telegram-bot
+
+# Установка зависимостей
+uv sync --group dev
+
+# Копирование конфигурации
+cp .env.example .env
+# Заполните .env вашими значениями
+```
+
+## Код-стайл
+
+| Параметр | Значение |
+| -------- | -------- |
+| Линтер/Форматтер | ruff |
+| Длина строки | 120 символов |
+| Кавычки | Одинарные (inline), двойные (docstrings) |
+| Импорты | Только абсолютные |
+| Типизация | Обязательна (Python 3.13 features) |
+
+```bash
+# Проверка
+make lint
+
+# Автоисправление
+make fix
+
+# Форматирование
+make format
+```
+
+## Тестирование
+
+Тесты используют `pytest` + `pytest-asyncio`:
+
+```bash
+# Все тесты
+make test
+
+# Конкретный файл
+uv run pytest -v tests/services/test_payment_service_yookassa.py
+
+# По паттерну
+uv run pytest -v -k "test_calculate"
+```
+
+## Docker разработка
+
+```bash
+make up              # Запуск контейнеров
+make up-follow       # Запуск с логами
+make down            # Остановка
+make reload          # Перезапуск
+```
+
+## Структура тестов
+
+```
+tests/
+├── conftest.py              # Глобальные фикстуры
+├── external/                # Тесты внешних клиентов
+├── services/                # Тесты сервисов
+└── utils/                   # Тесты утилит
+```

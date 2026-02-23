@@ -1,0 +1,145 @@
+---
+title: WebSocket и Webhooks
+description: "Real-time обновления и интеграции с внешними системами"
+---
+
+## Обзор
+
+Бот предоставляет две системы для real-time обновлений:
+
+1. **WebSocket** — для real-time обновлений в веб-админке
+2. **Webhooks** — для отправки событий во внешние системы
+
+## WebSocket
+
+### Подключение
+
+WebSocket endpoint: `ws://your-api-host:port/ws`
+
+Авторизация через query-параметр:
+
+```javascript
+const ws = new WebSocket('ws://localhost:8080/ws?token=YOUR_API_TOKEN');
+// или
+const ws = new WebSocket('ws://localhost:8080/ws?api_key=YOUR_API_TOKEN');
+```
+
+### Формат сообщений
+
+**Подтверждение подключения:**
+
+```json
+{
+  "type": "connection",
+  "status": "connected",
+  "message": "WebSocket connection established"
+}
+```
+
+**Событие:**
+
+```json
+{
+  "type": "user.created",
+  "payload": {
+    "user_id": 123,
+    "telegram_id": 456789,
+    "username": "testuser",
+    "first_name": "Test"
+  },
+  "timestamp": "2025-01-15T10:30:00"
+}
+```
+
+**Keepalive (ping/pong):**
+
+```json
+// Отправить
+{ "type": "ping" }
+// Ответ
+{ "type": "pong" }
+```
+
+### Поддерживаемые события
+
+| Событие | Описание |
+| ------- | -------- |
+| `user.created` | Создан новый пользователь |
+| `payment.completed` | Завершён платёж |
+| `transaction.created` | Создана транзакция |
+| `ticket.created` | Создан тикет |
+| `ticket.status_changed` | Изменён статус тикета |
+| `ticket.message_added` | Новое сообщение в тикете |
+
+## Webhooks
+
+### Создание webhook
+
+```bash
+POST /webhooks
+Authorization: Bearer YOUR_API_TOKEN
+Content-Type: application/json
+
+{
+  "name": "My Webhook",
+  "url": "https://example.com/webhook",
+  "event_type": "user.created",
+  "secret": "optional-secret-for-signing",
+  "description": "Webhook для новых пользователей"
+}
+```
+
+### Поддерживаемые события
+
+- `user.created` — создан новый пользователь
+- `payment.completed` — завершён платёж
+- `transaction.created` — создана транзакция
+- `ticket.created` — создан тикет
+- `ticket.status_changed` — изменён статус тикета
+
+### Заголовки запроса
+
+| Заголовок | Описание |
+| --------- | -------- |
+| `Content-Type` | `application/json` |
+| `X-Webhook-Event` | Тип события (например, `user.created`) |
+| `X-Webhook-Id` | ID webhook |
+| `X-Webhook-Signature` | HMAC-SHA256 подпись (если указан `secret`) |
+
+### Подпись payload
+
+Если при создании webhook указан `secret`, payload подписывается HMAC-SHA256:
+
+```python
+import hmac
+import hashlib
+
+signature = hmac.new(
+    secret.encode('utf-8'),
+    payload_json.encode('utf-8'),
+    hashlib.sha256
+).hexdigest()
+# Заголовок: X-Webhook-Signature: sha256={signature}
+```
+
+### API эндпоинты
+
+| Метод | Endpoint | Описание |
+| ----- | -------- | -------- |
+| `GET` | `/webhooks` | Список webhooks |
+| `GET` | `/webhooks/{id}` | Получить webhook |
+| `PATCH` | `/webhooks/{id}` | Обновить webhook |
+| `DELETE` | `/webhooks/{id}` | Удалить webhook |
+| `GET` | `/webhooks/stats` | Статистика |
+| `GET` | `/webhooks/{id}/deliveries` | История доставок |
+
+### Статусы доставки
+
+- `pending` — ожидает отправки
+- `success` — успешно доставлен (HTTP 200-299)
+- `failed` — ошибка доставки
+
+## Безопасность
+
+1. **WebSocket**: Требует валидный API токен
+2. **Webhooks**: Используйте HTTPS, подписывайте payload через `secret`, проверяйте подпись на стороне получателя

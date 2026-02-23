@@ -1,0 +1,107 @@
+---
+title: Переменные окружения
+description: "Полный справочник настроек .env файла"
+---
+
+## Обязательные
+
+| Переменная | Описание | Пример |
+| ---------- | -------- | ------ |
+| `BOT_TOKEN` | Telegram Bot Token от @BotFather | `1234567890:AABBCCdd...` |
+| `ADMIN_IDS` | Telegram ID администраторов (через запятую) | `123456789,987654321` |
+| `REMNAWAVE_API_URL` | URL Remnawave панели | `https://panel.example.com` |
+| `REMNAWAVE_API_KEY` | API ключ панели | `your_api_key` |
+
+## База данных
+
+| Переменная | Описание | По умолчанию |
+| ---------- | -------- | ------------ |
+| `DATABASE_MODE` | Режим БД | `postgresql` |
+| `DATABASE_URL` | Строка подключения PostgreSQL | `postgresql+asyncpg://user:pass@postgres:5432/db` |
+| `POSTGRES_DB` | Имя базы данных | `remnawave_bot` |
+| `POSTGRES_USER` | Пользователь БД | `remnawave_user` |
+| `POSTGRES_PASSWORD` | Пароль БД | — |
+
+## Webhook и веб-сервер
+
+| Переменная | Описание | По умолчанию |
+| ---------- | -------- | ------------ |
+| `BOT_RUN_MODE` | Режим: `polling` или `webhook` | `polling` |
+| `WEBHOOK_URL` | Публичный HTTPS URL | — |
+| `WEBHOOK_PATH` | Путь для webhook | `/webhook` |
+| `WEBHOOK_SECRET_TOKEN` | Секретный токен Telegram | — |
+| `WEB_API_ENABLED` | Включить веб-сервер | `false` |
+| `WEB_API_PORT` | Порт веб-сервера | `8080` |
+| `WEB_API_ALLOWED_ORIGINS` | CORS origins через запятую | — |
+| `WEB_API_DEFAULT_TOKEN` | API токен для авторизации | — |
+
+## Платежные системы
+
+### YooKassa
+
+| Переменная | Описание | По умолчанию |
+| ---------- | -------- | ------------ |
+| `YOOKASSA_SHOP_ID` | ID магазина YooKassa | — |
+| `YOOKASSA_SECRET_KEY` | Секретный ключ | — |
+| `YOOKASSA_RETURN_URL` | URL возврата после оплаты | `https://t.me/{bot}` |
+| `YOOKASSA_SBP_ENABLED` | Включить оплату через СБП | `false` |
+| `YOOKASSA_MIN_AMOUNT_KOPEKS` | Мин. сумма (копейки) | `5000` (50 руб) |
+| `YOOKASSA_MAX_AMOUNT_KOPEKS` | Макс. сумма (копейки) | `1000000` (10000 руб) |
+| `YOOKASSA_DEFAULT_RECEIPT_EMAIL` | Email для чеков | — |
+| `YOOKASSA_VAT_CODE` | Код НДС (1-12) | `1` |
+
+### CryptoBot
+
+| Переменная | Описание | По умолчанию |
+| ---------- | -------- | ------------ |
+| `CRYPTOBOT_TOKEN` | API токен CryptoBot | — |
+| `CRYPTOBOT_CURRENCY` | Валюта для конвертации | `RUB` |
+
+### Telegram Stars
+
+| Переменная | Описание | По умолчанию |
+| ---------- | -------- | ------------ |
+| `TELEGRAM_STARS_ENABLED` | Включить оплату звёздами | `false` |
+| `STARS_TO_KOPEKS_RATE` | Курс: 1 звезда = N копеек | `130` |
+
+### CloudPayments
+
+| Переменная | Описание | По умолчанию |
+| ---------- | -------- | ------------ |
+| `CLOUDPAYMENTS_PUBLIC_ID` | Public ID | — |
+| `CLOUDPAYMENTS_API_SECRET` | API секрет | — |
+
+## Cabinet (Личный кабинет)
+
+| Переменная | Описание | По умолчанию |
+| ---------- | -------- | ------------ |
+| `CABINET_ENABLED` | Включить Cabinet API | `false` |
+| `CABINET_JWT_SECRET` | JWT секрет для токенов | `BOT_TOKEN` |
+| `CABINET_ACCESS_TOKEN_EXPIRE_MINUTES` | Время жизни access token | `15` |
+| `CABINET_REFRESH_TOKEN_EXPIRE_DAYS` | Время жизни refresh token | `7` |
+| `CABINET_ALLOWED_ORIGINS` | CORS origins для кабинета | — |
+
+## Реферальная программа
+
+| Переменная | Описание | По умолчанию |
+| ---------- | -------- | ------------ |
+| `REFERRAL_PROGRAM_ENABLED` | Включить реферальную программу | `true` |
+| `REFERRAL_BONUS_KOPEKS` | Бонус рефереру (копейки) | `0` |
+| `REFERRAL_BONUS_DAYS` | Бонусные дни рефереру | `0` |
+
+## Redis
+
+| Переменная | Описание | По умолчанию |
+| ---------- | -------- | ------------ |
+| `REDIS_URL` | URL подключения к Redis | — |
+
+## SMTP (Email)
+
+| Переменная | Описание | По умолчанию |
+| ---------- | -------- | ------------ |
+| `SMTP_HOST` | SMTP сервер | — |
+| `SMTP_PORT` | Порт | `587` |
+| `SMTP_USER` | Пользователь | — |
+| `SMTP_PASSWORD` | Пароль | — |
+| `SMTP_FROM_EMAIL` | Email отправителя | — |
+| `SMTP_USE_TLS` | Использовать TLS | `true` |

@@ -1,0 +1,91 @@
+---
+title: Настройка прокси
+description: "Конфигурация обратного прокси для Cabinet"
+---
+
+## Принцип работы
+
+Cabinet требует обратный прокси, который:
+1. Раздаёт статику frontend (`/*`)
+2. Проксирует API запросы (`/api/*`) на backend бота с удалением префикса `/api`
+
+## Caddy (рекомендуется)
+
+```caddy Caddyfile
+cabinet.example.com {
+    handle /api/* {
+        uri strip_prefix /api
+        reverse_proxy remnawave_bot:8080
+    }
+
+    handle {
+        root * /srv/cabinet
+        try_files {path} /index.html
+        file_server
+    }
+}
+```
+
+## Nginx
+
+```nginx nginx.conf
+server {
+    listen 443 ssl;
+    server_name cabinet.example.com;
+
+    ssl_certificate /etc/letsencrypt/live/cabinet.example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/cabinet.example.com/privkey.pem;
+
+    root /srv/cabinet;
+    index index.html;
+
+    # API проксирование
+    location /api/ {
+        proxy_pass http://remnawave_bot:8080/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # SPA fallback
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}
+```
+
+## Docker Compose
+
+Если используете Docker для прокси:
+
+```yaml docker-compose.yml
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - ./cabinet-dist:/srv/cabinet
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - bot_network
+
+volumes:
+  caddy_data:
+  caddy_config:
+```
+
+## Проверка
+
+```bash
+# Проверка статики
+curl https://cabinet.example.com/
+
+# Проверка API проксирования
+curl https://cabinet.example.com/api/health
+```

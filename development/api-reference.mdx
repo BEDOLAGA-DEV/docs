@@ -1,0 +1,117 @@
+---
+title: API Reference
+description: "Справочник по REST API бота"
+---
+
+## Авторизация
+
+Все API запросы требуют авторизации через заголовок:
+
+```
+Authorization: Bearer YOUR_API_TOKEN
+```
+
+или
+
+```
+X-API-Key: YOUR_API_TOKEN
+```
+
+## Health Check
+
+```
+GET /health
+```
+
+Возвращает статус бота и доступность сервисов.
+
+## Конкурсы
+
+### Ежедневные игры
+
+| Метод | Endpoint | Описание |
+| ----- | -------- | -------- |
+| `GET` | `/contests/daily/templates` | Список шаблонов игр |
+| `GET` | `/contests/daily/templates/{id}` | Получить шаблон |
+| `PATCH` | `/contests/daily/templates/{id}` | Обновить шаблон |
+| `POST` | `/contests/daily/templates/{id}/start-round` | Запустить раунд |
+| `GET` | `/contests/daily/rounds` | Список раундов |
+| `GET` | `/contests/daily/rounds/{id}` | Получить раунд |
+| `POST` | `/contests/daily/rounds/{id}/finish` | Завершить раунд |
+| `GET` | `/contests/daily/rounds/{id}/attempts` | Попытки участников |
+
+**Запуск раунда вручную:**
+
+```json
+POST /contests/daily/templates/{id}/start-round
+{
+  "starts_at": "2025-12-15T09:00:00+03:00",
+  "ends_at": "2025-12-15T13:00:00+03:00",
+  "cooldown_hours": 4,
+  "payload": {"secret_idx": 3},
+  "force": true
+}
+```
+
+### Реферальные конкурсы
+
+| Метод | Endpoint | Описание |
+| ----- | -------- | -------- |
+| `GET` | `/contests/referral` | Список конкурсов |
+| `POST` | `/contests/referral` | Создать конкурс |
+| `GET` | `/contests/referral/{id}/detailed-stats` | Детальная статистика |
+| `PATCH` | `/contests/referral/{id}` | Обновить конкурс |
+| `POST` | `/contests/referral/{id}/toggle` | Включить/выключить |
+| `GET` | `/contests/referral/{id}/events` | События конкурса |
+| `DELETE` | `/contests/referral/{id}` | Удалить конкурс |
+
+**Создание конкурса:**
+
+```json
+POST /contests/referral
+{
+  "title": "Рефералы декабрь",
+  "contest_type": "referral_paid",
+  "start_at": "2025-12-20T10:00:00+03:00",
+  "end_at": "2025-12-27T10:00:00+03:00",
+  "daily_summary_time": "12:00:00",
+  "timezone": "Europe/Moscow",
+  "prize_text": "1 место — 5000 руб, 2 место — 3000 руб",
+  "is_active": true
+}
+```
+
+## Статистика кнопок меню
+
+| Метод | Endpoint | Описание |
+| ----- | -------- | -------- |
+| `POST` | `/menu-layout/stats/log-click` | Логирование клика |
+| `GET` | `/menu-layout/stats/buttons/{button_id}` | Статистика кнопки |
+| `GET` | `/menu-layout/stats` | Общая статистика |
+| `GET` | `/menu-layout/stats/by-type` | Статистика по типам |
+| `GET` | `/menu-layout/stats/by-hour` | Распределение по часам |
+| `GET` | `/menu-layout/stats/by-weekday` | Распределение по дням |
+| `GET` | `/menu-layout/stats/top-users` | Топ пользователей |
+| `GET` | `/menu-layout/stats/compare` | Сравнение периодов |
+| `GET` | `/menu-layout/stats/users/{user_id}/sequences` | Последовательности кликов |
+
+<Note>
+  Логирование кликов происходит автоматически через `ButtonStatsMiddleware` при `MENU_LAYOUT_ENABLED=True`.
+</Note>
+
+## Webhooks API
+
+| Метод | Endpoint | Описание |
+| ----- | -------- | -------- |
+| `GET` | `/webhooks` | Список webhooks |
+| `POST` | `/webhooks` | Создать webhook |
+| `GET` | `/webhooks/{id}` | Получить webhook |
+| `PATCH` | `/webhooks/{id}` | Обновить webhook |
+| `DELETE` | `/webhooks/{id}` | Удалить webhook |
+| `GET` | `/webhooks/stats` | Статистика |
+| `GET` | `/webhooks/{id}/deliveries` | История доставок |
+
+## Даты и часовые пояса
+
+- Поля `datetime` принимают значения с TZ; сервер переводит в UTC
+- Если TZ не указан, используется `settings.TIMEZONE`

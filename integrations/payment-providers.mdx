@@ -1,0 +1,90 @@
+---
+title: Платёжные провайдеры
+description: "Поддерживаемые способы оплаты и их настройка"
+---
+
+## Обзор
+
+Бот поддерживает множество платёжных провайдеров. Каждый провайдер реализован как отдельный адаптер с единым интерфейсом.
+
+## Поддерживаемые провайдеры
+
+| Провайдер | Валюта | Тип | Переменная включения |
+| --------- | ------ | --- | -------------------- |
+| YooKassa | RUB | Карты, SBP | `YOOKASSA_ENABLED=true` |
+| CryptoBot | USDT, TON, BTC | Криптовалюта | `CRYPTOBOT_ENABLED=true` |
+| Telegram Stars | Stars | Внутренняя валюта | `STARS_ENABLED=true` |
+| CloudPayments | RUB | Карты | `CLOUDPAYMENTS_ENABLED=true` |
+| PayPalych (Pal24) | RUB | Карты, SBP | `PAL24_ENABLED=true` |
+| MulenPay | RUB | Карты | `MULENPAY_ENABLED=true` |
+| Heleket | USDT | Криптовалюта | `HELEKET_ENABLED=true` |
+| Tribute | RUB | Карты | `TRIBUTE_ENABLED=true` |
+
+## Архитектура
+
+```
+PaymentService (app/services/payment_service.py)
+  ├── YooKassaAdapter
+  ├── CryptoBotAdapter
+  ├── StarsAdapter
+  ├── CloudPaymentsAdapter
+  ├── Pal24Adapter
+  ├── MulenPayAdapter
+  ├── HeleketAdapter
+  └── TributeAdapter
+```
+
+Каждый адаптер реализует:
+- Создание платежа
+- Обработку webhook-уведомлений
+- Проверку статуса платежа
+- Обработку ошибок и retry
+
+## YooKassa
+
+```env
+YOOKASSA_ENABLED=true
+YOOKASSA_SHOP_ID=123456
+YOOKASSA_SECRET_KEY=live_xxx
+YOOKASSA_VAT_CODE=1
+```
+
+Поддерживаемые методы оплаты:
+- Банковские карты
+- SBP (Система быстрых платежей)
+
+Webhook endpoint: `/yookassa-webhook`
+
+<Note>
+  IP-адреса YooKassa автоматически проверяются при получении webhook.
+</Note>
+
+## CryptoBot
+
+```env
+CRYPTOBOT_ENABLED=true
+CRYPTOBOT_TOKEN=xxx
+```
+
+Поддерживаемые валюты: USDT, TON, BTC.
+
+Курс конвертации обновляется автоматически через API CryptoBot.
+
+## Telegram Stars
+
+```env
+STARS_ENABLED=true
+STARS_RATE=1.5
+```
+
+`STARS_RATE` — курс конвертации Stars в рубли.
+
+## Heleket
+
+```env
+HELEKET_ENABLED=true
+HELEKET_MERCHANT_ID=xxx
+HELEKET_API_KEY=xxx
+```
+
+Криптовалютный провайдер с поддержкой USDT.

@@ -1,0 +1,93 @@
+---
+title: Архитектура
+description: "Структура проекта и ключевые компоненты"
+---
+
+## Общая структура
+
+```
+app/
+├── bot.py              # Настройка бота, диспетчер, middleware
+├── config.py           # Settings (pydantic-settings), загрузка из .env
+├── handlers/           # Обработчики сообщений/callback
+│   ├── admin/          # Админ-панель (30+ модулей)
+│   ├── balance.py      # Обработчики пополнения баланса
+│   ├── subscription/   # Покупка и управление подписками
+│   └── ...
+├── services/           # Бизнес-логика
+│   └── payment/        # Адаптеры платёжных систем
+├── external/           # Клиенты внешних API
+├── database/
+│   ├── models.py       # SQLAlchemy модели
+│   ├── crud/           # CRUD операции
+│   └── database.py     # Управление сессиями
+├── webapi/             # FastAPI REST API (админка)
+│   ├── routes/         # API эндпоинты
+│   └── schemas/        # Pydantic схемы
+├── middlewares/        # aiogram middleware
+└── utils/              # Утилиты
+```
+
+## Стек технологий
+
+| Компонент | Технология |
+| --------- | ---------- |
+| Язык | Python 3.13 |
+| Telegram фреймворк | aiogram 3.x |
+| ORM | SQLAlchemy 2.x (async) |
+| База данных | PostgreSQL |
+| REST API | FastAPI + Uvicorn |
+| Миграции | Alembic |
+| Кэширование | Redis (опционально) |
+| Линтер | ruff |
+
+## Ключевые паттерны
+
+### Регистрация обработчиков
+
+Каждый модуль обработчиков экспортирует функцию `register_handlers(router)`:
+
+```python
+from aiogram import Router
+
+def register_handlers(router: Router):
+    router.callback_query.register(handler_func, SomeFilter())
+```
+
+Регистрация происходит в `app/bot.py`.
+
+### Сессии базы данных
+
+Асинхронные контекстные менеджеры:
+
+```python
+async with get_session() as session:
+    result = await session.execute(select(User).where(...))
+```
+
+### Конфигурация
+
+Все настройки — через переменные окружения. Класс `Settings` в `app/config.py` загружает и валидирует их:
+
+```python
+from app.config import settings
+
+if settings.YOOKASSA_ENABLED:
+    # ...
+```
+
+### Платёжная система
+
+Модульные адаптеры с единым интерфейсом. Каждый провайдер — отдельный файл в `app/services/payment/`.
+
+## Единый веб-сервер
+
+FastAPI сервер на порту 8080 обслуживает:
+
+| Путь | Назначение |
+| ---- | ---------- |
+| `/webhook` | Telegram webhook |
+| `/yookassa-webhook` | YooKassa webhook |
+| `/cryptobot-webhook` | CryptoBot webhook |
+| `/api/*` | Cabinet API |
+| `/health` | Health check |

@@ -1,0 +1,84 @@
+---
+title: Настройка платежей
+description: "Подключение платёжных систем к Bedolaga Bot"
+---
+
+## Поддерживаемые провайдеры
+
+| Провайдер | Методы оплаты | Переменная вкл/выкл |
+| --------- | ------------- | -------------------- |
+| YooKassa | Карты, СБП | `YOOKASSA_SHOP_ID` + `YOOKASSA_SECRET_KEY` |
+| CryptoBot | Криптовалюта | `CRYPTOBOT_TOKEN` |
+| Telegram Stars | Звёзды Telegram | `TELEGRAM_STARS_ENABLED=true` |
+| CloudPayments | Карты, СБП | `CLOUDPAYMENTS_PUBLIC_ID` + `CLOUDPAYMENTS_API_SECRET` |
+| Freekassa | NSPK СБП, карты | `FREEKASSA_MERCHANT_ID` + секреты |
+| PayPalych | Карты, СБП | `PAYPALYCH_API_KEY` |
+| Platega | Карты, СБП | `PLATEGA_API_KEY` |
+| WATA | Карты | `WATA_API_KEY` |
+| Heleket | Криптовалюта | `HELEKET_API_KEY` |
+| MulenPay | Карты | `MULENPAY_API_KEY` |
+| Tribute | Telegram | `TRIBUTE_API_KEY` |
+
+## YooKassa
+
+Самый популярный провайдер для российского рынка.
+
+### Шаг 1. Регистрация
+
+1. Зарегистрируйтесь на [yookassa.ru](https://yookassa.ru)
+2. Создайте магазин и получите `Shop ID` и `Secret Key`
+
+### Шаг 2. Настройка .env
+
+```env
+YOOKASSA_SHOP_ID=123456
+YOOKASSA_SECRET_KEY=live_xxxxxxxxxxxxx
+YOOKASSA_RETURN_URL=https://t.me/your_bot
+YOOKASSA_SBP_ENABLED=true
+YOOKASSA_DEFAULT_RECEIPT_EMAIL=receipts@example.com
+```
+
+### Шаг 3. Webhook (для standalone сервера)
+
+YooKassa отправляет уведомления о платежах на webhook URL. Бот принимает их на порту 8082 (standalone) или 8080 (unified).
+
+В личном кабинете YooKassa укажите URL webhook:
+```
+https://your-domain.com/yookassa-webhook
+```
+
+<Info>
+  Бот проверяет IP-адреса YooKassa и отклоняет запросы с неизвестных адресов.
+</Info>
+
+### Лимиты
+
+| Параметр | Переменная | По умолчанию |
+| -------- | ---------- | ------------ |
+| Мин. сумма | `YOOKASSA_MIN_AMOUNT_KOPEKS` | 5000 (50 руб) |
+| Макс. сумма | `YOOKASSA_MAX_AMOUNT_KOPEKS` | 1000000 (10000 руб) |
+
+## CryptoBot
+
+### Настройка
+
+1. Получите API токен у [@CryptoBot](https://t.me/CryptoBot)
+2. Добавьте в `.env`:
+
+```env
+CRYPTOBOT_TOKEN=your_token
+CRYPTOBOT_CURRENCY=RUB
+```
+
+## Telegram Stars
+
+### Настройка
+
+```env
+TELEGRAM_STARS_ENABLED=true
+STARS_TO_KOPEKS_RATE=130
+```
+
+<Note>
+  Telegram Stars работают только для пополнения баланса. Курс `130` означает 1 звезда = 1.30 руб.
+</Note>

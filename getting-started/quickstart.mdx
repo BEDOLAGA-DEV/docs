@@ -1,0 +1,96 @@
+---
+title: Быстрый старт
+description: "Разверните Bedolaga Bot за 5 минут"
+---
+
+## Требования
+
+- Docker и Docker Compose
+- Сервер с Linux (Ubuntu 22+ рекомендуется)
+- Telegram бот-токен от [@BotFather](https://t.me/BotFather)
+- Развёрнутая [Remnawave](https://github.com/remnawave/backend) панель
+
+## Шаг 1. Клонирование
+
+```bash
+git clone https://github.com/BEDOLAGA-DEV/remnawave-bedolaga-telegram-bot.git
+cd remnawave-bedolaga-telegram-bot
+```
+
+## Шаг 2. Подготовка директорий
+
+```bash
+mkdir -p ./logs ./data ./data/backups ./data/referral_qr
+chmod -R 755 ./logs ./data
+sudo chown -R 1000:1000 ./logs ./data
+```
+
+## Шаг 3. Настройка окружения
+
+```bash
+cp .env.example .env
+nano .env
+```
+
+Минимальные настройки:
+
+```env
+# Обязательные
+BOT_TOKEN=1234567890:AABBCCdd...
+ADMIN_IDS=123456789
+
+# Remnawave
+REMNAWAVE_API_URL=https://your-panel.com
+REMNAWAVE_API_KEY=your_api_key
+
+# База данных (PostgreSQL создаётся автоматически)
+POSTGRES_DB=remnawave_bot
+POSTGRES_USER=remnawave_user
+POSTGRES_PASSWORD=secure_password_123
+```
+
+<Info>
+  Полный список переменных окружения — в разделе [Переменные окружения](/getting-started/environment).
+</Info>
+
+## Шаг 4. Запуск
+
+```bash
+# Установка Docker (если ещё не установлен)
+sudo curl -fsSL https://get.docker.com | sh
+
+# Установка make
+apt install make -y
+
+# Запуск
+make up
+```
+
+Или вручную:
+
+```bash
+docker compose up -d
+```
+
+## Шаг 5. Проверка
+
+```bash
+docker compose logs -f remnawave_bot
+```
+
+Вы должны увидеть:
+```
+INFO: Bot started in polling mode
+INFO: YooKassa Service return_url: https://t.me/your_bot
+```
+
+## Следующие шаги
+
+<CardGroup cols={2}>
+  <Card title="Режим webhook" icon="globe" href="/getting-started/docker-deployment">
+    Настройка для продакшена с HTTPS
+  </Card>
+  <Card title="Платежи" icon="credit-card" href="/bot/payments">
+    Подключение платёжных систем
+  </Card>
+</CardGroup>

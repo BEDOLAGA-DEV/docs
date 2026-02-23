@@ -1,0 +1,56 @@
+---
+title: Установка Cabinet
+description: "Пошаговая установка веб-кабинета"
+---
+
+## Шаг 1. Настройка backend бота
+
+В `.env` файле бота добавьте:
+
+```env
+CABINET_ENABLED=true
+CABINET_JWT_SECRET=your_random_secret_key_here
+CABINET_ALLOWED_ORIGINS=https://cabinet.example.com
+```
+
+<Warning>
+  Обязательно сгенерируйте `CABINET_JWT_SECRET` командой `openssl rand -hex 32`.
+</Warning>
+
+Перезапустите бота:
+
+```bash
+make reload
+```
+
+## Шаг 2. Получение frontend файлов
+
+### Вариант A: Docker образ (рекомендуется)
+
+```bash
+docker pull ghcr.io/bedolaga-dev/bedolaga-cabinet:latest
+
+# Извлечь статику
+docker create --name tmp_cabinet ghcr.io/bedolaga-dev/bedolaga-cabinet:latest
+docker cp tmp_cabinet:/usr/share/nginx/html ./cabinet-dist
+docker rm tmp_cabinet
+```
+
+### Вариант B: Сборка из исходников
+
+```bash
+git clone https://github.com/BEDOLAGA-DEV/bedolaga-cabinet.git
+cd bedolaga-cabinet
+npm install
+npm run build
+```
+
+Собранные файлы будут в `dist/`.
+
+## Шаг 3. Настройка обратного прокси
+
+Смотрите раздел [Настройка прокси](/cabinet/proxy-config).
+
+## Проверка
+
+Откройте `https://cabinet.example.com` в браузере. Вы должны увидеть экран авторизации через Telegram.
