@@ -94,6 +94,28 @@ make reload
 
 **Через админ-панель:** Админ панель → Настройки → Бэкапы → Создать
 
+**Ручной дамп БД через консоль:**
+
+Зайдите в папку с ботом и выполните:
+
+```bash
+docker exec remnawave_bot_db pg_dump -Fc -U postgres remnawave_bot > backup_$(date +%Y%m%d_%H%M%S).dump
+```
+
+Файл дампа появится в текущей директории.
+
+### Как восстановиться из копии БД?
+
+```bash
+docker exec -i postgres pg_restore -U postgres -d remnawave_bot --clean --if-exists < backup_XXXXXXXX_XXXXXX.dump
+```
+
+Замените `backup_XXXXXXXX_XXXXXX.dump` на имя вашего файла дампа.
+
+<Warning>
+  Флаг `--clean` удаляет существующие таблицы перед восстановлением. Убедитесь, что восстанавливаете нужный дамп. После восстановления перезапустите бота: `make reload`.
+</Warning>
+
 ### Бот не отвечает, что делать?
 
 1. Проверьте статус: `docker compose ps`
