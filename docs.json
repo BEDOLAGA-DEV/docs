@@ -61,6 +61,7 @@
             "pages": [
               "bot/overview",
               "bot/user-onboarding",
+              "bot/channel-subscription",
               "bot/payments",
               "bot/subscriptions",
               "bot/tariffs",
