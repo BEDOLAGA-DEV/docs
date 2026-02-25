@@ -1,8 +1,7 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Bedolaga Bot API",
-    "description": "REST API для Telegram-бота Bedolaga и веб-кабинета Cabinet.",
+    "title": "Remnawave Bot Admin API",
     "version": "1.0.0"
   },
   "paths": {
@@ -9883,29 +9882,6 @@
         }
       }
     },
-    "/miniapp/app-config.json": {
-      "get": {
-        "tags": [
-          "miniapp"
-        ],
-        "summary": "Get App Config",
-        "operationId": "get_app_config_miniapp_app_config_json_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "additionalProperties": true,
-                  "type": "object",
-                  "title": "Response Get App Config Miniapp App Config Json Get"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/miniapp/maintenance/status": {
       "post": {
         "tags": [
@@ -13371,6 +13347,7 @@
     "/cabinet/auth/telegram": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Auth"
         ],
         "summary": "Auth Telegram",
@@ -13413,6 +13390,7 @@
     "/cabinet/auth/telegram/widget": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Auth"
         ],
         "summary": "Auth Telegram Widget",
@@ -13455,6 +13433,7 @@
     "/cabinet/auth/email/register": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Auth"
         ],
         "summary": "Register Email",
@@ -13500,6 +13479,7 @@
     "/cabinet/auth/email/register/standalone": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Auth"
         ],
         "summary": "Register Email Standalone",
@@ -13542,6 +13522,7 @@
     "/cabinet/auth/email/verify": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Auth"
         ],
         "summary": "Verify Email",
@@ -13584,6 +13565,7 @@
     "/cabinet/auth/email/resend": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Auth"
         ],
         "summary": "Resend Verification",
@@ -13609,6 +13591,7 @@
     "/cabinet/auth/email/login": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Auth"
         ],
         "summary": "Login Email",
@@ -13651,6 +13634,7 @@
     "/cabinet/auth/refresh": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Auth"
         ],
         "summary": "Refresh Token",
@@ -13693,6 +13677,7 @@
     "/cabinet/auth/logout": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Auth"
         ],
         "summary": "Logout",
@@ -13733,6 +13718,7 @@
     "/cabinet/auth/password/forgot": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Auth"
         ],
         "summary": "Forgot Password",
@@ -13773,6 +13759,7 @@
     "/cabinet/auth/password/reset": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Auth"
         ],
         "summary": "Reset Password",
@@ -13813,6 +13800,7 @@
     "/cabinet/auth/me": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Auth"
         ],
         "summary": "Get Current User",
@@ -13837,13 +13825,40 @@
         ]
       }
     },
+    "/cabinet/auth/me/permissions": {
+      "get": {
+        "tags": [
+          "Cabinet",
+          "Cabinet Auth"
+        ],
+        "summary": "Get My Permissions",
+        "description": "Get current user's RBAC permissions, roles, and level.",
+        "operationId": "get_my_permissions_cabinet_auth_me_permissions_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
     "/cabinet/auth/me/is-admin": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Auth"
         ],
         "summary": "Check Is Admin",
-        "description": "Check if current user is an admin.",
+        "description": "Check if current user is an admin (legacy config or RBAC).",
         "operationId": "check_is_admin_cabinet_auth_me_is_admin_get",
         "responses": {
           "200": {
@@ -13865,6 +13880,7 @@
     "/cabinet/auth/email/change": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Auth"
         ],
         "summary": "Request Email Change",
@@ -13912,6 +13928,7 @@
     "/cabinet/auth/email/change/verify": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Auth"
         ],
         "summary": "Verify Email Change",
@@ -13957,6 +13974,7 @@
     "/cabinet/auth/email/change/cancel": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Auth"
         ],
         "summary": "Cancel Email Change",
@@ -13982,6 +14000,7 @@
     "/cabinet/auth/email/change/status": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Auth"
         ],
         "summary": "Get Email Change Status",
@@ -14007,6 +14026,7 @@
     "/cabinet/auth/oauth/providers": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet OAuth"
         ],
         "summary": "Get Oauth Providers",
@@ -14029,6 +14049,7 @@
     "/cabinet/auth/oauth/{provider}/authorize": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet OAuth"
         ],
         "summary": "Get Oauth Authorize Url",
@@ -14072,6 +14093,7 @@
     "/cabinet/auth/oauth/{provider}/callback": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet OAuth"
         ],
         "summary": "Oauth Callback",
@@ -14125,6 +14147,7 @@
     "/cabinet/subscription": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Subscription"
         ],
         "summary": "Get Subscription",
@@ -14152,6 +14175,7 @@
     "/cabinet/subscription/renewal-options": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Subscription"
         ],
         "summary": "Get Renewal Options",
@@ -14183,6 +14207,7 @@
     "/cabinet/subscription/renew": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Subscription"
         ],
         "summary": "Renew Subscription",
@@ -14228,6 +14253,7 @@
     "/cabinet/subscription/traffic-packages": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Subscription"
         ],
         "summary": "Get Traffic Packages",
@@ -14259,6 +14285,7 @@
     "/cabinet/subscription/traffic": {
       "put": {
         "tags": [
+          "Cabinet",
           "Cabinet Subscription"
         ],
         "summary": "Switch Traffic Package",
@@ -14306,6 +14333,7 @@
       },
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Subscription"
         ],
         "summary": "Purchase Traffic",
@@ -14351,6 +14379,7 @@
     "/cabinet/subscription/devices": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Subscription"
         ],
         "summary": "Get Devices",
@@ -14378,6 +14407,7 @@
       },
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Subscription"
         ],
         "summary": "Purchase Devices Legacy",
@@ -14421,6 +14451,7 @@
       },
       "delete": {
         "tags": [
+          "Cabinet",
           "Cabinet Subscription"
         ],
         "summary": "Delete All Devices",
@@ -14450,6 +14481,7 @@
     "/cabinet/subscription/autopay": {
       "patch": {
         "tags": [
+          "Cabinet",
           "Cabinet Subscription"
         ],
         "summary": "Update Autopay",
@@ -14495,6 +14527,7 @@
     "/cabinet/subscription/trial": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Subscription"
         ],
         "summary": "Get Trial Info",
@@ -14520,6 +14553,7 @@
       },
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Subscription"
         ],
         "summary": "Activate Trial",
@@ -14547,6 +14581,7 @@
     "/cabinet/subscription/purchase-options": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Subscription"
         ],
         "summary": "Get Purchase Options",
@@ -14576,6 +14611,7 @@
     "/cabinet/subscription/purchase-preview": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Subscription"
         ],
         "summary": "Preview Purchase",
@@ -14625,6 +14661,7 @@
     "/cabinet/subscription/purchase": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Subscription"
         ],
         "summary": "Submit Purchase",
@@ -14674,6 +14711,7 @@
     "/cabinet/subscription/purchase-tariff": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Subscription"
         ],
         "summary": "Purchase Tariff",
@@ -14723,6 +14761,7 @@
     "/cabinet/subscription/devices/purchase": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Subscription"
         ],
         "summary": "Purchase Devices",
@@ -14768,6 +14807,7 @@
     "/cabinet/subscription/traffic/save-cart": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Subscription"
         ],
         "summary": "Save Traffic Cart",
@@ -14819,6 +14859,7 @@
     "/cabinet/subscription/devices/save-cart": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Subscription"
         ],
         "summary": "Save Devices Cart",
@@ -14870,6 +14911,7 @@
     "/cabinet/subscription/devices/price": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Subscription"
         ],
         "summary": "Get Device Price",
@@ -14917,6 +14959,7 @@
     "/cabinet/subscription/countries": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Subscription"
         ],
         "summary": "Get Available Countries",
@@ -14944,6 +14987,7 @@
       },
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Subscription"
         ],
         "summary": "Update Countries",
@@ -14995,6 +15039,7 @@
     "/cabinet/subscription/connection-link": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Subscription"
         ],
         "summary": "Get Connection Link",
@@ -15024,6 +15069,7 @@
     "/cabinet/subscription/happ-downloads": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Subscription"
         ],
         "summary": "Get Happ Downloads",
@@ -15053,6 +15099,7 @@
     "/cabinet/subscription/app-config": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Subscription"
         ],
         "summary": "Get App Config",
@@ -15082,6 +15129,7 @@
     "/cabinet/subscription/devices/{hwid}": {
       "delete": {
         "tags": [
+          "Cabinet",
           "Cabinet Subscription"
         ],
         "summary": "Delete Device",
@@ -15132,6 +15180,7 @@
     "/cabinet/subscription/devices/reduction-info": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Subscription"
         ],
         "summary": "Get Device Reduction Info",
@@ -15161,6 +15210,7 @@
     "/cabinet/subscription/devices/reduce": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Subscription"
         ],
         "summary": "Reduce Devices",
@@ -15214,6 +15264,7 @@
     "/cabinet/subscription/tariff/switch/preview": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Subscription"
         ],
         "summary": "Preview Tariff Switch",
@@ -15263,6 +15314,7 @@
     "/cabinet/subscription/tariff/switch": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Subscription"
         ],
         "summary": "Switch Tariff",
@@ -15312,6 +15364,7 @@
     "/cabinet/subscription/pause": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Subscription"
         ],
         "summary": "Toggle Subscription Pause",
@@ -15341,6 +15394,7 @@
     "/cabinet/subscription/refresh-traffic": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Subscription"
         ],
         "summary": "Refresh Traffic",
@@ -15366,6 +15420,7 @@
     "/cabinet/balance": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Balance"
         ],
         "summary": "Get Balance",
@@ -15393,6 +15448,7 @@
     "/cabinet/balance/transactions": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Balance"
         ],
         "summary": "Get Transactions",
@@ -15477,6 +15533,7 @@
     "/cabinet/balance/payment-methods": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Balance"
         ],
         "summary": "Get Payment Methods",
@@ -15508,6 +15565,7 @@
     "/cabinet/balance/stars-invoice": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Balance"
         ],
         "summary": "Create Stars Invoice",
@@ -15555,6 +15613,7 @@
     "/cabinet/balance/topup": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Balance"
         ],
         "summary": "Create Topup",
@@ -15602,6 +15661,7 @@
     "/cabinet/balance/pending-payments": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Balance"
         ],
         "summary": "Get Pending Payments",
@@ -15668,6 +15728,7 @@
     "/cabinet/balance/pending-payments/{method}/{payment_id}": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Balance"
         ],
         "summary": "Get Pending Payment Details",
@@ -15725,6 +15786,7 @@
     "/cabinet/balance/pending-payments/{method}/{payment_id}/check": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Balance"
         ],
         "summary": "Check Payment Status",
@@ -15782,6 +15844,7 @@
     "/cabinet/referral": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Referral"
         ],
         "summary": "Get Referral Info",
@@ -15809,6 +15872,7 @@
     "/cabinet/referral/list": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Referral"
         ],
         "summary": "Get Referral List",
@@ -15875,6 +15939,7 @@
     "/cabinet/referral/earnings": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Referral"
         ],
         "summary": "Get Referral Earnings",
@@ -15941,6 +16006,7 @@
     "/cabinet/referral/terms": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Referral"
         ],
         "summary": "Get Referral Terms",
@@ -15963,6 +16029,7 @@
     "/cabinet/referral/partner/status": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Partner"
         ],
         "summary": "Get Partner Status",
@@ -15990,6 +16057,7 @@
     "/cabinet/referral/partner/apply": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Partner"
         ],
         "summary": "Apply For Partner",
@@ -16037,6 +16105,7 @@
     "/cabinet/referral/withdrawal/balance": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Withdrawal"
         ],
         "summary": "Get Withdrawal Balance",
@@ -16064,6 +16133,7 @@
     "/cabinet/referral/withdrawal/create": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Withdrawal"
         ],
         "summary": "Create Withdrawal",
@@ -16111,6 +16181,7 @@
     "/cabinet/referral/withdrawal/history": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Withdrawal"
         ],
         "summary": "Get Withdrawal History",
@@ -16138,6 +16209,7 @@
     "/cabinet/referral/withdrawal/{request_id}/cancel": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Withdrawal"
         ],
         "summary": "Cancel Withdrawal",
@@ -16184,6 +16256,7 @@
     "/cabinet/tickets/notifications": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Ticket Notifications"
         ],
         "summary": "Get User Notifications",
@@ -16258,6 +16331,7 @@
     "/cabinet/tickets/notifications/unread-count": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Ticket Notifications"
         ],
         "summary": "Get User Unread Count",
@@ -16285,6 +16359,7 @@
     "/cabinet/tickets/notifications/{notification_id}/read": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Ticket Notifications"
         ],
         "summary": "Mark Notification As Read",
@@ -16331,6 +16406,7 @@
     "/cabinet/tickets/notifications/read-all": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Ticket Notifications"
         ],
         "summary": "Mark All Notifications As Read",
@@ -16356,6 +16432,7 @@
     "/cabinet/tickets/notifications/ticket/{ticket_id}/read": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Ticket Notifications"
         ],
         "summary": "Mark Ticket Notifications As Read",
@@ -16402,6 +16479,7 @@
     "/cabinet/tickets": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Tickets"
         ],
         "summary": "Get Tickets",
@@ -16484,6 +16562,7 @@
       },
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Tickets"
         ],
         "summary": "Create Ticket",
@@ -16531,6 +16610,7 @@
     "/cabinet/tickets/{ticket_id}": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Tickets"
         ],
         "summary": "Get Ticket",
@@ -16579,6 +16659,7 @@
     "/cabinet/tickets/{ticket_id}/messages": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Tickets"
         ],
         "summary": "Add Ticket Message",
@@ -16637,6 +16718,7 @@
     "/cabinet/promocode/activate": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Promocode"
         ],
         "summary": "Activate Promocode",
@@ -16684,6 +16766,7 @@
     "/cabinet/promocode/deactivate-discount": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Promocode"
         ],
         "summary": "Deactivate Discount Promocode",
@@ -16711,6 +16794,7 @@
     "/cabinet/contests/count": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Contests"
         ],
         "summary": "Get Contests Count",
@@ -16738,6 +16822,7 @@
     "/cabinet/contests": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Contests"
         ],
         "summary": "Get Contests",
@@ -16769,6 +16854,7 @@
     "/cabinet/contests/{round_id}": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Contests"
         ],
         "summary": "Get Contest Game",
@@ -16817,6 +16903,7 @@
     "/cabinet/contests/{round_id}/answer": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Contests"
         ],
         "summary": "Submit Contest Answer",
@@ -16875,6 +16962,7 @@
     "/cabinet/polls/count": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Polls"
         ],
         "summary": "Get Polls Count",
@@ -16902,6 +16990,7 @@
     "/cabinet/polls": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Polls"
         ],
         "summary": "Get Available Polls",
@@ -16933,6 +17022,7 @@
     "/cabinet/polls/{response_id}": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Polls"
         ],
         "summary": "Get Poll Details",
@@ -16981,6 +17071,7 @@
     "/cabinet/polls/{response_id}/start": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Polls"
         ],
         "summary": "Start Poll",
@@ -17029,6 +17120,7 @@
     "/cabinet/polls/{response_id}/questions/{question_id}/answer": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Polls"
         ],
         "summary": "Answer Question",
@@ -17096,6 +17188,7 @@
     "/cabinet/promo/offers": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Promo"
         ],
         "summary": "Get Promo Offers",
@@ -17127,6 +17220,7 @@
     "/cabinet/promo/active-discount": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Promo"
         ],
         "summary": "Get Active Discount",
@@ -17152,6 +17246,7 @@
       },
       "delete": {
         "tags": [
+          "Cabinet",
           "Cabinet Promo"
         ],
         "summary": "Clear Active Discount",
@@ -17177,6 +17272,7 @@
     "/cabinet/promo/group-discounts": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Promo"
         ],
         "summary": "Get Promo Group Discounts",
@@ -17204,6 +17300,7 @@
     "/cabinet/promo/loyalty-tiers": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Promo"
         ],
         "summary": "Get Loyalty Tiers",
@@ -17231,6 +17328,7 @@
     "/cabinet/promo/claim": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Promo"
         ],
         "summary": "Claim Promo Offer",
@@ -17278,6 +17376,7 @@
     "/cabinet/notifications": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Notifications"
         ],
         "summary": "Get Notification Settings",
@@ -17303,6 +17402,7 @@
       },
       "patch": {
         "tags": [
+          "Cabinet",
           "Cabinet Notifications"
         ],
         "summary": "Update Notification Settings",
@@ -17350,6 +17450,7 @@
     "/cabinet/notifications/test": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Notifications"
         ],
         "summary": "Send Test Notification",
@@ -17375,6 +17476,7 @@
     "/cabinet/notifications/history": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Notifications"
         ],
         "summary": "Get Notification History",
@@ -17432,6 +17534,7 @@
     "/cabinet/info/faq": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Info"
         ],
         "summary": "Get Faq Pages",
@@ -17482,6 +17585,7 @@
     "/cabinet/info/faq/{page_id}": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Info"
         ],
         "summary": "Get Faq Page",
@@ -17537,6 +17641,7 @@
     "/cabinet/info/rules": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Info"
         ],
         "summary": "Get Rules",
@@ -17583,6 +17688,7 @@
     "/cabinet/info/privacy-policy": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Info"
         ],
         "summary": "Get Privacy Policy",
@@ -17629,6 +17735,7 @@
     "/cabinet/info/public-offer": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Info"
         ],
         "summary": "Get Public Offer",
@@ -17675,6 +17782,7 @@
     "/cabinet/info/service": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Info"
         ],
         "summary": "Get Service Info",
@@ -17697,6 +17805,7 @@
     "/cabinet/info/languages": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Info"
         ],
         "summary": "Get Available Languages",
@@ -17717,6 +17826,7 @@
     "/cabinet/info/user/language": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Info"
         ],
         "summary": "Get User Language",
@@ -17740,6 +17850,7 @@
       },
       "patch": {
         "tags": [
+          "Cabinet",
           "Cabinet Info"
         ],
         "summary": "Update User Language",
@@ -17789,6 +17900,7 @@
     "/cabinet/info/support-config": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Info"
         ],
         "summary": "Get Support Config",
@@ -17811,6 +17923,7 @@
     "/cabinet/branding": {
       "get": {
         "tags": [
+          "Cabinet",
           "Branding"
         ],
         "summary": "Get Branding",
@@ -17833,6 +17946,7 @@
     "/cabinet/branding/logo": {
       "get": {
         "tags": [
+          "Cabinet",
           "Branding"
         ],
         "summary": "Get Logo",
@@ -17851,6 +17965,7 @@
       },
       "post": {
         "tags": [
+          "Cabinet",
           "Branding"
         ],
         "summary": "Upload Logo",
@@ -17896,6 +18011,7 @@
       },
       "delete": {
         "tags": [
+          "Cabinet",
           "Branding"
         ],
         "summary": "Delete Logo",
@@ -17923,6 +18039,7 @@
     "/cabinet/branding/name": {
       "put": {
         "tags": [
+          "Cabinet",
           "Branding"
         ],
         "summary": "Update Branding Name",
@@ -17970,6 +18087,7 @@
     "/cabinet/branding/colors": {
       "get": {
         "tags": [
+          "Cabinet",
           "Branding"
         ],
         "summary": "Get Theme Colors",
@@ -17990,6 +18108,7 @@
       },
       "patch": {
         "tags": [
+          "Cabinet",
           "Branding"
         ],
         "summary": "Update Theme Colors",
@@ -18037,6 +18156,7 @@
     "/cabinet/branding/colors/reset": {
       "post": {
         "tags": [
+          "Cabinet",
           "Branding"
         ],
         "summary": "Reset Theme Colors",
@@ -18064,6 +18184,7 @@
     "/cabinet/branding/themes": {
       "get": {
         "tags": [
+          "Cabinet",
           "Branding"
         ],
         "summary": "Get Enabled Themes",
@@ -18084,6 +18205,7 @@
       },
       "patch": {
         "tags": [
+          "Cabinet",
           "Branding"
         ],
         "summary": "Update Enabled Themes",
@@ -18131,6 +18253,7 @@
     "/cabinet/branding/animation": {
       "get": {
         "tags": [
+          "Cabinet",
           "Branding"
         ],
         "summary": "Get Animation Enabled",
@@ -18151,6 +18274,7 @@
       },
       "patch": {
         "tags": [
+          "Cabinet",
           "Branding"
         ],
         "summary": "Update Animation Enabled",
@@ -18195,9 +18319,79 @@
         ]
       }
     },
+    "/cabinet/branding/animation-config": {
+      "get": {
+        "tags": [
+          "Cabinet",
+          "Branding"
+        ],
+        "summary": "Get Animation Config",
+        "description": "Get full animation config. Public endpoint.",
+        "operationId": "get_animation_config_cabinet_branding_animation_config_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnimationConfigResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Cabinet",
+          "Branding"
+        ],
+        "summary": "Update Animation Config",
+        "description": "Update animation config (partial update). Admin only.",
+        "operationId": "update_animation_config_cabinet_branding_animation_config_patch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnimationConfigUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnimationConfigResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
     "/cabinet/branding/fullscreen": {
       "get": {
         "tags": [
+          "Cabinet",
           "Branding"
         ],
         "summary": "Get Fullscreen Enabled",
@@ -18218,6 +18412,7 @@
       },
       "patch": {
         "tags": [
+          "Cabinet",
           "Branding"
         ],
         "summary": "Update Fullscreen Enabled",
@@ -18265,6 +18460,7 @@
     "/cabinet/branding/email-auth": {
       "get": {
         "tags": [
+          "Cabinet",
           "Branding"
         ],
         "summary": "Get Email Auth Enabled",
@@ -18285,6 +18481,7 @@
       },
       "patch": {
         "tags": [
+          "Cabinet",
           "Branding"
         ],
         "summary": "Update Email Auth Enabled",
@@ -18332,6 +18529,7 @@
     "/cabinet/branding/analytics": {
       "get": {
         "tags": [
+          "Cabinet",
           "Branding"
         ],
         "summary": "Get Analytics Counters",
@@ -18352,6 +18550,7 @@
       },
       "patch": {
         "tags": [
+          "Cabinet",
           "Branding"
         ],
         "summary": "Update Analytics Counters",
@@ -18399,6 +18598,7 @@
     "/cabinet/branding/lite-mode": {
       "get": {
         "tags": [
+          "Cabinet",
           "Branding"
         ],
         "summary": "Get Lite Mode Enabled",
@@ -18419,6 +18619,7 @@
       },
       "patch": {
         "tags": [
+          "Cabinet",
           "Branding"
         ],
         "summary": "Update Lite Mode Enabled",
@@ -18466,6 +18667,7 @@
     "/cabinet/media/upload": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Media"
         ],
         "summary": "Upload Media",
@@ -18513,6 +18715,7 @@
     "/cabinet/media/{file_id}": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Media"
         ],
         "summary": "Cabinet Download Media",
@@ -18554,6 +18757,7 @@
     "/cabinet/wheel/config": {
       "get": {
         "tags": [
+          "Cabinet",
           "Fortune Wheel"
         ],
         "summary": "Get Wheel Config",
@@ -18581,6 +18785,7 @@
     "/cabinet/wheel/availability": {
       "get": {
         "tags": [
+          "Cabinet",
           "Fortune Wheel"
         ],
         "summary": "Check Spin Availability",
@@ -18608,6 +18813,7 @@
     "/cabinet/wheel/spin": {
       "post": {
         "tags": [
+          "Cabinet",
           "Fortune Wheel"
         ],
         "summary": "Spin Wheel",
@@ -18655,6 +18861,7 @@
     "/cabinet/wheel/history": {
       "get": {
         "tags": [
+          "Cabinet",
           "Fortune Wheel"
         ],
         "summary": "Get Spin History",
@@ -18714,6 +18921,7 @@
     "/cabinet/wheel/stars-invoice": {
       "post": {
         "tags": [
+          "Cabinet",
           "Fortune Wheel"
         ],
         "summary": "Create Stars Invoice",
@@ -18741,6 +18949,7 @@
     "/cabinet/admin/tickets/notifications": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Ticket Notifications"
         ],
         "summary": "Get Admin Notifications",
@@ -18815,6 +19024,7 @@
     "/cabinet/admin/tickets/notifications/unread-count": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Ticket Notifications"
         ],
         "summary": "Get Admin Unread Count",
@@ -18842,6 +19052,7 @@
     "/cabinet/admin/tickets/notifications/{notification_id}/read": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Ticket Notifications"
         ],
         "summary": "Mark Admin Notification As Read",
@@ -18888,6 +19099,7 @@
     "/cabinet/admin/tickets/notifications/read-all": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Ticket Notifications"
         ],
         "summary": "Mark All Admin Notifications As Read",
@@ -18913,6 +19125,7 @@
     "/cabinet/admin/tickets/notifications/ticket/{ticket_id}/read": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Ticket Notifications"
         ],
         "summary": "Mark Admin Ticket Notifications As Read",
@@ -18959,6 +19172,7 @@
     "/cabinet/admin/tickets/stats": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Tickets"
         ],
         "summary": "Get Ticket Stats",
@@ -18986,6 +19200,7 @@
     "/cabinet/admin/tickets/settings": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Tickets"
         ],
         "summary": "Get Ticket Settings",
@@ -19011,6 +19226,7 @@
       },
       "patch": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Tickets"
         ],
         "summary": "Update Ticket Settings",
@@ -19058,6 +19274,7 @@
     "/cabinet/admin/tickets": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Tickets"
         ],
         "summary": "Get All Tickets",
@@ -19178,6 +19395,7 @@
     "/cabinet/admin/tickets/{ticket_id}": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Tickets"
         ],
         "summary": "Get Ticket Detail",
@@ -19226,6 +19444,7 @@
     "/cabinet/admin/tickets/{ticket_id}/reply": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Tickets"
         ],
         "summary": "Reply To Ticket",
@@ -19284,6 +19503,7 @@
     "/cabinet/admin/tickets/{ticket_id}/status": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Tickets"
         ],
         "summary": "Update Ticket Status",
@@ -19342,6 +19562,7 @@
     "/cabinet/admin/tickets/{ticket_id}/priority": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Tickets"
         ],
         "summary": "Update Ticket Priority",
@@ -19400,6 +19621,7 @@
     "/cabinet/admin/settings/categories": {
       "get": {
         "tags": [
+          "Cabinet",
           "Admin Settings"
         ],
         "summary": "List Categories",
@@ -19431,6 +19653,7 @@
     "/cabinet/admin/settings": {
       "get": {
         "tags": [
+          "Cabinet",
           "Admin Settings"
         ],
         "summary": "List Settings",
@@ -19490,6 +19713,7 @@
     "/cabinet/admin/settings/{key}": {
       "get": {
         "tags": [
+          "Cabinet",
           "Admin Settings"
         ],
         "summary": "Get Setting",
@@ -19536,6 +19760,7 @@
       },
       "put": {
         "tags": [
+          "Cabinet",
           "Admin Settings"
         ],
         "summary": "Update Setting",
@@ -19592,6 +19817,7 @@
       },
       "delete": {
         "tags": [
+          "Cabinet",
           "Admin Settings"
         ],
         "summary": "Reset Setting",
@@ -19637,611 +19863,10 @@
         }
       }
     },
-    "/cabinet/admin/apps": {
-      "get": {
-        "tags": [
-          "Cabinet Admin Apps"
-        ],
-        "summary": "Get App Config",
-        "description": "Get full app configuration.",
-        "operationId": "get_app_config_cabinet_admin_apps_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AppConfigResponse"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ]
-      }
-    },
-    "/cabinet/admin/apps/platforms": {
-      "get": {
-        "tags": [
-          "Cabinet Admin Apps"
-        ],
-        "summary": "Get Platforms",
-        "description": "Get list of available platforms.",
-        "operationId": "get_platforms_cabinet_admin_apps_platforms_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": {
-                    "type": "string"
-                  },
-                  "type": "array",
-                  "title": "Response Get Platforms Cabinet Admin Apps Platforms Get"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ]
-      }
-    },
-    "/cabinet/admin/apps/platforms/{platform}": {
-      "get": {
-        "tags": [
-          "Cabinet Admin Apps"
-        ],
-        "summary": "Get Platform Apps",
-        "description": "Get apps for a specific platform.",
-        "operationId": "get_platform_apps_cabinet_admin_apps_platforms__platform__get",
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "platform",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Platform"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/AppDefinition-Output"
-                  },
-                  "title": "Response Get Platform Apps Cabinet Admin Apps Platforms  Platform  Get"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "Cabinet Admin Apps"
-        ],
-        "summary": "Create App",
-        "description": "Create a new app for a platform.",
-        "operationId": "create_app_cabinet_admin_apps_platforms__platform__post",
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "platform",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Platform"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateAppRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AppDefinition-Output"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/cabinet/admin/apps/platforms/{platform}/{app_id}": {
-      "put": {
-        "tags": [
-          "Cabinet Admin Apps"
-        ],
-        "summary": "Update App",
-        "description": "Update an existing app.",
-        "operationId": "update_app_cabinet_admin_apps_platforms__platform___app_id__put",
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "platform",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Platform"
-            }
-          },
-          {
-            "name": "app_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "App Id"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateAppRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AppDefinition-Output"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "Cabinet Admin Apps"
-        ],
-        "summary": "Delete App",
-        "description": "Delete an app from a platform.",
-        "operationId": "delete_app_cabinet_admin_apps_platforms__platform___app_id__delete",
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "platform",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Platform"
-            }
-          },
-          {
-            "name": "app_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "App Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/cabinet/admin/apps/platforms/{platform}/reorder": {
-      "post": {
-        "tags": [
-          "Cabinet Admin Apps"
-        ],
-        "summary": "Reorder Apps",
-        "description": "Reorder apps in a platform.",
-        "operationId": "reorder_apps_cabinet_admin_apps_platforms__platform__reorder_post",
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "platform",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Platform"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ReorderAppsRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/cabinet/admin/apps/branding": {
-      "get": {
-        "tags": [
-          "Cabinet Admin Apps"
-        ],
-        "summary": "Get Branding",
-        "description": "Get branding configuration.",
-        "operationId": "get_branding_cabinet_admin_apps_branding_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AppConfigBranding"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ]
-      },
-      "put": {
-        "tags": [
-          "Cabinet Admin Apps"
-        ],
-        "summary": "Update Branding",
-        "description": "Update branding configuration.",
-        "operationId": "update_branding_cabinet_admin_apps_branding_put",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateBrandingRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AppConfigBranding"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ]
-      }
-    },
-    "/cabinet/admin/apps/platforms/{platform}/copy/{app_id}": {
-      "post": {
-        "tags": [
-          "Cabinet Admin Apps"
-        ],
-        "summary": "Copy App To Platform",
-        "description": "Copy an app from one platform to another.",
-        "operationId": "copy_app_to_platform_cabinet_admin_apps_platforms__platform__copy__app_id__post",
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "platform",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Platform"
-            }
-          },
-          {
-            "name": "app_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "App Id"
-            }
-          },
-          {
-            "name": "target_platform",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Target Platform"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/cabinet/admin/apps/remnawave/status": {
-      "get": {
-        "tags": [
-          "Cabinet Admin Apps"
-        ],
-        "summary": "Get Remnawave Config Status",
-        "description": "Get RemnaWave config integration status.",
-        "operationId": "get_remnawave_config_status_cabinet_admin_apps_remnawave_status_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RemnaWaveConfigStatus"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ]
-      }
-    },
-    "/cabinet/admin/apps/remnawave/uuid": {
-      "put": {
-        "tags": [
-          "Cabinet Admin Apps"
-        ],
-        "summary": "Set Remnawave Config Uuid",
-        "description": "Set RemnaWave subscription config UUID.",
-        "operationId": "set_remnawave_config_uuid_cabinet_admin_apps_remnawave_uuid_put",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateRemnaWaveUuidRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RemnaWaveConfigStatus"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ]
-      }
-    },
-    "/cabinet/admin/apps/remnawave/config": {
-      "get": {
-        "tags": [
-          "Cabinet Admin Apps"
-        ],
-        "summary": "Get Remnawave Subscription Config",
-        "description": "Fetch subscription page config from RemnaWave panel.\nUses CABINET_REMNA_SUB_CONFIG setting for the config UUID.",
-        "operationId": "get_remnawave_subscription_config_cabinet_admin_apps_remnawave_config_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ]
-      }
-    },
-    "/cabinet/admin/apps/remnawave/configs": {
-      "get": {
-        "tags": [
-          "Cabinet Admin Apps"
-        ],
-        "summary": "List Remnawave Subscription Configs",
-        "description": "List available subscription page configs from RemnaWave panel.",
-        "operationId": "list_remnawave_subscription_configs_cabinet_admin_apps_remnawave_configs_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ]
-      }
-    },
     "/cabinet/admin/wheel/config": {
       "get": {
         "tags": [
+          "Cabinet",
           "Admin Fortune Wheel"
         ],
         "summary": "Get Admin Wheel Config",
@@ -20267,6 +19892,7 @@
       },
       "put": {
         "tags": [
+          "Cabinet",
           "Admin Fortune Wheel"
         ],
         "summary": "Update Admin Wheel Config",
@@ -20314,6 +19940,7 @@
     "/cabinet/admin/wheel/prizes": {
       "get": {
         "tags": [
+          "Cabinet",
           "Admin Fortune Wheel"
         ],
         "summary": "Get Prizes",
@@ -20343,6 +19970,7 @@
       },
       "post": {
         "tags": [
+          "Cabinet",
           "Admin Fortune Wheel"
         ],
         "summary": "Create Prize",
@@ -20390,6 +20018,7 @@
     "/cabinet/admin/wheel/prizes/{prize_id}": {
       "put": {
         "tags": [
+          "Cabinet",
           "Admin Fortune Wheel"
         ],
         "summary": "Update Prize",
@@ -20446,6 +20075,7 @@
       },
       "delete": {
         "tags": [
+          "Cabinet",
           "Admin Fortune Wheel"
         ],
         "summary": "Delete Prize Endpoint",
@@ -20487,6 +20117,7 @@
     "/cabinet/admin/wheel/prizes/reorder": {
       "post": {
         "tags": [
+          "Cabinet",
           "Admin Fortune Wheel"
         ],
         "summary": "Reorder Prizes",
@@ -20532,6 +20163,7 @@
     "/cabinet/admin/wheel/statistics": {
       "get": {
         "tags": [
+          "Cabinet",
           "Admin Fortune Wheel"
         ],
         "summary": "Get Statistics",
@@ -20605,6 +20237,7 @@
     "/cabinet/admin/wheel/spins": {
       "get": {
         "tags": [
+          "Cabinet",
           "Admin Fortune Wheel"
         ],
         "summary": "Get All Spins Endpoint",
@@ -20717,6 +20350,7 @@
     "/cabinet/admin/tariffs": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Tariffs"
         ],
         "summary": "List Tariffs",
@@ -20764,6 +20398,7 @@
       },
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Tariffs"
         ],
         "summary": "Create New Tariff",
@@ -20811,6 +20446,7 @@
     "/cabinet/admin/tariffs/available-servers": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Tariffs"
         ],
         "summary": "Get Available Servers",
@@ -20842,6 +20478,7 @@
     "/cabinet/admin/tariffs/order": {
       "put": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Tariffs"
         ],
         "summary": "Update Tariff Order",
@@ -20887,6 +20524,7 @@
     "/cabinet/admin/tariffs/{tariff_id}": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Tariffs"
         ],
         "summary": "Get Tariff",
@@ -20933,6 +20571,7 @@
       },
       "put": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Tariffs"
         ],
         "summary": "Update Existing Tariff",
@@ -20989,6 +20628,7 @@
       },
       "delete": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Tariffs"
         ],
         "summary": "Delete Existing Tariff",
@@ -21035,6 +20675,7 @@
     "/cabinet/admin/tariffs/{tariff_id}/toggle": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Tariffs"
         ],
         "summary": "Toggle Tariff",
@@ -21083,6 +20724,7 @@
     "/cabinet/admin/tariffs/{tariff_id}/trial": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Tariffs"
         ],
         "summary": "Toggle Trial Tariff",
@@ -21131,6 +20773,7 @@
     "/cabinet/admin/tariffs/{tariff_id}/stats": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Tariffs"
         ],
         "summary": "Get Tariff Stats",
@@ -21179,6 +20822,7 @@
     "/cabinet/admin/servers": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Servers"
         ],
         "summary": "List Servers",
@@ -21228,6 +20872,7 @@
     "/cabinet/admin/servers/{server_id}": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Servers"
         ],
         "summary": "Get Server",
@@ -21274,6 +20919,7 @@
       },
       "put": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Servers"
         ],
         "summary": "Update Existing Server",
@@ -21332,6 +20978,7 @@
     "/cabinet/admin/servers/{server_id}/toggle": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Servers"
         ],
         "summary": "Toggle Server",
@@ -21380,6 +21027,7 @@
     "/cabinet/admin/servers/{server_id}/trial": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Servers"
         ],
         "summary": "Toggle Server Trial",
@@ -21428,6 +21076,7 @@
     "/cabinet/admin/servers/{server_id}/stats": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Servers"
         ],
         "summary": "Get Server Stats",
@@ -21476,6 +21125,7 @@
     "/cabinet/admin/servers/sync": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Servers"
         ],
         "summary": "Sync Servers",
@@ -21503,6 +21153,7 @@
     "/cabinet/admin/stats/dashboard": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Stats"
         ],
         "summary": "Get Dashboard Stats",
@@ -21530,6 +21181,7 @@
     "/cabinet/admin/stats/system-info": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Stats"
         ],
         "summary": "Get System Info",
@@ -21557,6 +21209,7 @@
     "/cabinet/admin/stats/nodes": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Stats"
         ],
         "summary": "Get Nodes Status",
@@ -21584,6 +21237,7 @@
     "/cabinet/admin/stats/nodes/{node_uuid}/restart": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Stats"
         ],
         "summary": "Restart Node",
@@ -21630,6 +21284,7 @@
     "/cabinet/admin/stats/nodes/{node_uuid}/toggle": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Stats"
         ],
         "summary": "Toggle Node",
@@ -21676,6 +21331,7 @@
     "/cabinet/admin/stats/referrals/top": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Stats"
         ],
         "summary": "Get Top Referrers",
@@ -21725,6 +21381,7 @@
     "/cabinet/admin/stats/campaigns/top": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Stats"
         ],
         "summary": "Get Top Campaigns",
@@ -21774,6 +21431,7 @@
     "/cabinet/admin/stats/payments/recent": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Stats"
         ],
         "summary": "Get Recent Payments",
@@ -21823,6 +21481,7 @@
     "/cabinet/admin/ban-system/status": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Ban System"
         ],
         "summary": "Get Ban System Status",
@@ -21850,6 +21509,7 @@
     "/cabinet/admin/ban-system/stats/raw": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Ban System"
         ],
         "summary": "Get Stats Raw",
@@ -21879,6 +21539,7 @@
     "/cabinet/admin/ban-system/stats": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Ban System"
         ],
         "summary": "Get Stats",
@@ -21906,6 +21567,7 @@
     "/cabinet/admin/ban-system/users": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Ban System"
         ],
         "summary": "Get Users",
@@ -21986,6 +21648,7 @@
     "/cabinet/admin/ban-system/users/over-limit": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Ban System"
         ],
         "summary": "Get Users Over Limit",
@@ -22037,6 +21700,7 @@
     "/cabinet/admin/ban-system/users/search/{query}": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Ban System"
         ],
         "summary": "Search Users",
@@ -22085,6 +21749,7 @@
     "/cabinet/admin/ban-system/users/{email}": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Ban System"
         ],
         "summary": "Get User Detail",
@@ -22133,6 +21798,7 @@
     "/cabinet/admin/ban-system/punishments": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Ban System"
         ],
         "summary": "Get Punishments",
@@ -22160,6 +21826,7 @@
     "/cabinet/admin/ban-system/punishments/{user_id}/unban": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Ban System"
         ],
         "summary": "Unban User",
@@ -22208,6 +21875,7 @@
     "/cabinet/admin/ban-system/ban": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Ban System"
         ],
         "summary": "Ban User",
@@ -22255,6 +21923,7 @@
     "/cabinet/admin/ban-system/history/{query}": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Ban System"
         ],
         "summary": "Get Punishment History",
@@ -22315,6 +21984,7 @@
     "/cabinet/admin/ban-system/nodes": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Ban System"
         ],
         "summary": "Get Nodes",
@@ -22342,6 +22012,7 @@
     "/cabinet/admin/ban-system/agents": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Ban System"
         ],
         "summary": "Get Agents",
@@ -22433,6 +22104,7 @@
     "/cabinet/admin/ban-system/agents/summary": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Ban System"
         ],
         "summary": "Get Agents Summary",
@@ -22460,6 +22132,7 @@
     "/cabinet/admin/ban-system/traffic/violations": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Ban System"
         ],
         "summary": "Get Traffic Violations",
@@ -22511,6 +22184,7 @@
     "/cabinet/admin/ban-system/traffic": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Ban System"
         ],
         "summary": "Get Traffic",
@@ -22538,6 +22212,7 @@
     "/cabinet/admin/ban-system/traffic/top": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Ban System"
         ],
         "summary": "Get Traffic Top",
@@ -22593,6 +22268,7 @@
     "/cabinet/admin/ban-system/settings": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Ban System"
         ],
         "summary": "Get Settings",
@@ -22620,6 +22296,7 @@
     "/cabinet/admin/ban-system/settings/{key}": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Ban System"
         ],
         "summary": "Get Setting",
@@ -22666,6 +22343,7 @@
       },
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Ban System"
         ],
         "summary": "Set Setting",
@@ -22723,6 +22401,7 @@
     "/cabinet/admin/ban-system/settings/{key}/toggle": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Ban System"
         ],
         "summary": "Toggle Setting",
@@ -22771,6 +22450,7 @@
     "/cabinet/admin/ban-system/settings/whitelist/add": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Ban System"
         ],
         "summary": "Whitelist Add",
@@ -22818,6 +22498,7 @@
     "/cabinet/admin/ban-system/settings/whitelist/remove": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Ban System"
         ],
         "summary": "Whitelist Remove",
@@ -22865,6 +22546,7 @@
     "/cabinet/admin/ban-system/report": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Ban System"
         ],
         "summary": "Get Report",
@@ -22916,6 +22598,7 @@
     "/cabinet/admin/ban-system/health": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Ban System"
         ],
         "summary": "Get Health",
@@ -22943,6 +22626,7 @@
     "/cabinet/admin/ban-system/health/detailed": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Ban System"
         ],
         "summary": "Get Health Detailed",
@@ -22970,6 +22654,7 @@
     "/cabinet/admin/ban-system/agents/{node_name}/history": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Ban System"
         ],
         "summary": "Get Agent History",
@@ -23030,6 +22715,7 @@
     "/cabinet/admin/ban-system/users/{email}/history": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Ban System"
         ],
         "summary": "Get User Punishment History",
@@ -23090,6 +22776,7 @@
     "/cabinet/admin/broadcasts/filters": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Broadcasts"
         ],
         "summary": "Get Filters",
@@ -23117,6 +22804,7 @@
     "/cabinet/admin/broadcasts/tariffs": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Broadcasts"
         ],
         "summary": "Get Tariffs",
@@ -23144,6 +22832,7 @@
     "/cabinet/admin/broadcasts/buttons": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Broadcasts"
         ],
         "summary": "Get Buttons",
@@ -23171,6 +22860,7 @@
     "/cabinet/admin/broadcasts/preview": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Broadcasts"
         ],
         "summary": "Preview Broadcast",
@@ -23218,6 +22908,7 @@
     "/cabinet/admin/broadcasts": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Broadcasts"
         ],
         "summary": "Create Broadcast",
@@ -23263,6 +22954,7 @@
       },
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Broadcasts"
         ],
         "summary": "List Broadcasts",
@@ -23325,6 +23017,7 @@
     "/cabinet/admin/broadcasts/email-filters": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Broadcasts"
         ],
         "summary": "Get Email Filters",
@@ -23352,6 +23045,7 @@
     "/cabinet/admin/broadcasts/email-preview": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Broadcasts"
         ],
         "summary": "Preview Email Broadcast",
@@ -23399,6 +23093,7 @@
     "/cabinet/admin/broadcasts/send": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Broadcasts"
         ],
         "summary": "Create Combined Broadcast",
@@ -23446,6 +23141,7 @@
     "/cabinet/admin/broadcasts/{broadcast_id}": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Broadcasts"
         ],
         "summary": "Get Broadcast",
@@ -23494,6 +23190,7 @@
     "/cabinet/admin/broadcasts/{broadcast_id}/stop": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Broadcasts"
         ],
         "summary": "Stop Broadcast",
@@ -23542,6 +23239,7 @@
     "/cabinet/admin/promocodes": {
       "get": {
         "tags": [
+          "Cabinet",
           "Admin Promocodes"
         ],
         "summary": "List Promocodes",
@@ -23618,6 +23316,7 @@
       },
       "post": {
         "tags": [
+          "Cabinet",
           "Admin Promocodes"
         ],
         "summary": "Create Promocode Endpoint",
@@ -23665,6 +23364,7 @@
     "/cabinet/admin/promocodes/{promocode_id}": {
       "get": {
         "tags": [
+          "Cabinet",
           "Admin Promocodes"
         ],
         "summary": "Get Promocode",
@@ -23711,6 +23411,7 @@
       },
       "patch": {
         "tags": [
+          "Cabinet",
           "Admin Promocodes"
         ],
         "summary": "Update Promocode Endpoint",
@@ -23767,6 +23468,7 @@
       },
       "delete": {
         "tags": [
+          "Cabinet",
           "Admin Promocodes"
         ],
         "summary": "Delete Promocode Endpoint",
@@ -23808,6 +23510,7 @@
     "/cabinet/admin/promocodes/deactivate-discount/{user_id}": {
       "post": {
         "tags": [
+          "Cabinet",
           "Admin Promocodes"
         ],
         "summary": "Admin Deactivate Discount Promocode",
@@ -23856,6 +23559,7 @@
     "/cabinet/admin/promo-groups": {
       "get": {
         "tags": [
+          "Cabinet",
           "Admin Promo Groups"
         ],
         "summary": "List Promo Groups",
@@ -23916,6 +23620,7 @@
       },
       "post": {
         "tags": [
+          "Cabinet",
           "Admin Promo Groups"
         ],
         "summary": "Create Promo Group Endpoint",
@@ -23963,6 +23668,7 @@
     "/cabinet/admin/promo-groups/{group_id}": {
       "get": {
         "tags": [
+          "Cabinet",
           "Admin Promo Groups"
         ],
         "summary": "Get Promo Group",
@@ -24009,6 +23715,7 @@
       },
       "patch": {
         "tags": [
+          "Cabinet",
           "Admin Promo Groups"
         ],
         "summary": "Update Promo Group Endpoint",
@@ -24065,6 +23772,7 @@
       },
       "delete": {
         "tags": [
+          "Cabinet",
           "Admin Promo Groups"
         ],
         "summary": "Delete Promo Group Endpoint",
@@ -24106,6 +23814,7 @@
     "/cabinet/admin/campaigns/overview": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Campaigns"
         ],
         "summary": "Get Overview",
@@ -24133,6 +23842,7 @@
     "/cabinet/admin/campaigns/available-servers": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Campaigns"
         ],
         "summary": "Get Available Servers",
@@ -24164,6 +23874,7 @@
     "/cabinet/admin/campaigns/available-tariffs": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Campaigns"
         ],
         "summary": "Get Available Tariffs",
@@ -24195,6 +23906,7 @@
     "/cabinet/admin/campaigns/available-partners": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Campaigns"
         ],
         "summary": "Get Available Partners",
@@ -24226,6 +23938,7 @@
     "/cabinet/admin/campaigns": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Campaigns"
         ],
         "summary": "List Campaigns",
@@ -24296,6 +24009,7 @@
       },
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Campaigns"
         ],
         "summary": "Create New Campaign",
@@ -24343,6 +24057,7 @@
     "/cabinet/admin/campaigns/{campaign_id}": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Campaigns"
         ],
         "summary": "Get Campaign",
@@ -24389,6 +24104,7 @@
       },
       "put": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Campaigns"
         ],
         "summary": "Update Existing Campaign",
@@ -24445,6 +24161,7 @@
       },
       "delete": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Campaigns"
         ],
         "summary": "Delete Existing Campaign",
@@ -24491,6 +24208,7 @@
     "/cabinet/admin/campaigns/{campaign_id}/stats": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Campaigns"
         ],
         "summary": "Get Campaign Stats",
@@ -24539,6 +24257,7 @@
     "/cabinet/admin/campaigns/{campaign_id}/registrations": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Campaigns"
         ],
         "summary": "Get Campaign Registrations",
@@ -24610,6 +24329,7 @@
     "/cabinet/admin/campaigns/{campaign_id}/toggle": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Campaigns"
         ],
         "summary": "Toggle Campaign",
@@ -24658,6 +24378,7 @@
     "/cabinet/admin/partners/settings": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Partners"
         ],
         "summary": "Get Partner Settings",
@@ -24683,6 +24404,7 @@
       },
       "patch": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Partners"
         ],
         "summary": "Update Partner Settings",
@@ -24730,6 +24452,7 @@
     "/cabinet/admin/partners/applications": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Partners"
         ],
         "summary": "List Applications",
@@ -24814,6 +24537,7 @@
     "/cabinet/admin/partners/applications/{application_id}/approve": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Partners"
         ],
         "summary": "Approve Application",
@@ -24870,6 +24594,7 @@
     "/cabinet/admin/partners/applications/{application_id}/reject": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Partners"
         ],
         "summary": "Reject Application",
@@ -24926,6 +24651,7 @@
     "/cabinet/admin/partners/stats": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Partners"
         ],
         "summary": "Get Partner Stats",
@@ -24951,6 +24677,7 @@
     "/cabinet/admin/partners": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Partners"
         ],
         "summary": "List Partners",
@@ -25013,6 +24740,7 @@
     "/cabinet/admin/partners/{user_id}": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Partners"
         ],
         "summary": "Get Partner Detail",
@@ -25061,6 +24789,7 @@
     "/cabinet/admin/partners/{user_id}/commission": {
       "patch": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Partners"
         ],
         "summary": "Update Commission",
@@ -25117,6 +24846,7 @@
     "/cabinet/admin/partners/{user_id}/revoke": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Partners"
         ],
         "summary": "Revoke Partner",
@@ -25163,6 +24893,7 @@
     "/cabinet/admin/partners/{user_id}/campaigns/{campaign_id}/assign": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Partners"
         ],
         "summary": "Assign Campaign",
@@ -25218,6 +24949,7 @@
     "/cabinet/admin/partners/{user_id}/campaigns/{campaign_id}/unassign": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Partners"
         ],
         "summary": "Unassign Campaign",
@@ -25273,6 +25005,7 @@
     "/cabinet/admin/withdrawals": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Withdrawals"
         ],
         "summary": "List Withdrawals",
@@ -25358,6 +25091,7 @@
     "/cabinet/admin/withdrawals/{withdrawal_id}": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Withdrawals"
         ],
         "summary": "Get Withdrawal Detail",
@@ -25406,6 +25140,7 @@
     "/cabinet/admin/withdrawals/{withdrawal_id}/approve": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Withdrawals"
         ],
         "summary": "Approve Withdrawal",
@@ -25462,6 +25197,7 @@
     "/cabinet/admin/withdrawals/{withdrawal_id}/reject": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Withdrawals"
         ],
         "summary": "Reject Withdrawal",
@@ -25518,6 +25254,7 @@
     "/cabinet/admin/withdrawals/{withdrawal_id}/complete": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Withdrawals"
         ],
         "summary": "Complete Withdrawal",
@@ -25564,6 +25301,7 @@
     "/cabinet/admin/users": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Users"
         ],
         "summary": "List Users",
@@ -25685,6 +25423,7 @@
     "/cabinet/admin/users/stats": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Users"
         ],
         "summary": "Get Users Stats",
@@ -25712,6 +25451,7 @@
     "/cabinet/admin/users/{user_id}": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Users"
         ],
         "summary": "Get User Detail",
@@ -25758,6 +25498,7 @@
       },
       "delete": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Users"
         ],
         "summary": "Delete User",
@@ -25818,6 +25559,7 @@
     "/cabinet/admin/users/by-telegram/{telegram_id}": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Users"
         ],
         "summary": "Get User By Telegram",
@@ -25866,6 +25608,7 @@
     "/cabinet/admin/users/{user_id}/panel-info": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Users"
         ],
         "summary": "Get User Panel Info",
@@ -25914,6 +25657,7 @@
     "/cabinet/admin/users/{user_id}/node-usage": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Users"
         ],
         "summary": "Get User Node Usage",
@@ -25962,6 +25706,7 @@
     "/cabinet/admin/users/{user_id}/balance": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Users"
         ],
         "summary": "Update User Balance",
@@ -26020,6 +25765,7 @@
     "/cabinet/admin/users/{user_id}/subscription": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Users"
         ],
         "summary": "Update User Subscription",
@@ -26078,6 +25824,7 @@
     "/cabinet/admin/users/{user_id}/available-tariffs": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Users"
         ],
         "summary": "Get User Available Tariffs",
@@ -26138,6 +25885,7 @@
     "/cabinet/admin/users/{user_id}/status": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Users"
         ],
         "summary": "Update User Status",
@@ -26196,6 +25944,7 @@
     "/cabinet/admin/users/{user_id}/block": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Users"
         ],
         "summary": "Block User",
@@ -26260,6 +26009,7 @@
     "/cabinet/admin/users/{user_id}/unblock": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Users"
         ],
         "summary": "Unblock User",
@@ -26308,6 +26058,7 @@
     "/cabinet/admin/users/{user_id}/restrictions": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Users"
         ],
         "summary": "Update User Restrictions",
@@ -26366,6 +26117,7 @@
     "/cabinet/admin/users/{user_id}/promo-group": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Users"
         ],
         "summary": "Update User Promo Group",
@@ -26424,6 +26176,7 @@
     "/cabinet/admin/users/{user_id}/referral-commission": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Users"
         ],
         "summary": "Update User Referral Commission",
@@ -26482,6 +26235,7 @@
     "/cabinet/admin/users/{user_id}/devices": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Users"
         ],
         "summary": "Get User Devices",
@@ -26528,6 +26282,7 @@
       },
       "delete": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Users"
         ],
         "summary": "Reset User Devices",
@@ -26576,6 +26331,7 @@
     "/cabinet/admin/users/{user_id}/devices/{hwid}": {
       "delete": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Users"
         ],
         "summary": "Delete User Device",
@@ -26633,6 +26389,7 @@
     "/cabinet/admin/users/{user_id}/full": {
       "delete": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Users"
         ],
         "summary": "Full Delete User",
@@ -26693,6 +26450,7 @@
     "/cabinet/admin/users/{user_id}/reset-trial": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Users"
         ],
         "summary": "Reset User Trial",
@@ -26751,6 +26509,7 @@
     "/cabinet/admin/users/{user_id}/reset-subscription": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Users"
         ],
         "summary": "Reset User Subscription",
@@ -26811,6 +26570,7 @@
     "/cabinet/admin/users/{user_id}/disable": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Users"
         ],
         "summary": "Disable User",
@@ -26869,6 +26629,7 @@
     "/cabinet/admin/users/{user_id}/referrals": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Users"
         ],
         "summary": "Get User Referrals",
@@ -26940,6 +26701,7 @@
     "/cabinet/admin/users/{user_id}/transactions": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Users"
         ],
         "summary": "Get User Transactions",
@@ -27025,6 +26787,7 @@
     "/cabinet/admin/users/{user_id}/sync/status": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Users"
         ],
         "summary": "Get User Sync Status",
@@ -27073,6 +26836,7 @@
     "/cabinet/admin/users/{user_id}/sync/from-panel": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Users"
         ],
         "summary": "Sync User From Panel",
@@ -27135,6 +26899,7 @@
     "/cabinet/admin/users/{user_id}/sync/to-panel": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Users"
         ],
         "summary": "Sync User To Panel",
@@ -27199,6 +26964,7 @@
     "/cabinet/admin/payment-methods": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Payment Methods"
         ],
         "summary": "List Payment Methods",
@@ -27230,6 +26996,7 @@
     "/cabinet/admin/payment-methods/promo-groups": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Payment Methods"
         ],
         "summary": "List Promo Groups",
@@ -27261,6 +27028,7 @@
     "/cabinet/admin/payment-methods/{method_id}": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Payment Methods"
         ],
         "summary": "Get Payment Method",
@@ -27307,6 +27075,7 @@
       },
       "put": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Payment Methods"
         ],
         "summary": "Update Payment Method",
@@ -27365,6 +27134,7 @@
     "/cabinet/admin/payment-methods/order": {
       "put": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Payment Methods"
         ],
         "summary": "Update Payment Methods Order",
@@ -27410,6 +27180,7 @@
     "/cabinet/admin/payments": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Payments"
         ],
         "summary": "Get All Pending Payments",
@@ -27494,6 +27265,7 @@
     "/cabinet/admin/payments/stats": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Payments"
         ],
         "summary": "Get Payments Stats",
@@ -27521,6 +27293,7 @@
     "/cabinet/admin/payments/{method}/{payment_id}": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Payments"
         ],
         "summary": "Get Pending Payment Details",
@@ -27578,6 +27351,7 @@
     "/cabinet/admin/payments/{method}/{payment_id}/check": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Payments"
         ],
         "summary": "Check Payment Status",
@@ -27635,6 +27409,7 @@
     "/cabinet/admin/promo-offers/templates": {
       "get": {
         "tags": [
+          "Cabinet",
           "Admin Promo Offers"
         ],
         "summary": "List Templates",
@@ -27662,6 +27437,7 @@
     "/cabinet/admin/promo-offers/templates/{template_id}": {
       "get": {
         "tags": [
+          "Cabinet",
           "Admin Promo Offers"
         ],
         "summary": "Get Template",
@@ -27708,6 +27484,7 @@
       },
       "patch": {
         "tags": [
+          "Cabinet",
           "Admin Promo Offers"
         ],
         "summary": "Update Template",
@@ -27766,6 +27543,7 @@
     "/cabinet/admin/promo-offers": {
       "get": {
         "tags": [
+          "Cabinet",
           "Admin Promo Offers"
         ],
         "summary": "List Offers",
@@ -27861,6 +27639,7 @@
     "/cabinet/admin/promo-offers/broadcast": {
       "post": {
         "tags": [
+          "Cabinet",
           "Admin Promo Offers"
         ],
         "summary": "Broadcast Offer",
@@ -27908,6 +27687,7 @@
     "/cabinet/admin/promo-offers/logs": {
       "get": {
         "tags": [
+          "Cabinet",
           "Admin Promo Offers"
         ],
         "summary": "Get Logs",
@@ -28004,6 +27784,7 @@
     "/cabinet/admin/remnawave/status": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin RemnaWave"
         ],
         "summary": "Get Remnawave Status",
@@ -28031,6 +27812,7 @@
     "/cabinet/admin/remnawave/system": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin RemnaWave"
         ],
         "summary": "Get System Statistics",
@@ -28058,6 +27840,7 @@
     "/cabinet/admin/remnawave/nodes": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin RemnaWave"
         ],
         "summary": "List Nodes",
@@ -28085,6 +27868,7 @@
     "/cabinet/admin/remnawave/nodes/overview": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin RemnaWave"
         ],
         "summary": "Get Nodes Overview",
@@ -28112,6 +27896,7 @@
     "/cabinet/admin/remnawave/nodes/realtime": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin RemnaWave"
         ],
         "summary": "Get Nodes Realtime",
@@ -28144,6 +27929,7 @@
     "/cabinet/admin/remnawave/nodes/{node_uuid}": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin RemnaWave"
         ],
         "summary": "Get Node Details",
@@ -28192,6 +27978,7 @@
     "/cabinet/admin/remnawave/nodes/{node_uuid}/statistics": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin RemnaWave"
         ],
         "summary": "Get Node Statistics",
@@ -28240,6 +28027,7 @@
     "/cabinet/admin/remnawave/nodes/{node_uuid}/usage": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin RemnaWave"
         ],
         "summary": "Get Node Usage",
@@ -28322,6 +28110,7 @@
     "/cabinet/admin/remnawave/nodes/{node_uuid}/action": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin RemnaWave"
         ],
         "summary": "Perform Node Action",
@@ -28380,6 +28169,7 @@
     "/cabinet/admin/remnawave/nodes/restart-all": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin RemnaWave"
         ],
         "summary": "Restart All Nodes",
@@ -28407,6 +28197,7 @@
     "/cabinet/admin/remnawave/squads": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin RemnaWave"
         ],
         "summary": "List Squads",
@@ -28432,6 +28223,7 @@
       },
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin RemnaWave"
         ],
         "summary": "Create Squad",
@@ -28479,6 +28271,7 @@
     "/cabinet/admin/remnawave/squads/{squad_uuid}": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin RemnaWave"
         ],
         "summary": "Get Squad Details",
@@ -28525,6 +28318,7 @@
       },
       "patch": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin RemnaWave"
         ],
         "summary": "Update Squad",
@@ -28581,6 +28375,7 @@
       },
       "delete": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin RemnaWave"
         ],
         "summary": "Delete Squad",
@@ -28629,6 +28424,7 @@
     "/cabinet/admin/remnawave/squads/{squad_uuid}/action": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin RemnaWave"
         ],
         "summary": "Perform Squad Action",
@@ -28687,6 +28483,7 @@
     "/cabinet/admin/remnawave/squads/{squad_uuid}/migration-preview": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin RemnaWave"
         ],
         "summary": "Preview Migration",
@@ -28735,6 +28532,7 @@
     "/cabinet/admin/remnawave/squads/migrate": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin RemnaWave"
         ],
         "summary": "Migrate Squad Users",
@@ -28782,6 +28580,7 @@
     "/cabinet/admin/remnawave/inbounds": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin RemnaWave"
         ],
         "summary": "List Inbounds",
@@ -28809,6 +28608,7 @@
     "/cabinet/admin/remnawave/sync/auto/status": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin RemnaWave"
         ],
         "summary": "Get Auto Sync Status",
@@ -28836,6 +28636,7 @@
     "/cabinet/admin/remnawave/sync/auto/toggle": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin RemnaWave"
         ],
         "summary": "Toggle Auto Sync",
@@ -28883,6 +28684,7 @@
     "/cabinet/admin/remnawave/sync/auto/run": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin RemnaWave"
         ],
         "summary": "Run Auto Sync Now",
@@ -28910,6 +28712,7 @@
     "/cabinet/admin/remnawave/sync/from-panel": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin RemnaWave"
         ],
         "summary": "Sync From Panel",
@@ -28957,6 +28760,7 @@
     "/cabinet/admin/remnawave/sync/to-panel": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin RemnaWave"
         ],
         "summary": "Sync To Panel",
@@ -28984,6 +28788,7 @@
     "/cabinet/admin/remnawave/sync/servers": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin RemnaWave"
         ],
         "summary": "Sync Servers",
@@ -29011,6 +28816,7 @@
     "/cabinet/admin/remnawave/sync/subscriptions/validate": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin RemnaWave"
         ],
         "summary": "Validate Subscriptions",
@@ -29038,6 +28844,7 @@
     "/cabinet/admin/remnawave/sync/subscriptions/cleanup": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin RemnaWave"
         ],
         "summary": "Cleanup Subscriptions",
@@ -29065,6 +28872,7 @@
     "/cabinet/admin/remnawave/sync/subscriptions/statuses": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin RemnaWave"
         ],
         "summary": "Sync Subscription Statuses",
@@ -29092,6 +28900,7 @@
     "/cabinet/admin/remnawave/sync/recommendations": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin RemnaWave"
         ],
         "summary": "Get Sync Recommendations",
@@ -29119,6 +28928,7 @@
     "/cabinet/admin/email-templates": {
       "get": {
         "tags": [
+          "Cabinet",
           "Admin Email Templates"
         ],
         "summary": "List all email template types",
@@ -29148,6 +28958,7 @@
     "/cabinet/admin/email-templates/{notification_type}": {
       "get": {
         "tags": [
+          "Cabinet",
           "Admin Email Templates"
         ],
         "summary": "Get templates for a notification type",
@@ -29198,6 +29009,7 @@
     "/cabinet/admin/email-templates/{notification_type}/{language}": {
       "put": {
         "tags": [
+          "Cabinet",
           "Admin Email Templates"
         ],
         "summary": "Save custom template",
@@ -29265,6 +29077,7 @@
       },
       "delete": {
         "tags": [
+          "Cabinet",
           "Admin Email Templates"
         ],
         "summary": "Reset template to default",
@@ -29324,6 +29137,7 @@
     "/cabinet/admin/email-templates/{notification_type}/preview": {
       "post": {
         "tags": [
+          "Cabinet",
           "Admin Email Templates"
         ],
         "summary": "Preview rendered template",
@@ -29384,6 +29198,7 @@
     "/cabinet/admin/email-templates/{notification_type}/test": {
       "post": {
         "tags": [
+          "Cabinet",
           "Admin Email Templates"
         ],
         "summary": "Send test email",
@@ -29444,6 +29259,7 @@
     "/cabinet/admin/updates/releases": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Updates"
         ],
         "summary": "Get Releases",
@@ -29471,6 +29287,7 @@
     "/cabinet/admin/traffic": {
       "get": {
         "tags": [
+          "Cabinet",
           "Admin Traffic"
         ],
         "summary": "Get Traffic Usage",
@@ -29632,6 +29449,7 @@
     "/cabinet/admin/traffic/enrichment": {
       "get": {
         "tags": [
+          "Cabinet",
           "Admin Traffic"
         ],
         "summary": "Get Traffic Enrichment",
@@ -29659,6 +29477,7 @@
     "/cabinet/admin/traffic/export-csv": {
       "post": {
         "tags": [
+          "Cabinet",
           "Admin Traffic"
         ],
         "summary": "Export Traffic Csv",
@@ -29706,6 +29525,7 @@
     "/cabinet/admin/pinned-messages": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Pinned Messages"
         ],
         "summary": "List Pinned Messages",
@@ -29776,6 +29596,7 @@
       },
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Pinned Messages"
         ],
         "summary": "Create Pinned Message",
@@ -29823,6 +29644,7 @@
     "/cabinet/admin/pinned-messages/active": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Pinned Messages"
         ],
         "summary": "Get Active Message",
@@ -29858,6 +29680,7 @@
     "/cabinet/admin/pinned-messages/{message_id}": {
       "get": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Pinned Messages"
         ],
         "summary": "Get Pinned Message",
@@ -29904,6 +29727,7 @@
       },
       "patch": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Pinned Messages"
         ],
         "summary": "Update Pinned Message",
@@ -29960,6 +29784,7 @@
       },
       "delete": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Pinned Messages"
         ],
         "summary": "Delete Pinned Message",
@@ -30001,6 +29826,7 @@
     "/cabinet/admin/pinned-messages/{message_id}/settings": {
       "patch": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Pinned Messages"
         ],
         "summary": "Update Pinned Message Settings",
@@ -30059,6 +29885,7 @@
     "/cabinet/admin/pinned-messages/active/deactivate": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Pinned Messages"
         ],
         "summary": "Deactivate Active Message",
@@ -30094,6 +29921,7 @@
     "/cabinet/admin/pinned-messages/active/unpin": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Pinned Messages"
         ],
         "summary": "Unpin Active Message",
@@ -30121,6 +29949,7 @@
     "/cabinet/admin/pinned-messages/{message_id}/activate": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Pinned Messages"
         ],
         "summary": "Activate Pinned Message",
@@ -30179,6 +30008,7 @@
     "/cabinet/admin/pinned-messages/{message_id}/broadcast": {
       "post": {
         "tags": [
+          "Cabinet",
           "Cabinet Admin Pinned Messages"
         ],
         "summary": "Broadcast Message",
@@ -30227,6 +30057,7 @@
     "/cabinet/admin/button-styles": {
       "get": {
         "tags": [
+          "Cabinet",
           "Admin Button Styles"
         ],
         "summary": "Get Button Styles",
@@ -30252,6 +30083,7 @@
       },
       "patch": {
         "tags": [
+          "Cabinet",
           "Admin Button Styles"
         ],
         "summary": "Update Button Styles",
@@ -30299,6 +30131,7 @@
     "/cabinet/admin/button-styles/reset": {
       "post": {
         "tags": [
+          "Cabinet",
           "Admin Button Styles"
         ],
         "summary": "Reset Button Styles",
@@ -30321,6 +30154,1254 @@
             "HTTPBearer": []
           }
         ]
+      }
+    },
+    "/cabinet/admin/channel-subscriptions": {
+      "get": {
+        "tags": [
+          "Cabinet",
+          "Cabinet Admin Channels"
+        ],
+        "summary": "List Channels",
+        "operationId": "list_channels_cabinet_admin_channel_subscriptions_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChannelListResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Cabinet",
+          "Cabinet Admin Channels"
+        ],
+        "summary": "Create Channel",
+        "operationId": "create_channel_cabinet_admin_channel_subscriptions_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChannelCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChannelResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/cabinet/admin/channel-subscriptions/{channel_db_id}": {
+      "patch": {
+        "tags": [
+          "Cabinet",
+          "Cabinet Admin Channels"
+        ],
+        "summary": "Update Channel Endpoint",
+        "operationId": "update_channel_endpoint_cabinet_admin_channel_subscriptions__channel_db_id__patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "channel_db_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Channel Db Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChannelUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChannelResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Cabinet",
+          "Cabinet Admin Channels"
+        ],
+        "summary": "Delete Channel Endpoint",
+        "operationId": "delete_channel_endpoint_cabinet_admin_channel_subscriptions__channel_db_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "channel_db_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Channel Db Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/cabinet/admin/channel-subscriptions/{channel_db_id}/toggle": {
+      "post": {
+        "tags": [
+          "Cabinet",
+          "Cabinet Admin Channels"
+        ],
+        "summary": "Toggle Channel Endpoint",
+        "operationId": "toggle_channel_endpoint_cabinet_admin_channel_subscriptions__channel_db_id__toggle_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "channel_db_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Channel Db Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChannelResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/cabinet/admin/apps/remnawave/status": {
+      "get": {
+        "tags": [
+          "Cabinet",
+          "Cabinet Admin Apps"
+        ],
+        "summary": "Get Remnawave Config Status",
+        "description": "Get RemnaWave config integration status.",
+        "operationId": "get_remnawave_config_status_cabinet_admin_apps_remnawave_status_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RemnaWaveConfigStatus"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/cabinet/admin/apps/remnawave/uuid": {
+      "put": {
+        "tags": [
+          "Cabinet",
+          "Cabinet Admin Apps"
+        ],
+        "summary": "Set Remnawave Config Uuid",
+        "description": "Set RemnaWave subscription config UUID.",
+        "operationId": "set_remnawave_config_uuid_cabinet_admin_apps_remnawave_uuid_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRemnaWaveUuidRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RemnaWaveConfigStatus"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/cabinet/admin/apps/remnawave/config": {
+      "get": {
+        "tags": [
+          "Cabinet",
+          "Cabinet Admin Apps"
+        ],
+        "summary": "Get Remnawave Subscription Config",
+        "description": "Fetch subscription page config from RemnaWave panel.",
+        "operationId": "get_remnawave_subscription_config_cabinet_admin_apps_remnawave_config_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/cabinet/admin/apps/remnawave/configs": {
+      "get": {
+        "tags": [
+          "Cabinet",
+          "Cabinet Admin Apps"
+        ],
+        "summary": "List Remnawave Subscription Configs",
+        "description": "List available subscription page configs from RemnaWave panel.",
+        "operationId": "list_remnawave_subscription_configs_cabinet_admin_apps_remnawave_configs_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/cabinet/admin/rbac/permissions": {
+      "get": {
+        "tags": [
+          "Cabinet",
+          "Admin RBAC"
+        ],
+        "summary": "Get Permission Registry",
+        "description": "Get all available permissions grouped by section.",
+        "operationId": "get_permission_registry_cabinet_admin_rbac_permissions_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PermissionSection"
+                  },
+                  "type": "array",
+                  "title": "Response Get Permission Registry Cabinet Admin Rbac Permissions Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/cabinet/admin/rbac/roles/{role_id}/users": {
+      "get": {
+        "tags": [
+          "Cabinet",
+          "Admin RBAC"
+        ],
+        "summary": "List Role Users",
+        "description": "List user-role assignments for a specific role.",
+        "operationId": "list_role_users_cabinet_admin_rbac_roles__role_id__users_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "role_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Role Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UserRoleResponse"
+                  },
+                  "title": "Response List Role Users Cabinet Admin Rbac Roles  Role Id  Users Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/cabinet/admin/rbac/roles": {
+      "get": {
+        "tags": [
+          "Cabinet",
+          "Admin RBAC"
+        ],
+        "summary": "List Roles",
+        "description": "List all admin roles with user counts.",
+        "operationId": "list_roles_cabinet_admin_rbac_roles_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "include_inactive",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Include Inactive"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RoleResponse"
+                  },
+                  "title": "Response List Roles Cabinet Admin Rbac Roles Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Cabinet",
+          "Admin RBAC"
+        ],
+        "summary": "Create Role",
+        "description": "Create a new custom admin role.",
+        "operationId": "create_role_cabinet_admin_rbac_roles_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RoleCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoleResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/cabinet/admin/rbac/roles/{role_id}": {
+      "put": {
+        "tags": [
+          "Cabinet",
+          "Admin RBAC"
+        ],
+        "summary": "Update Role",
+        "description": "Update an existing admin role.",
+        "operationId": "update_role_cabinet_admin_rbac_roles__role_id__put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "role_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Role Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RoleUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoleResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Cabinet",
+          "Admin RBAC"
+        ],
+        "summary": "Delete Role",
+        "description": "Delete a custom admin role. System roles cannot be deleted.",
+        "operationId": "delete_role_cabinet_admin_rbac_roles__role_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "role_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Role Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/cabinet/admin/rbac/assignments": {
+      "post": {
+        "tags": [
+          "Cabinet",
+          "Admin RBAC"
+        ],
+        "summary": "Assign Role",
+        "description": "Assign a role to a user. Hierarchy enforcement applies.",
+        "operationId": "assign_role_cabinet_admin_rbac_assignments_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RoleAssignRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserRoleResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/cabinet/admin/rbac/assignments/{assignment_id}": {
+      "delete": {
+        "tags": [
+          "Cabinet",
+          "Admin RBAC"
+        ],
+        "summary": "Revoke Role",
+        "description": "Revoke a role assignment. Cannot remove the last superadmin.",
+        "operationId": "revoke_role_cabinet_admin_rbac_assignments__assignment_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "assignment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Assignment Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/cabinet/admin/rbac/policies": {
+      "get": {
+        "tags": [
+          "Cabinet",
+          "Admin RBAC Policies"
+        ],
+        "summary": "List Policies",
+        "description": "List all access policies. Optionally filter by role_id.",
+        "operationId": "list_policies_cabinet_admin_rbac_policies_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "role_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Role Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PolicyResponse"
+                  },
+                  "title": "Response List Policies Cabinet Admin Rbac Policies Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Cabinet",
+          "Admin RBAC Policies"
+        ],
+        "summary": "Create Policy",
+        "description": "Create a new access policy (ABAC rule).",
+        "operationId": "create_policy_cabinet_admin_rbac_policies_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PolicyCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PolicyResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/cabinet/admin/rbac/policies/{policy_id}": {
+      "put": {
+        "tags": [
+          "Cabinet",
+          "Admin RBAC Policies"
+        ],
+        "summary": "Update Policy",
+        "description": "Update an existing access policy.",
+        "operationId": "update_policy_cabinet_admin_rbac_policies__policy_id__put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "policy_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Policy Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PolicyUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PolicyResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Cabinet",
+          "Admin RBAC Policies"
+        ],
+        "summary": "Delete Policy",
+        "description": "Delete an access policy.",
+        "operationId": "delete_policy_cabinet_admin_rbac_policies__policy_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "policy_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Policy Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/cabinet/admin/rbac/audit-log": {
+      "get": {
+        "tags": [
+          "Cabinet",
+          "Admin RBAC Audit Log"
+        ],
+        "summary": "List Audit Logs",
+        "description": "List audit log entries with optional filters and pagination.",
+        "operationId": "list_audit_logs_cabinet_admin_rbac_audit_log_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "User Id"
+            }
+          },
+          {
+            "name": "action",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Action"
+            }
+          },
+          {
+            "name": "resource_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Resource Type"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "name": "date_from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Date From"
+            }
+          },
+          {
+            "name": "date_to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Date To"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 500,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditLogListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/cabinet/admin/rbac/audit-log/export": {
+      "get": {
+        "tags": [
+          "Cabinet",
+          "Admin RBAC Audit Log"
+        ],
+        "summary": "Export Audit Logs",
+        "description": "Export audit logs as CSV file.",
+        "operationId": "export_audit_logs_cabinet_admin_rbac_audit_log_export_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "User Id"
+            }
+          },
+          {
+            "name": "action",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Action"
+            }
+          },
+          {
+            "name": "resource_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Resource Type"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "name": "date_from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Date From"
+            }
+          },
+          {
+            "name": "date_to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Date To"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 50000,
+              "minimum": 1,
+              "default": 10000,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
       }
     }
   },
@@ -31939,6 +33020,143 @@
         "title": "AnalyticsCountersUpdate",
         "description": "Request to update analytics counters (partial update allowed)."
       },
+      "AnimationConfigResponse": {
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled",
+            "default": true
+          },
+          "type": {
+            "type": "string",
+            "title": "Type",
+            "default": "aurora"
+          },
+          "settings": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Settings"
+          },
+          "opacity": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Opacity",
+            "default": 1.0
+          },
+          "blur": {
+            "type": "number",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Blur",
+            "default": 0
+          },
+          "reducedOnMobile": {
+            "type": "boolean",
+            "title": "Reducedonmobile",
+            "default": true
+          }
+        },
+        "type": "object",
+        "title": "AnimationConfigResponse",
+        "description": "Full animation config."
+      },
+      "AnimationConfigUpdate": {
+        "properties": {
+          "enabled": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Enabled"
+          },
+          "type": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "aurora",
+                  "sparkles",
+                  "vortex",
+                  "shooting-stars",
+                  "background-beams",
+                  "background-beams-collision",
+                  "gradient-animation",
+                  "wavy",
+                  "background-lines",
+                  "boxes",
+                  "meteors",
+                  "grid",
+                  "dots",
+                  "spotlight",
+                  "ripple",
+                  "none"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Type"
+          },
+          "settings": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Settings"
+          },
+          "opacity": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Opacity"
+          },
+          "blur": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 100.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Blur"
+          },
+          "reducedOnMobile": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reducedonmobile"
+          }
+        },
+        "type": "object",
+        "title": "AnimationConfigUpdate",
+        "description": "Request to update animation config (partial update)."
+      },
       "AnimationEnabledResponse": {
         "properties": {
           "enabled": {
@@ -32046,310 +33264,178 @@
         "title": "AnswerResponse",
         "description": "Response after answering."
       },
-      "AppButton": {
+      "AuditLogEntry": {
         "properties": {
-          "buttonLink": {
-            "type": "string",
-            "title": "Buttonlink"
+          "id": {
+            "type": "integer",
+            "title": "Id"
           },
-          "buttonText": {
-            "$ref": "#/components/schemas/LocalizedText"
+          "user_id": {
+            "type": "integer",
+            "title": "User Id"
+          },
+          "action": {
+            "type": "string",
+            "title": "Action"
+          },
+          "resource_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resource Type"
+          },
+          "resource_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resource Id"
+          },
+          "details": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Details"
+          },
+          "ip_address": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ip Address"
+          },
+          "user_agent": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Agent"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "request_method": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Request Method"
+          },
+          "request_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Request Path"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "user_first_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User First Name"
+          },
+          "user_email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Email"
           }
         },
         "type": "object",
         "required": [
-          "buttonLink",
-          "buttonText"
+          "id",
+          "user_id",
+          "action",
+          "status"
         ],
-        "title": "AppButton",
-        "description": "Button with link and localized text."
+        "title": "AuditLogEntry",
+        "description": "Single audit log entry."
       },
-      "AppConfigBranding": {
+      "AuditLogListResponse": {
         "properties": {
-          "name": {
-            "type": "string",
-            "title": "Name"
-          },
-          "logoUrl": {
-            "type": "string",
-            "title": "Logourl"
-          },
-          "supportUrl": {
-            "type": "string",
-            "title": "Supporturl"
-          }
-        },
-        "type": "object",
-        "required": [
-          "name",
-          "logoUrl",
-          "supportUrl"
-        ],
-        "title": "AppConfigBranding",
-        "description": "Branding configuration."
-      },
-      "AppConfigConfig": {
-        "properties": {
-          "additionalLocales": {
+          "items": {
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/AuditLogEntry"
             },
             "type": "array",
-            "title": "Additionallocales"
+            "title": "Items"
           },
-          "branding": {
-            "$ref": "#/components/schemas/AppConfigBranding"
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit"
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset"
           }
         },
         "type": "object",
         "required": [
-          "additionalLocales",
-          "branding"
+          "items",
+          "total",
+          "limit",
+          "offset"
         ],
-        "title": "AppConfigConfig",
-        "description": "Top-level config section."
-      },
-      "AppConfigResponse": {
-        "properties": {
-          "config": {
-            "$ref": "#/components/schemas/AppConfigConfig"
-          },
-          "platforms": {
-            "additionalProperties": {
-              "items": {
-                "$ref": "#/components/schemas/AppDefinition-Output"
-              },
-              "type": "array"
-            },
-            "type": "object",
-            "title": "Platforms"
-          }
-        },
-        "type": "object",
-        "required": [
-          "config",
-          "platforms"
-        ],
-        "title": "AppConfigResponse",
-        "description": "Full app config response."
-      },
-      "AppDefinition-Input": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "title": "Id"
-          },
-          "name": {
-            "type": "string",
-            "title": "Name"
-          },
-          "isFeatured": {
-            "type": "boolean",
-            "title": "Isfeatured",
-            "default": false
-          },
-          "urlScheme": {
-            "type": "string",
-            "title": "Urlscheme"
-          },
-          "isNeedBase64Encoding": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Isneedbase64Encoding"
-          },
-          "installationStep": {
-            "$ref": "#/components/schemas/AppStep-Input"
-          },
-          "addSubscriptionStep": {
-            "$ref": "#/components/schemas/AppStep-Input"
-          },
-          "connectAndUseStep": {
-            "$ref": "#/components/schemas/AppStep-Input"
-          },
-          "additionalBeforeAddSubscriptionStep": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/AppStep-Input"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "additionalAfterAddSubscriptionStep": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/AppStep-Input"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "name",
-          "urlScheme",
-          "installationStep",
-          "addSubscriptionStep",
-          "connectAndUseStep"
-        ],
-        "title": "AppDefinition",
-        "description": "VPN application definition."
-      },
-      "AppDefinition-Output": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "title": "Id"
-          },
-          "name": {
-            "type": "string",
-            "title": "Name"
-          },
-          "isFeatured": {
-            "type": "boolean",
-            "title": "Isfeatured",
-            "default": false
-          },
-          "urlScheme": {
-            "type": "string",
-            "title": "Urlscheme"
-          },
-          "isNeedBase64Encoding": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Isneedbase64Encoding"
-          },
-          "installationStep": {
-            "$ref": "#/components/schemas/AppStep-Output"
-          },
-          "addSubscriptionStep": {
-            "$ref": "#/components/schemas/AppStep-Output"
-          },
-          "connectAndUseStep": {
-            "$ref": "#/components/schemas/AppStep-Output"
-          },
-          "additionalBeforeAddSubscriptionStep": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/AppStep-Output"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "additionalAfterAddSubscriptionStep": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/AppStep-Output"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "name",
-          "urlScheme",
-          "installationStep",
-          "addSubscriptionStep",
-          "connectAndUseStep"
-        ],
-        "title": "AppDefinition",
-        "description": "VPN application definition."
-      },
-      "AppStep-Input": {
-        "properties": {
-          "description": {
-            "$ref": "#/components/schemas/LocalizedText"
-          },
-          "buttons": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/AppButton"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Buttons"
-          },
-          "title": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/LocalizedText"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "type": "object",
-        "required": [
-          "description"
-        ],
-        "title": "AppStep",
-        "description": "Step with description and optional buttons/title."
-      },
-      "AppStep-Output": {
-        "properties": {
-          "description": {
-            "$ref": "#/components/schemas/LocalizedText"
-          },
-          "buttons": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/AppButton"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Buttons"
-          },
-          "title": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/LocalizedText"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "type": "object",
-        "required": [
-          "description"
-        ],
-        "title": "AppStep",
-        "description": "Step with description and optional buttons/title."
+        "title": "AuditLogListResponse",
+        "description": "Paginated audit log list."
       },
       "AuthResponse": {
         "properties": {
@@ -36971,6 +38057,219 @@
         "title": "ChangeData",
         "description": "Данные об изменении."
       },
+      "ChannelCreateRequest": {
+        "properties": {
+          "channel_id": {
+            "type": "string",
+            "title": "Channel Id"
+          },
+          "channel_link": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Channel Link"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "disable_trial_on_leave": {
+            "type": "boolean",
+            "title": "Disable Trial On Leave",
+            "default": true
+          },
+          "disable_paid_on_leave": {
+            "type": "boolean",
+            "title": "Disable Paid On Leave",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "channel_id"
+        ],
+        "title": "ChannelCreateRequest"
+      },
+      "ChannelListResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ChannelResponse"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total"
+        ],
+        "title": "ChannelListResponse"
+      },
+      "ChannelResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "channel_id": {
+            "type": "string",
+            "title": "Channel Id"
+          },
+          "channel_link": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Channel Link"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
+          },
+          "sort_order": {
+            "type": "integer",
+            "title": "Sort Order"
+          },
+          "disable_trial_on_leave": {
+            "type": "boolean",
+            "title": "Disable Trial On Leave"
+          },
+          "disable_paid_on_leave": {
+            "type": "boolean",
+            "title": "Disable Paid On Leave"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "channel_id",
+          "channel_link",
+          "title",
+          "is_active",
+          "sort_order",
+          "disable_trial_on_leave",
+          "disable_paid_on_leave"
+        ],
+        "title": "ChannelResponse"
+      },
+      "ChannelUpdateRequest": {
+        "properties": {
+          "channel_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Channel Id"
+          },
+          "channel_link": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Channel Link"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active"
+          },
+          "sort_order": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sort Order"
+          },
+          "disable_trial_on_leave": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Disable Trial On Leave"
+          },
+          "disable_paid_on_leave": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Disable Paid On Leave"
+          }
+        },
+        "type": "object",
+        "title": "ChannelUpdateRequest"
+      },
       "ClaimOfferRequest": {
         "properties": {
           "offer_id": {
@@ -37795,24 +39094,6 @@
         ],
         "title": "ContestsCountResponse",
         "description": "Count of available contests."
-      },
-      "CreateAppRequest": {
-        "properties": {
-          "platform": {
-            "type": "string",
-            "title": "Platform"
-          },
-          "app": {
-            "$ref": "#/components/schemas/AppDefinition-Input"
-          }
-        },
-        "type": "object",
-        "required": [
-          "platform",
-          "app"
-        ],
-        "title": "CreateAppRequest",
-        "description": "Request to create a new app."
       },
       "CreatePrizeRequest": {
         "properties": {
@@ -39459,47 +40740,6 @@
         ],
         "title": "LiteModeEnabledUpdate",
         "description": "Request to update lite mode setting."
-      },
-      "LocalizedText": {
-        "properties": {
-          "en": {
-            "type": "string",
-            "title": "En",
-            "default": ""
-          },
-          "ru": {
-            "type": "string",
-            "title": "Ru",
-            "default": ""
-          },
-          "zh": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Zh",
-            "default": ""
-          },
-          "fa": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Fa",
-            "default": ""
-          }
-        },
-        "type": "object",
-        "title": "LocalizedText",
-        "description": "Localized text for multiple languages."
       },
       "LoyaltyTierInfo": {
         "properties": {
@@ -48454,6 +49694,28 @@
         "title": "PeriodPriceInfo",
         "description": "Period price info."
       },
+      "PermissionSection": {
+        "properties": {
+          "section": {
+            "type": "string",
+            "title": "Section"
+          },
+          "actions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Actions"
+          }
+        },
+        "type": "object",
+        "required": [
+          "section",
+          "actions"
+        ],
+        "title": "PermissionSection",
+        "description": "Permission section with available actions."
+      },
       "PinnedMessageBroadcastResponse": {
         "properties": {
           "message": {
@@ -48648,6 +49910,300 @@
           "was_active"
         ],
         "title": "PinnedMessageUnpinResponse"
+      },
+      "PolicyCreateRequest": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "role_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role Id"
+          },
+          "priority": {
+            "type": "integer",
+            "maximum": 1000.0,
+            "minimum": 0.0,
+            "title": "Priority",
+            "default": 0
+          },
+          "effect": {
+            "type": "string",
+            "pattern": "^(allow|deny)$",
+            "title": "Effect"
+          },
+          "conditions": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Conditions"
+          },
+          "resource": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Resource"
+          },
+          "actions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Actions"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "effect",
+          "resource"
+        ],
+        "title": "PolicyCreateRequest",
+        "description": "Create a new access policy."
+      },
+      "PolicyResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "role_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role Id"
+          },
+          "role_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role Name"
+          },
+          "priority": {
+            "type": "integer",
+            "title": "Priority"
+          },
+          "effect": {
+            "type": "string",
+            "title": "Effect"
+          },
+          "conditions": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Conditions"
+          },
+          "resource": {
+            "type": "string",
+            "title": "Resource"
+          },
+          "actions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Actions"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
+          },
+          "created_by": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created By"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "priority",
+          "effect",
+          "resource",
+          "is_active"
+        ],
+        "title": "PolicyResponse",
+        "description": "Access policy response."
+      },
+      "PolicyUpdateRequest": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "role_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role Id"
+          },
+          "priority": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 1000.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Priority"
+          },
+          "effect": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(allow|deny)$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Effect"
+          },
+          "conditions": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conditions"
+          },
+          "resource": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resource"
+          },
+          "actions": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actions"
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active"
+          }
+        },
+        "type": "object",
+        "title": "PolicyUpdateRequest",
+        "description": "Update policy fields (all optional)."
       },
       "PollAnswerResponse": {
         "properties": {
@@ -52984,23 +54540,6 @@
         "title": "RenewalRequest",
         "description": "Request to renew subscription."
       },
-      "ReorderAppsRequest": {
-        "properties": {
-          "app_ids": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "App Ids"
-          }
-        },
-        "type": "object",
-        "required": [
-          "app_ids"
-        ],
-        "title": "ReorderAppsRequest",
-        "description": "Request to reorder apps in a platform."
-      },
       "ReorderButtonsInRowRequest": {
         "properties": {
           "ordered_button_ids": {
@@ -53329,6 +54868,286 @@
           "content"
         ],
         "title": "RichTextPageUpdateRequest"
+      },
+      "RoleAssignRequest": {
+        "properties": {
+          "user_id": {
+            "type": "integer",
+            "title": "User Id"
+          },
+          "role_id": {
+            "type": "integer",
+            "title": "Role Id"
+          },
+          "expires_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "role_id"
+        ],
+        "title": "RoleAssignRequest",
+        "description": "Assign a role to a user."
+      },
+      "RoleCreateRequest": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "level": {
+            "type": "integer",
+            "maximum": 998.0,
+            "minimum": 0.0,
+            "title": "Level"
+          },
+          "permissions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Permissions"
+          },
+          "color": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 7
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Color"
+          },
+          "icon": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icon"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "level"
+        ],
+        "title": "RoleCreateRequest",
+        "description": "Create a new custom role."
+      },
+      "RoleResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "level": {
+            "type": "integer",
+            "title": "Level"
+          },
+          "permissions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Permissions"
+          },
+          "color": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Color"
+          },
+          "icon": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icon"
+          },
+          "is_system": {
+            "type": "boolean",
+            "title": "Is System"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
+          },
+          "user_count": {
+            "type": "integer",
+            "title": "User Count",
+            "default": 0
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "level",
+          "is_system",
+          "is_active"
+        ],
+        "title": "RoleResponse",
+        "description": "Admin role with user count."
+      },
+      "RoleUpdateRequest": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "level": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 998.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Level"
+          },
+          "permissions": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Permissions"
+          },
+          "color": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 7
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Color"
+          },
+          "icon": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icon"
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active"
+          }
+        },
+        "type": "object",
+        "title": "RoleUpdateRequest",
+        "description": "Update role fields (all optional)."
       },
       "RowsReorderRequest": {
         "properties": {
@@ -59904,19 +61723,6 @@
         "title": "UnreadCountResponse",
         "description": "Unread notifications count."
       },
-      "UpdateAppRequest": {
-        "properties": {
-          "app": {
-            "$ref": "#/components/schemas/AppDefinition-Input"
-          }
-        },
-        "type": "object",
-        "required": [
-          "app"
-        ],
-        "title": "UpdateAppRequest",
-        "description": "Request to update an app."
-      },
       "UpdateBalanceRequest": {
         "properties": {
           "amount_kopeks": {
@@ -59974,19 +61780,6 @@
         ],
         "title": "UpdateBalanceResponse",
         "description": "Response after balance update."
-      },
-      "UpdateBrandingRequest": {
-        "properties": {
-          "branding": {
-            "$ref": "#/components/schemas/AppConfigBranding"
-          }
-        },
-        "type": "object",
-        "required": [
-          "branding"
-        ],
-        "title": "UpdateBrandingRequest",
-        "description": "Request to update branding."
       },
       "UpdatePrizeRequest": {
         "properties": {
@@ -62035,6 +63828,125 @@
         ],
         "title": "UserReferralInfo",
         "description": "User referral info."
+      },
+      "UserRoleResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "user_id": {
+            "type": "integer",
+            "title": "User Id"
+          },
+          "role_id": {
+            "type": "integer",
+            "title": "Role Id"
+          },
+          "role_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role Name"
+          },
+          "user_telegram_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Telegram Id"
+          },
+          "user_username": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Username"
+          },
+          "user_first_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User First Name"
+          },
+          "user_email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Email"
+          },
+          "assigned_by": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assigned By"
+          },
+          "assigned_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assigned At"
+          },
+          "expires_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires At"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "user_id",
+          "role_id",
+          "is_active"
+        ],
+        "title": "UserRoleResponse",
+        "description": "User-role assignment details."
       },
       "UserStatus": {
         "type": "string",
@@ -70563,249 +72475,15 @@
       }
     },
     "securitySchemes": {
-      "ApiKeyHeader": {
+      "APIKeyHeader": {
         "type": "apiKey",
         "in": "header",
-        "name": "X-API-Key",
-        "description": "API-ключ для Web API"
+        "name": "X-API-Key"
       },
-      "BearerAuth": {
+      "HTTPBearer": {
         "type": "http",
-        "scheme": "bearer",
-        "bearerFormat": "JWT",
-        "description": "JWT-токен для Cabinet API"
+        "scheme": "bearer"
       }
     }
-  },
-  "servers": [
-    {
-      "url": "http://localhost:8080",
-      "description": "Local"
-    },
-    {
-      "url": "https://your-domain.com",
-      "description": "Production"
-    }
-  ],
-  "tags": [
-    {
-      "name": "Admin Button Styles"
-    },
-    {
-      "name": "Admin Email Templates"
-    },
-    {
-      "name": "Admin Fortune Wheel"
-    },
-    {
-      "name": "Admin Promo Groups"
-    },
-    {
-      "name": "Admin Promo Offers"
-    },
-    {
-      "name": "Admin Promocodes"
-    },
-    {
-      "name": "Admin Settings"
-    },
-    {
-      "name": "Admin Traffic"
-    },
-    {
-      "name": "Branding"
-    },
-    {
-      "name": "Cabinet Admin Apps"
-    },
-    {
-      "name": "Cabinet Admin Ban System"
-    },
-    {
-      "name": "Cabinet Admin Broadcasts"
-    },
-    {
-      "name": "Cabinet Admin Campaigns"
-    },
-    {
-      "name": "Cabinet Admin Partners"
-    },
-    {
-      "name": "Cabinet Admin Payment Methods"
-    },
-    {
-      "name": "Cabinet Admin Payments"
-    },
-    {
-      "name": "Cabinet Admin Pinned Messages"
-    },
-    {
-      "name": "Cabinet Admin RemnaWave"
-    },
-    {
-      "name": "Cabinet Admin Servers"
-    },
-    {
-      "name": "Cabinet Admin Stats"
-    },
-    {
-      "name": "Cabinet Admin Tariffs"
-    },
-    {
-      "name": "Cabinet Admin Ticket Notifications"
-    },
-    {
-      "name": "Cabinet Admin Tickets"
-    },
-    {
-      "name": "Cabinet Admin Updates"
-    },
-    {
-      "name": "Cabinet Admin Users"
-    },
-    {
-      "name": "Cabinet Admin Withdrawals"
-    },
-    {
-      "name": "Cabinet Auth"
-    },
-    {
-      "name": "Cabinet Balance"
-    },
-    {
-      "name": "Cabinet Contests"
-    },
-    {
-      "name": "Cabinet Info"
-    },
-    {
-      "name": "Cabinet Media"
-    },
-    {
-      "name": "Cabinet Notifications"
-    },
-    {
-      "name": "Cabinet OAuth"
-    },
-    {
-      "name": "Cabinet Partner"
-    },
-    {
-      "name": "Cabinet Polls"
-    },
-    {
-      "name": "Cabinet Promo"
-    },
-    {
-      "name": "Cabinet Promocode"
-    },
-    {
-      "name": "Cabinet Referral"
-    },
-    {
-      "name": "Cabinet Subscription"
-    },
-    {
-      "name": "Cabinet Ticket Notifications"
-    },
-    {
-      "name": "Cabinet Tickets"
-    },
-    {
-      "name": "Cabinet Withdrawal"
-    },
-    {
-      "name": "Fortune Wheel"
-    },
-    {
-      "name": "auth"
-    },
-    {
-      "name": "backups"
-    },
-    {
-      "name": "ban-notifications"
-    },
-    {
-      "name": "broadcasts"
-    },
-    {
-      "name": "campaigns"
-    },
-    {
-      "name": "contests"
-    },
-    {
-      "name": "health"
-    },
-    {
-      "name": "logs"
-    },
-    {
-      "name": "main-menu"
-    },
-    {
-      "name": "media"
-    },
-    {
-      "name": "menu-layout"
-    },
-    {
-      "name": "miniapp"
-    },
-    {
-      "name": "notifications"
-    },
-    {
-      "name": "pages"
-    },
-    {
-      "name": "partners"
-    },
-    {
-      "name": "pinned-messages"
-    },
-    {
-      "name": "polls"
-    },
-    {
-      "name": "promo-codes"
-    },
-    {
-      "name": "promo-groups"
-    },
-    {
-      "name": "promo-offers"
-    },
-    {
-      "name": "remnawave"
-    },
-    {
-      "name": "servers"
-    },
-    {
-      "name": "settings"
-    },
-    {
-      "name": "stats"
-    },
-    {
-      "name": "subscriptions"
-    },
-    {
-      "name": "support"
-    },
-    {
-      "name": "transactions"
-    },
-    {
-      "name": "users"
-    },
-    {
-      "name": "webhooks"
-    },
-    {
-      "name": "welcome-texts"
-    }
-  ]
+  }
 }
