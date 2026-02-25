@@ -7,12 +7,18 @@ description: "Веб-интерфейс личного кабинета — по
 
 **Bedolaga Cabinet** — веб-приложение для управления VPN подписками через браузер. Работает как полноценный личный кабинет с авторизацией через Telegram, email или OAuth-провайдеров (Google, Яндекс, Discord, VK). Включает встроенную админ-панель для управления всем сервисом.
 
-<CardGroup cols={3}>
+<CardGroup cols={2}>
   <Card title="Telegram + Email + OAuth" icon="right-to-bracket">
     4 способа авторизации, включая вход без Telegram
   </Card>
   <Card title="Админ-панель" icon="gauge">
     Полное управление сервисом через веб-интерфейс
+  </Card>
+  <Card title="RBAC + ABAC" icon="shield-halved">
+    Роли, разрешения, политики доступа и журнал аудита. [Подробнее →](/cabinet/rbac)
+  </Card>
+  <Card title="Анимированные фоны" icon="palette">
+    15 визуальных эффектов на базе Aceternity UI. [Подробнее →](/cabinet/backgrounds)
   </Card>
   <Card title="Real-time" icon="bolt">
     WebSocket-уведомления и мгновенные обновления
@@ -107,7 +113,7 @@ ADMIN_IDS=123456789,987654321
 ADMIN_EMAILS=admin@example.com,manager@example.com
 ```
 
-Достаточно одного из двух — Telegram ID или email в списке администраторов.
+Достаточно одного из двух — Telegram ID или email в списке администраторов. Для делегирования доступа с ограниченными правами используйте [систему ролей (RBAC)](/cabinet/rbac).
 
 ### Разделы
 
@@ -171,6 +177,12 @@ ADMIN_EMAILS=admin@example.com,manager@example.com
   </Card>
   <Card title="Обновления" icon="rotate">
     Проверка новых версий бота и кабинета
+  </Card>
+  <Card title="Роли и доступ (RBAC)" icon="shield-halved">
+    Создание ролей с разрешениями, назначение пользователям, ABAC-политики (время, IP), журнал аудита. [Подробнее →](/cabinet/rbac)
+  </Card>
+  <Card title="Анимированные фоны" icon="palette">
+    15 визуальных эффектов (CSS, Canvas, SVG), live-превью, мобильная оптимизация. [Подробнее →](/cabinet/backgrounds)
   </Card>
 </CardGroup>
 

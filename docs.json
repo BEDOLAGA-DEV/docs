@@ -88,6 +88,8 @@
               "cabinet/proxy-config",
               "cabinet/email-auth",
               "cabinet/oauth-setup",
+              "cabinet/rbac",
+              "cabinet/backgrounds",
               "cabinet/analytics-setup"
             ]
           },
