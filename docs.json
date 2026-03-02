@@ -90,6 +90,7 @@
               "cabinet/oauth-setup",
               "cabinet/rbac",
               "cabinet/backgrounds",
+              "cabinet/sales-stats",
               "cabinet/analytics-setup"
             ]
           },
