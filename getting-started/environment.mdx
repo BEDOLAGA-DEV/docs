@@ -365,6 +365,17 @@ description: "Полный справочник настроек .env файла
 | `FREEKASSA_USE_API` | Использовать API (обязательно для NSPK) | `false` |
 | `FREEKASSA_WEBHOOK_PATH` | Путь webhook | `/freekassa-webhook` |
 
+#### Freekassa: отдельные методы оплаты
+
+Можно выделить СБП и карту как отдельные кнопки (параллельно с основным методом Freekassa).
+
+| Переменная | Описание | По умолчанию |
+| ---------- | -------- | ------------ |
+| `FREEKASSA_SBP_ENABLED` | Включить отдельную кнопку СБП | `false` |
+| `FREEKASSA_SBP_DISPLAY_NAME` | Название кнопки СБП | `СБП (QR код)` |
+| `FREEKASSA_CARD_ENABLED` | Включить отдельную кнопку карты | `false` |
+| `FREEKASSA_CARD_DISPLAY_NAME` | Название кнопки карты | `Карта РФ` |
+
 ### Kassa AI (api.fk.life)
 
 Отдельная платёжная система, работает параллельно с Freekassa.
@@ -724,6 +735,46 @@ description: "Полный справочник настроек .env файла
 | `CABINET_EMAIL_VERIFICATION_EXPIRE_HOURS` | Время жизни токена верификации email (часы) | `24` |
 | `CABINET_PASSWORD_RESET_EXPIRE_HOURS` | Время жизни токена сброса пароля (часы) | `1` |
 | `CABINET_EMAIL_CHANGE_CODE_EXPIRE_MINUTES` | Время жизни кода подтверждения смены email (мин) | `15` |
+
+### Telegram авторизация (виджет)
+
+Настройки внешнего вида Telegram Login Widget на странице входа Cabinet.
+
+| Переменная | Описание | По умолчанию |
+| ---------- | -------- | ------------ |
+| `TELEGRAM_WIDGET_SIZE` | Размер виджета: `large`, `medium`, `small` | `large` |
+| `TELEGRAM_WIDGET_RADIUS` | Скругление углов (0-20) | `8` |
+| `TELEGRAM_WIDGET_USERPIC` | Показывать аватар пользователя | `true` |
+| `TELEGRAM_WIDGET_REQUEST_ACCESS` | Запрашивать доступ к данным | `true` |
+
+### Telegram OIDC
+
+Авторизация через Telegram OpenID Connect (popup-окно, JWT id_token). Подробнее: [Telegram OIDC](/cabinet/telegram-oidc).
+
+| Переменная | Описание | По умолчанию |
+| ---------- | -------- | ------------ |
+| `TELEGRAM_OIDC_ENABLED` | Включить OIDC авторизацию | `false` |
+| `TELEGRAM_OIDC_CLIENT_ID` | Client ID (числовой ID бота) | — |
+| `TELEGRAM_OIDC_CLIENT_SECRET` | Client Secret от BotFather | — |
+
+### OAuth провайдеры
+
+Вход через социальные аккаунты. Подробнее: [Настройка OAuth](/cabinet/oauth-setup).
+
+| Переменная | Описание | По умолчанию |
+| ---------- | -------- | ------------ |
+| `OAUTH_GOOGLE_ENABLED` | Включить Google OAuth | `false` |
+| `OAUTH_GOOGLE_CLIENT_ID` | Google Client ID | — |
+| `OAUTH_GOOGLE_CLIENT_SECRET` | Google Client Secret | — |
+| `OAUTH_YANDEX_ENABLED` | Включить Яндекс OAuth | `false` |
+| `OAUTH_YANDEX_CLIENT_ID` | Яндекс Client ID | — |
+| `OAUTH_YANDEX_CLIENT_SECRET` | Яндекс Client Secret | — |
+| `OAUTH_DISCORD_ENABLED` | Включить Discord OAuth | `false` |
+| `OAUTH_DISCORD_CLIENT_ID` | Discord Client ID | — |
+| `OAUTH_DISCORD_CLIENT_SECRET` | Discord Client Secret | — |
+| `OAUTH_VK_ENABLED` | Включить VK ID OAuth 2.1 (PKCE) | `false` |
+| `OAUTH_VK_CLIENT_ID` | VK App ID | — |
+| `OAUTH_VK_CLIENT_SECRET` | VK защищённый ключ | — |
 
 ### Тестовый email (разработка)
 
