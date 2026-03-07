@@ -9,78 +9,57 @@ Cabinet поддерживает два способа авторизации ч
 
 | Способ | Описание | Когда использовать |
 | ------ | -------- | ------------------ |
-| **Telegram Widget** | Кнопка-виджет от Telegram (v23) | Открытие Cabinet в браузере |
-| **Telegram OIDC** | OpenID Connect через `oauth.telegram.org` | Popup-авторизация без виджета |
+| **Telegram Widget** | Iframe-виджет от Telegram | Стандартная кнопка авторизации |
+| **Telegram OIDC** | OpenID Connect через `oauth.telegram.org` | Popup-авторизация, современный метод |
 
-Оба способа работают параллельно. OIDC — более современный метод, использующий стандартный JWT id_token с подписью RSA256 и валидацией через JWKS.
+Оба способа работают параллельно. Когда `TELEGRAM_OIDC_ENABLED=true`, Cabinet показывает кастомную кнопку с popup-авторизацией. Иначе — стандартный iframe-виджет Telegram.
 
 <Warning>
   Требуется `CABINET_ENABLED=true` и заполненный `CABINET_URL`.
 </Warning>
 
-## Telegram Widget (виджет авторизации)
+---
 
-Виджет отображается как кнопка Telegram на странице входа. Работает «из коробки» при наличии `BOT_TOKEN` и настроенного домена в BotFather.
+## Telegram OIDC (рекомендуемый)
 
-### Настройка домена в BotFather
+OIDC (OpenID Connect) — стандартный протокол авторизации. Telegram реализует его через `oauth.telegram.org` с поддержкой PKCE.
 
-1. Откройте [@BotFather](https://t.me/BotFather) в Telegram
+**Официальная документация Telegram:** [Telegram Login — OpenID Connect](https://core.telegram.org/bots/telegram-login#openid-connect)
+
+### Эндпоинты протокола
+
+| Назначение | URL |
+| ---------- | --- |
+| Discovery | `https://oauth.telegram.org/.well-known/openid-configuration` |
+| Авторизация | `https://oauth.telegram.org/auth` |
+| Обмен кода на токен | `https://oauth.telegram.org/token` |
+| Публичные ключи (JWKS) | `https://oauth.telegram.org/.well-known/jwks.json` |
+| JavaScript SDK | `https://oauth.telegram.org/js/telegram-login.js?3` |
+
+### Шаг 1: Регистрация приложения в BotFather
+
+1. Откройте Mini App [@BotFather](https://t.me/BotFather)
 2. Выберите вашего бота
-3. **Bot Settings** → **Domain** → укажите домен кабинета (например, `cabinet.example.com`)
+3. Перейдите в **Bot Settings** → **Web Login**
+4. Зарегистрируйте **Allowed URLs** — укажите все домены, с которых будет выполняться авторизация:
+   - Origin кабинета: `https://cabinet.example.com`
+   - Redirect URI (если используете Authorization Code Flow напрямую): `https://cabinet.example.com/auth/telegram/callback`
 
 <Warning>
-  Без привязки домена в BotFather виджет авторизации **не будет работать**. Telegram проверяет, что виджет загружается с авторизованного домена.
+  Telegram обрабатывает вход **только** с предварительно зарегистрированных URL. Без регистрации домена авторизация не будет работать.
 </Warning>
 
-### Кастомизация виджета
-
-Внешний вид виджета настраивается через переменные окружения:
-
-```env
-# Размер виджета: large, medium, small
-TELEGRAM_WIDGET_SIZE=large
-
-# Скругление углов (0-20)
-TELEGRAM_WIDGET_RADIUS=8
-
-# Показывать аватар пользователя
-TELEGRAM_WIDGET_USERPIC=true
-
-# Запрашивать доступ к данным (write access)
-TELEGRAM_WIDGET_REQUEST_ACCESS=true
-```
-
-### Как работает
-
-1. Cabinet загружает Telegram Login Widget на странице входа
-2. Пользователь нажимает кнопку и подтверждает вход в Telegram
-3. Telegram возвращает данные пользователя (id, имя, фото) с HMAC-SHA256 подписью
-4. Cabinet отправляет данные на API бота для проверки подписи через `BOT_TOKEN`
-5. Бот возвращает JWT-токены для авторизованной сессии
-
-## Telegram OIDC
-
-OIDC (OpenID Connect) — стандартный протокол авторизации. Telegram поддерживает его через `oauth.telegram.org`. В отличие от виджета, OIDC использует popup-окно и JWT id_token с RSA256 подписью.
-
-### Шаг 1: Создание OIDC приложения
-
-1. Откройте [@BotFather](https://t.me/BotFather)
-2. Отправьте `/newapp` или выберите существующего бота
-3. Следуйте инструкциям для создания Web App
-4. В настройках Web App укажите URL кабинета
+5. BotFather отобразит **Client ID** и **Client Secret** — сохраните их
 
 <Note>
-  `TELEGRAM_OIDC_CLIENT_ID` — это числовой ID вашего бота (тот же что в `BOT_TOKEN` до двоеточия). Например, для токена `1234567890:AABBCCdd...` Client ID = `1234567890`.
+  **Client ID** — это числовой ID вашего бота (тот же, что в `BOT_TOKEN` до двоеточия). Например, для токена `1234567890:AABBCCdd...` Client ID = `1234567890`.
 </Note>
 
-### Шаг 2: Получение Client Secret
+<Tip>
+  Рекомендация Telegram: установите аватар бота, совпадающий с логотипом вашего сайта, а имя бота должно отражать связь с сервисом. Пользователь увидит аватар и имя бота при подтверждении авторизации.
+</Tip>
 
-Client Secret для OIDC можно получить у [@BotFather](https://t.me/BotFather):
-
-1. Выберите бота → **Bot Settings** → **Payments** или обратитесь к документации Telegram по [OIDC](https://core.telegram.org/bots/webapps#oidc-authorization)
-2. Скопируйте полученный secret
-
-### Шаг 3: Настройка .env
+### Шаг 2: Настройка .env бота
 
 ```env
 # Включить OIDC авторизацию
@@ -99,97 +78,461 @@ TELEGRAM_OIDC_CLIENT_SECRET=your_oidc_client_secret_here
 make reload
 ```
 
-### Как работает
+### Доступные scopes
 
-1. Cabinet открывает popup-окно на `https://oauth.telegram.org/auth`
-2. Пользователь подтверждает авторизацию в Telegram
-3. Telegram возвращает JWT `id_token` со следующими claims:
-   - `sub` — уникальный ID пользователя Telegram
-   - `id` — числовой Telegram ID
-   - `name` — имя пользователя
-   - `preferred_username` — username
-   - `picture` — URL аватара
-4. Cabinet отправляет `id_token` на API бота (`POST /cabinet/auth/telegram/oidc`)
-5. Бот валидирует токен:
-   - Загружает публичные ключи из `https://oauth.telegram.org/.well-known/jwks.json` (кэшируются на 1 час)
-   - Проверяет подпись RSA256 по `kid` из заголовка
-   - Проверяет `iss` = `https://oauth.telegram.org`
-   - Проверяет `aud` = `TELEGRAM_OIDC_CLIENT_ID`
-   - Проверяет `exp` (не просрочен)
-6. Если токен валиден — создаёт или находит пользователя, возвращает JWT-токены Cabinet
+| Scope | Описание | Возвращаемые claims |
+| ----- | -------- | ------------------- |
+| `openid` | **Обязательный.** Уникальный ID и временная метка | `sub`, `iss`, `iat`, `exp` |
+| `profile` | Базовая информация | `name`, `preferred_username`, `picture` |
+| `phone` | Верифицированный номер телефона (требует отдельного согласия) | `phone_number` |
+| `telegram:bot_access` | Разрешение боту отправлять сообщения пользователю после входа | — |
 
-### Ротация ключей
+Cabinet запрашивает scopes `openid` и `profile`. Scope `phone` не используется.
+
+### Структура id_token
+
+После авторизации Telegram возвращает JWT `id_token` с подписью RS256. Пример декодированного токена:
+
+```json
+{
+  "iss": "https://oauth.telegram.org",
+  "aud": "1234567890",
+  "sub": "1234123412341234123",
+  "iat": 1700000000,
+  "exp": 1700003600,
+  "id": 987654321,
+  "name": "John Doe",
+  "preferred_username": "johndoe",
+  "picture": "https://cdn4.telesco.pe/file/..."
+}
+```
+
+| Claim | Тип | Описание |
+| ----- | --- | -------- |
+| `iss` | string | Издатель — всегда `https://oauth.telegram.org` |
+| `aud` | string | Аудитория — числовой Client ID бота |
+| `sub` | string | Уникальный идентификатор пользователя |
+| `id` | number | Числовой Telegram ID пользователя |
+| `name` | string | Имя пользователя |
+| `preferred_username` | string | Username в Telegram (без `@`) |
+| `picture` | string | URL аватара |
+| `phone_number` | string | Номер телефона (только если запрошен scope `phone`) |
+| `iat` | number | Unix-время выдачи токена |
+| `exp` | number | Unix-время истечения токена |
+
+### Как работает (пошагово)
+
+```
+┌──────────┐    ┌──────────────────┐    ┌──────────────────┐    ┌─────────────┐
+│  Браузер │    │  Cabinet Frontend│    │   API бота       │    │  Telegram   │
+│          │    │                  │    │                  │    │  OIDC       │
+└────┬─────┘    └────────┬─────────┘    └────────┬─────────┘    └──────┬──────┘
+     │                   │                       │                     │
+     │  1. Загрузка     │                       │                     │
+     │  страницы входа  │                       │                     │
+     │──────────────────>│                       │                     │
+     │                   │  2. GET /cabinet/     │                     │
+     │                   │  branding/            │                     │
+     │                   │  telegram-widget      │                     │
+     │                   │──────────────────────>│                     │
+     │                   │  {oidc_enabled: true, │                     │
+     │                   │   oidc_client_id: "…"}│                     │
+     │                   │<──────────────────────│                     │
+     │                   │                       │                     │
+     │                   │  3. Загрузка SDK      │                     │
+     │                   │  telegram-login.js    │                     │
+     │                   │─────────────────────────────────────────────>│
+     │                   │  4. Telegram.Login     │                     │
+     │                   │  .init({client_id})   │                     │
+     │                   │                       │                     │
+     │  5. Клик по       │                       │                     │
+     │  кнопке "Войти"  │                       │                     │
+     │──────────────────>│                       │                     │
+     │                   │  6. Telegram.Login     │                     │
+     │                   │  .open()              │                     │
+     │                   │─────────────────────────────────────────────>│
+     │                   │                       │                     │
+     │  ┌────────────────────────────────────────────────────────────┐ │
+     │  │  7. Popup: пользователь подтверждает авторизацию           │ │
+     │  └────────────────────────────────────────────────────────────┘ │
+     │                   │                       │                     │
+     │                   │  8. Callback:          │                     │
+     │                   │  {id_token: "eyJ…"}   │                     │
+     │                   │<────────────────────────────────────────────│
+     │                   │                       │                     │
+     │                   │  9. POST /cabinet/    │                     │
+     │                   │  auth/telegram/oidc   │                     │
+     │                   │  {id_token: "eyJ…"}   │                     │
+     │                   │──────────────────────>│                     │
+     │                   │                       │  10. GET JWKS       │
+     │                   │                       │──────────────────────>│
+     │                   │                       │  {keys: [...]}      │
+     │                   │                       │<─────────────────────│
+     │                   │                       │                     │
+     │                   │                       │  11. Валидация JWT: │
+     │                   │                       │  - подпись RS256    │
+     │                   │                       │  - iss, aud, exp    │
+     │                   │                       │  - replay-защита   │
+     │                   │                       │                     │
+     │                   │  12. {access_token,   │                     │
+     │                   │   refresh_token, user}│                     │
+     │                   │<──────────────────────│                     │
+     │                   │                       │                     │
+     │  13. Авторизован  │                       │                     │
+     │<──────────────────│                       │                     │
+```
+
+**Детали каждого шага:**
+
+1. Пользователь открывает страницу входа Cabinet
+2. Frontend запрашивает конфигурацию виджета с API бота (публичный эндпоинт, без авторизации)
+3. Если `oidc_enabled=true` — загружается JavaScript SDK Telegram (`telegram-login.js?3`)
+4. SDK инициализируется с `client_id` и callback-функцией:
+   ```javascript
+   Telegram.Login.init({
+     client_id: 1234567890,
+     request_access: ['write'],
+     lang: 'ru'
+   }, callback)
+   ```
+5. Пользователь нажимает кнопку «Войти через Telegram»
+6. SDK открывает popup-окно авторизации на `oauth.telegram.org`
+7. Пользователь видит имя и аватар бота, подтверждает вход
+8. Popup закрывается, SDK вызывает callback с `{id_token: "eyJ…"}` или `{error: "..."}`
+9. Frontend отправляет `id_token` на API бота
+10. Бот загружает публичные ключи JWKS (кэшируются на 1 час)
+11. Бот валидирует JWT-подпись и claims
+12. Бот создаёт/находит пользователя, возвращает JWT-токены Cabinet
+13. Пользователь авторизован и перенаправляется на главную страницу
+
+### JavaScript SDK
+
+Cabinet использует Telegram Login SDK. Доступные методы:
+
+| Метод | Описание |
+| ----- | -------- |
+| `Telegram.Login.init(options, callback)` | Инициализация SDK и регистрация callback |
+| `Telegram.Login.open([callback])` | Открыть popup авторизации |
+| `Telegram.Login.auth(options, callback)` | Открыть popup с явными параметрами |
+
+**Параметры инициализации (InitOptions):**
+
+| Параметр | Тип | Описание |
+| -------- | --- | -------- |
+| `client_id` | number | Числовой ID бота (обязательный) |
+| `request_access` | string[] | Запрашиваемые разрешения: `['write']` и/или `['phone']` |
+| `lang` | string | Язык интерфейса popup (`ru`, `en`, `es` и др.) |
+| `nonce` | string | Серверный random-string для защиты от replay-атак |
+
+**Структура callback:**
+
+```javascript
+{
+  id_token: "eyJhbGciOiJSUzI1NiIs...",  // JWT (при успехе)
+  user: {                                 // Декодированные claims (клиентская копия)
+    name: "John Doe",
+    preferred_username: "johndoe",
+    picture: "https://cdn4.telesco.pe/..."
+  },
+  error: "POPUP_CLOSED"                   // Строка ошибки (при неудаче)
+}
+```
+
+<Warning>
+  Данные из `user` в callback — только для предварительного отображения. Для авторизации **всегда** используйте `id_token` с серверной валидацией.
+</Warning>
+
+### Валидация id_token на сервере
+
+Бот выполняет следующие проверки при получении `id_token`:
+
+1. **Подпись** — загружает публичные ключи JWKS, находит ключ по `kid` из заголовка JWT, проверяет подпись RS256
+2. **Издатель** — `iss` должен быть `https://oauth.telegram.org`
+3. **Аудитория** — `aud` должен совпадать с `TELEGRAM_OIDC_CLIENT_ID`
+4. **Срок действия** — `exp` не должен быть в прошлом
+5. **Обязательные claims** — проверяется наличие `exp`, `iat`, `iss`, `aud`, `sub`
+6. **Replay-защита** — каждый `id_token` может быть использован только один раз (хэш хранится до 10 минут)
+
+### Ротация ключей (JWKS)
 
 Telegram может ротировать ключи подписи. Бот автоматически обновляет JWKS-кэш:
-- Штатное обновление — каждый час
-- Экстренное обновление — если `kid` из токена не найден в кэше (с cooldown 30 секунд)
+
+| Сценарий | Поведение |
+| -------- | --------- |
+| Штатное обновление | Каждый час (TTL кэша) |
+| Неизвестный `kid` | Немедленное обновление JWKS |
+| Повторный неизвестный `kid` | Cooldown 30 секунд между принудительными обновлениями |
+
+### Rate Limiting
+
+Эндпоинт `POST /cabinet/auth/telegram/oidc` защищён rate limiter:
+- **10 запросов** в **60 секунд** на один IP-адрес
+- При превышении — HTTP 429 с заголовком `Retry-After`
+- Режим fail-closed: при ошибке rate limiter запросы отклоняются
+
+### Создание и привязка аккаунтов
+
+При авторизации через OIDC:
+
+- **Существующий пользователь** (по Telegram ID) — выполняется вход, обновляются поля `first_name`, `username`, `last_name` из актуальных claims
+- **Новый пользователь** — создаётся аккаунт с данными из claims. Если передан `referral_code` или `campaign_slug` — применяются соответствующие бонусы
+- **Неактивный аккаунт** — авторизация отклоняется с HTTP 403
+
+### Совместимость с другими OIDC-системами
+
+Telegram OIDC совместим со стандартными OIDC-провайдерами и может использоваться с:
+- **Keycloak** — как внешний Identity Provider
+- **Authentik** — через Generic OIDC
+- **Auth0** — через Custom Social Connection
+
+<Note>
+  Telegram **не предоставляет** отдельный UserInfo endpoint. Все claims содержатся в `id_token`. Некоторые OIDC-библиотеки могут требовать настройки для пропуска запроса UserInfo.
+</Note>
+
+---
+
+## Telegram Widget (legacy)
+
+Стандартный iframe-виджет Telegram. Используется, когда OIDC отключен (`TELEGRAM_OIDC_ENABLED=false`).
+
+### Настройка домена в BotFather
+
+1. Откройте [@BotFather](https://t.me/BotFather) в Telegram
+2. Выберите вашего бота
+3. **Bot Settings** → **Domain** → укажите домен кабинета (например, `cabinet.example.com`)
+
+<Warning>
+  Без привязки домена в BotFather виджет авторизации **не будет работать**. Telegram проверяет, что виджет загружается с авторизованного домена.
+</Warning>
+
+### Кастомизация виджета
+
+Внешний вид виджета настраивается через переменные окружения или через Admin Cabinet → Настройки:
+
+| Переменная | Описание | По умолчанию |
+| ---------- | -------- | ------------ |
+| `TELEGRAM_WIDGET_SIZE` | Размер: `large`, `medium`, `small` | `large` |
+| `TELEGRAM_WIDGET_RADIUS` | Скругление углов (0-20 пикселей) | `8` |
+| `TELEGRAM_WIDGET_USERPIC` | Показывать аватар пользователя | `true` |
+| `TELEGRAM_WIDGET_REQUEST_ACCESS` | Запрашивать write access | `true` |
+
+<Note>
+  Настройки виджета можно менять без перезапуска бота через Admin Cabinet → Настройки. Значения из базы данных имеют приоритет над переменными окружения.
+</Note>
+
+### Как работает
+
+1. Cabinet загружает iframe-виджет Telegram Login на странице входа
+2. Пользователь нажимает кнопку и подтверждает вход в Telegram
+3. Telegram возвращает данные пользователя (id, first_name, auth_date, hash) с HMAC-SHA256 подписью
+4. Cabinet отправляет данные на API бота
+5. Бот проверяет подпись через `SHA256(BOT_TOKEN)` и валидирует `auth_date` (не старше 24 часов)
+6. Бот возвращает JWT-токены для авторизованной сессии
+
+---
+
+## OIDC vs Widget — сравнение
+
+| Характеристика | OIDC | Widget |
+| -------------- | ---- | ------ |
+| Метод авторизации | Popup-окно | Iframe / Redirect |
+| Подпись данных | JWT RS256 (JWKS) | HMAC-SHA256 (BOT_TOKEN) |
+| Стандарт | OpenID Connect | Telegram-проприетарный |
+| Replay-защита | Встроенная (одноразовый токен) | Нет (проверка auth_date) |
+| Совместимость с IdP | Keycloak, Authentik, Auth0 | Только Telegram |
+| Настройка | BotFather → Web Login | BotFather → Domain |
+| Кастомизация кнопки | Полная (своя кнопка) | Ограничена (iframe) |
+
+---
+
+## Конфигурационный API
+
+### GET /cabinet/branding/telegram-widget
+
+Публичный эндпоинт (без авторизации). Возвращает конфигурацию для страницы входа.
+
+**Ответ:**
+
+```json
+{
+  "bot_username": "my_vpn_bot",
+  "size": "large",
+  "radius": 8,
+  "userpic": true,
+  "request_access": true,
+  "oidc_enabled": true,
+  "oidc_client_id": "1234567890"
+}
+```
+
+| Поле | Тип | Описание |
+| ---- | --- | -------- |
+| `bot_username` | string | Username бота (без `@`) |
+| `size` | string | Размер виджета: `large`, `medium`, `small` |
+| `radius` | number | Скругление углов (0-20) |
+| `userpic` | boolean | Показывать аватар |
+| `request_access` | boolean | Запрашивать write access |
+| `oidc_enabled` | boolean | Включен ли OIDC |
+| `oidc_client_id` | string | Client ID (пусто если OIDC выключен) |
+
+Frontend использует `oidc_enabled` и `oidc_client_id` чтобы выбрать способ авторизации: OIDC popup или legacy widget.
+
+### POST /cabinet/auth/telegram/oidc
+
+Валидация id_token и авторизация пользователя.
+
+**Запрос:**
+
+```json
+{
+  "id_token": "eyJhbGciOiJSUzI1NiIs...",
+  "campaign_slug": "summer2025",
+  "referral_code": "abc123"
+}
+```
+
+| Поле | Тип | Описание |
+| ---- | --- | -------- |
+| `id_token` | string | JWT id_token от Telegram (макс. 4096 символов) |
+| `campaign_slug` | string? | Slug рекламной кампании (опционально) |
+| `referral_code` | string? | Реферальный код (опционально) |
+
+**Ответ (200):**
+
+```json
+{
+  "access_token": "eyJ...",
+  "refresh_token": "eyJ...",
+  "token_type": "bearer",
+  "expires_in": 900,
+  "user": {
+    "id": 42,
+    "telegram_id": 987654321,
+    "username": "johndoe",
+    "first_name": "John",
+    "email": null,
+    "balance_kopeks": 0,
+    "referral_code": "abc123"
+  },
+  "campaign_bonus": null
+}
+```
+
+**Ошибки:**
+
+| Код | Причина |
+| --- | ------- |
+| 400 | `Telegram OIDC is not configured` — OIDC выключен или Client ID не задан |
+| 401 | `Invalid or expired Telegram OIDC token` — невалидный JWT, истёкший, или повторное использование |
+| 401 | `Missing user ID in OIDC claims` — нет `id` или `sub` в токене |
+| 403 | `User account is not active` — аккаунт заблокирован |
+| 429 | Rate limit (10 req / 60s per IP) |
+
+---
 
 ## Итоговая настройка .env
 
 Пример с виджетом и OIDC:
 
 ```env
-# === CABINET ===
+# === CABINET (обязательно) ===
 CABINET_ENABLED=true
 CABINET_URL=https://cabinet.example.com
 CABINET_JWT_SECRET=your_jwt_secret_here
 CABINET_ALLOWED_ORIGINS=https://cabinet.example.com
 
-# === TELEGRAM WIDGET ===
+# === TELEGRAM WIDGET (кастомизация) ===
 TELEGRAM_WIDGET_SIZE=large
 TELEGRAM_WIDGET_RADIUS=8
 TELEGRAM_WIDGET_USERPIC=true
 TELEGRAM_WIDGET_REQUEST_ACCESS=true
 
-# === TELEGRAM OIDC ===
+# === TELEGRAM OIDC (рекомендуется) ===
 TELEGRAM_OIDC_ENABLED=true
 TELEGRAM_OIDC_CLIENT_ID=1234567890
 TELEGRAM_OIDC_CLIENT_SECRET=your_oidc_secret
 ```
 
+---
+
 ## Проверка
-
-### Widget
-
-1. Откройте Cabinet в браузере
-2. На экране входа должна появиться кнопка Telegram
-3. Нажмите — должно перенаправить на авторизацию в Telegram
-4. После подтверждения — вход в Cabinet
-
-### OIDC
-
-1. Если `TELEGRAM_OIDC_ENABLED=true`, на странице входа появится дополнительная кнопка OIDC
-2. При нажатии откроется popup-окно авторизации Telegram
-3. После подтверждения popup закроется и пользователь будет авторизован
 
 ### API: проверка конфигурации
 
 ```bash
-curl -s https://api.example.com/cabinet/auth/telegram/config | jq
+curl -s https://hooks.example.com/cabinet/branding/telegram-widget | jq
 ```
+
+Ответ должен содержать `oidc_enabled: true` и `oidc_client_id` с ID бота.
+
+### Widget (если OIDC выключен)
+
+1. Откройте Cabinet в браузере
+2. На экране входа должна появиться iframe-кнопка Telegram
+3. Нажмите — откроется авторизация Telegram
+4. После подтверждения — вход в Cabinet
+
+### OIDC (если включен)
+
+1. На странице входа отображается кастомная кнопка «Войти через Telegram»
+2. При нажатии откроется popup-окно авторизации
+3. После подтверждения popup закроется и пользователь авторизован
+
+---
 
 ## Устранение проблем
 
-### Виджет не появляется
+### Кнопка «Войти через Telegram» не появляется
 
-1. Домен кабинета добавлен в BotFather → Bot Settings → Domain?
-2. `VITE_TELEGRAM_BOT_USERNAME` указан верно (без `@`)?
-3. Страница загружается по HTTPS?
+1. Проверьте конфигурацию: `curl -s https://hooks.example.com/cabinet/branding/telegram-widget | jq`
+2. Если `oidc_enabled: false`:
+   - Проверьте `TELEGRAM_OIDC_ENABLED=true` в `.env`
+   - Проверьте что `TELEGRAM_OIDC_CLIENT_ID` заполнен
+   - Перезапустите бота
+3. Если OIDC выключен, но виджет тоже не появляется:
+   - Домен кабинета добавлен в BotFather → Bot Settings → Domain?
+   - `VITE_TELEGRAM_BOT_USERNAME` указан верно (без `@`)?
+   - Страница загружается по HTTPS?
 
-### OIDC popup не открывается или сразу закрывается
+### Popup открывается, но сразу закрывается
 
-1. Проверьте `TELEGRAM_OIDC_ENABLED=true`
-2. Убедитесь что `TELEGRAM_OIDC_CLIENT_ID` и `TELEGRAM_OIDC_CLIENT_SECRET` заполнены
-3. Перезапустите бота после изменений
+1. URL кабинета зарегистрирован в BotFather → Bot Settings → Web Login → Allowed URLs?
+2. Убедитесь что домен в `CABINET_URL` совпадает с зарегистрированным
 
-### "Invalid id_token" в логах
+### "Telegram OIDC is not configured" (400)
 
-1. Неверный `TELEGRAM_OIDC_CLIENT_ID` — должен совпадать с числовым ID бота
-2. Неверный `TELEGRAM_OIDC_CLIENT_SECRET`
-3. Часы сервера сильно расходятся с реальным временем — настройте NTP
+1. `TELEGRAM_OIDC_ENABLED=true` в `.env`?
+2. `TELEGRAM_OIDC_CLIENT_ID` не пустой?
+3. Перезапустили бота после изменений?
 
-### "Unknown kid in id_token"
+### "Invalid or expired Telegram OIDC token" (401)
 
-Telegram ротировал ключи подписи. Бот автоматически обновит JWKS. Если ошибка повторяется:
-1. Проверьте доступность `https://oauth.telegram.org/.well-known/jwks.json` с вашего сервера
-2. Убедитесь что нет блокировки исходящих запросов к `oauth.telegram.org`
+| Причина | Решение |
+| ------- | ------- |
+| Неверный Client ID | `TELEGRAM_OIDC_CLIENT_ID` должен совпадать с числовым ID бота |
+| Токен просрочен | Пользователь слишком долго подтверждал — повторите вход |
+| Повторное использование | Каждый id_token одноразовый — повторите вход |
+| Расхождение часов | Настройте NTP на сервере (допуск ±5 минут) |
+
+### "Unknown kid in id_token" в логах
+
+Telegram ротировал ключи подписи. Бот автоматически обновит JWKS.
+
+Если ошибка повторяется:
+1. Проверьте доступность `https://oauth.telegram.org/.well-known/jwks.json` с вашего сервера:
+   ```bash
+   curl -s https://oauth.telegram.org/.well-known/jwks.json | jq '.keys | length'
+   ```
+2. Убедитесь что нет блокировки исходящих HTTPS-запросов к `oauth.telegram.org`
+3. Проверьте DNS-резолвинг:
+   ```bash
+   dig oauth.telegram.org
+   ```
+
+### Rate limit (429)
+
+Эндпоинт OIDC ограничен 10 запросами в 60 секунд на IP. Это защита от брутфорса. В нормальной работе лимит не должен срабатывать.
+
+Если срабатывает в production:
+- Проверьте что reverse proxy передаёт реальный IP пользователя (заголовок `X-Forwarded-For`)
+- Без этого все запросы идут с IP прокси и быстро исчерпывают лимит
