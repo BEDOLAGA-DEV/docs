@@ -491,6 +491,21 @@ description: "Полный справочник настроек .env файла
 | `WATA_PUBLIC_KEY_CACHE_SECONDS` | Кэш публичного ключа (сек) | `3600` |
 | `WATA_WEBHOOK_PATH` | Путь webhook | `/wata-webhook` |
 
+### RioPay
+
+| Переменная | Описание | По умолчанию |
+| ---------- | -------- | ------------ |
+| `RIOPAY_ENABLED` | Включить RioPay | `false` |
+| `RIOPAY_API_TOKEN` | API токен (заголовок `x-api-token`) | — |
+| `RIOPAY_WEBHOOK_SECRET` | Ключ HMAC-SHA512 для вебхуков (по умолчанию = `RIOPAY_API_TOKEN`) | — |
+| `RIOPAY_DISPLAY_NAME` | Название кнопки в интерфейсе | `RioPay` |
+| `RIOPAY_CURRENCY` | Валюта | `RUB` |
+| `RIOPAY_MIN_AMOUNT_KOPEKS` | Мин. сумма (копейки) | `10000` |
+| `RIOPAY_MAX_AMOUNT_KOPEKS` | Макс. сумма (копейки) | `100000000` |
+| `RIOPAY_WEBHOOK_PATH` | Путь webhook | `/riopay-webhook` |
+| `RIOPAY_SUCCESS_URL` | URL при успешной оплате | — |
+| `RIOPAY_FAIL_URL` | URL при ошибке оплаты | — |
+
 ## Налоговая служба (NaloGO)
 
 Автоматическая отправка чеков в налоговую при пополнении баланса.
@@ -517,6 +532,7 @@ description: "Полный справочник настроек .env файла
 | `REFERRAL_FIRST_TOPUP_BONUS_KOPEKS` | Бонус рефералу при первом пополнении | `10000` |
 | `REFERRAL_INVITER_BONUS_KOPEKS` | Бонус пригласившему | `10000` |
 | `REFERRAL_COMMISSION_PERCENT` | Процент комиссии с пополнений | `25` |
+| `REFERRAL_MAX_COMMISSION_PAYMENTS` | Макс. кол-во платежей реферала, с которых начисляется комиссия (0 = без лимита) | `0` |
 | `REFERRAL_PARTNER_SECTION_VISIBLE` | Показывать раздел партнёрки | `true` |
 | `REFERRAL_NOTIFICATIONS_ENABLED` | Уведомления о рефералах | `true` |
 | `REFERRAL_NOTIFICATION_RETRY_ATTEMPTS` | Повторные попытки отправки уведомлений | `3` |
