@@ -63,6 +63,7 @@
               "bot/user-onboarding",
               "bot/channel-subscription",
               "bot/payments",
+              "bot/recurrent-payments",
               "bot/subscriptions",
               "bot/tariffs",
               "bot/auto-purchase",
