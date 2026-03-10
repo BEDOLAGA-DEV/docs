@@ -92,6 +92,8 @@
               "cabinet/landings",
               "cabinet/rbac",
               "cabinet/backgrounds",
+              "cabinet/gift-subscriptions",
+              "cabinet/menu-editor",
               "cabinet/sales-stats",
               "cabinet/analytics-setup"
             ]
