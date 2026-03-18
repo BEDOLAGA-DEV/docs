@@ -3,7 +3,7 @@ title: Настройка платежей
 description: "Подключение платёжных систем, настройки баланса, автооплаты и webhook"
 ---
 
-Бот поддерживает 13 платёжных провайдеров одновременно. Каждый провайдер включается отдельно, все работают параллельно через единый веб-сервер на порту `8080`.
+Бот поддерживает 14 платёжных провайдеров одновременно. Каждый провайдер включается отдельно, все работают параллельно через единый веб-сервер на порту `8080`.
 
 ## Общая архитектура
 
@@ -36,7 +36,8 @@ description: "Подключение платёжных систем, настр
 12. Freekassa
 13. Kassa AI
 14. RioPay
-15. Через поддержку (всегда последний)
+15. SeverPay
+16. Через поддержку (всегда последний)
 
 ---
 
@@ -57,6 +58,7 @@ description: "Подключение платёжных систем, настр
 | MulenPay | Карты | `/mulenpay-webhook` | RUB |
 | Tribute | Telegram | `/tribute-webhook` | RUB |
 | RioPay | Карты | `/riopay-webhook` | RUB |
+| SeverPay | СБП, карты | `/severpay-webhook` | RUB |
 
 <Note>
   Все webhook URL доступны на едином сервере бота (порт 8080). Укажите полный путь: `https://hooks.domain.com/webhook-path`. Для CloudPayments дополнительно доступны суб-роуты `/check`, `/pay`, `/fail`.
@@ -710,6 +712,41 @@ RIOPAY_API_TOKEN=your_api_token
 
 ---
 
+## SeverPay
+
+Платежи через SeverPay (СБП и банковские карты) с HMAC-SHA256 подписью webhook.
+
+### Обязательные настройки
+
+```env
+SEVERPAY_ENABLED=true
+SEVERPAY_MID=12345
+SEVERPAY_TOKEN=your_secret_token
+```
+
+### Все переменные
+
+| Переменная | Тип | По умолчанию | Описание |
+| ---------- | --- | ------------ | -------- |
+| `SEVERPAY_ENABLED` | `bool` | `false` | Включить SeverPay |
+| `SEVERPAY_MID` | `int` | — | **Обязательно**. Merchant ID |
+| `SEVERPAY_TOKEN` | `str` | — | **Обязательно**. Секретный токен (HMAC-SHA256 подпись) |
+| `SEVERPAY_DISPLAY_NAME` | `str` | `SeverPay` | Отображаемое название |
+| `SEVERPAY_CURRENCY` | `str` | `RUB` | Валюта |
+| `SEVERPAY_MIN_AMOUNT_KOPEKS` | `int` | `10000` | Минимальная сумма (100 руб) |
+| `SEVERPAY_MAX_AMOUNT_KOPEKS` | `int` | `10000000` | Максимальная сумма (100 000 руб) |
+| `SEVERPAY_WEBHOOK_PATH` | `str` | `/severpay-webhook` | Путь webhook |
+| `SEVERPAY_RETURN_URL` | `str` | — | URL возврата после оплаты |
+| `SEVERPAY_LIFETIME` | `int` | `1440` | Время жизни платежа (минуты, 30–4320) |
+
+### Webhook
+
+В кабинете SeverPay укажите: `https://hooks.domain.com/severpay-webhook`
+
+Подпись webhook проверяется через HMAC-SHA256. Webhook всегда возвращает HTTP 200 для предотвращения повторных запросов от SeverPay.
+
+---
+
 ## Активация провайдера
 
 Каждый провайдер считается **включённым** только при выполнении двух условий:
@@ -736,6 +773,7 @@ RIOPAY_API_TOKEN=your_api_token
 | MulenPay | `MULENPAY_ENABLED` + `API_KEY` + `SECRET_KEY` + `SHOP_ID` |
 | Tribute | `TRIBUTE_ENABLED` (проверяется только флаг) |
 | RioPay | `RIOPAY_ENABLED` + `API_TOKEN` |
+| SeverPay | `SEVERPAY_ENABLED` + `MID` + `TOKEN` |
 
 ---
 
@@ -763,7 +801,8 @@ GET /health/payment-webhooks
   "cloudpayments_enabled": false,
   "freekassa_enabled": false,
   "kassa_ai_enabled": false,
-  "riopay_enabled": false
+  "riopay_enabled": false,
+  "severpay_enabled": false
 }
 ```
 
