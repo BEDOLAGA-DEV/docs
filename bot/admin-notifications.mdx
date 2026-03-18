@@ -26,6 +26,39 @@ ADMIN_NOTIFICATIONS_TOPIC_ID=123
 
 Каждый тип событий можно направить в свой топик. Если специальный топик не указан — уведомления уходят в `ADMIN_NOTIFICATIONS_TOPIC_ID`.
 
+#### Топики по категориям
+
+```env
+# Покупки подписок (первичные покупки, гостевые покупки)
+ADMIN_NOTIFICATIONS_PURCHASES_TOPIC_ID=
+
+# Продления подписок
+ADMIN_NOTIFICATIONS_RENEWALS_TOPIC_ID=
+
+# Активации триалов
+ADMIN_NOTIFICATIONS_TRIALS_TOPIC_ID=
+
+# Пополнения баланса
+ADMIN_NOTIFICATIONS_BALANCE_TOPIC_ID=
+
+# Докупка трафика, устройств, серверов
+ADMIN_NOTIFICATIONS_ADDONS_TOPIC_ID=
+
+# Инфраструктура: ноды, техработы, статус панели, RemnaWave webhook-события
+ADMIN_NOTIFICATIONS_INFRASTRUCTURE_TOPIC_ID=
+
+# Ошибки бота, крэш-репорты
+ADMIN_NOTIFICATIONS_ERRORS_TOPIC_ID=
+
+# Промокоды, кампании, смена промогруппы, конкурсы
+ADMIN_NOTIFICATIONS_PROMO_TOPIC_ID=
+
+# Партнёрские заявки, выводы средств, массовые действия
+ADMIN_NOTIFICATIONS_PARTNERS_TOPIC_ID=
+```
+
+#### Отдельные топики (настраиваются независимо)
+
 | Переменная | Назначение | Фоллбэк |
 | ---------- | ---------- | ------- |
 | `ADMIN_NOTIFICATIONS_TOPIC_ID` | Общие уведомления | General (без топика) |
@@ -33,6 +66,10 @@ ADMIN_NOTIFICATIONS_TOPIC_ID=123
 | `ADMIN_NOTIFICATIONS_NALOG_TOPIC_ID` | Очередь чеков NaloGO | `ADMIN_NOTIFICATIONS_TOPIC_ID` |
 | `SUSPICIOUS_NOTIFICATIONS_TOPIC_ID` | Аномалии трафика | `ADMIN_NOTIFICATIONS_TOPIC_ID` |
 | `REFERRAL_WITHDRAWAL_NOTIFICATIONS_TOPIC_ID` | Запросы на вывод средств | `ADMIN_NOTIFICATIONS_TOPIC_ID` |
+
+<Tip>
+  Все топики по категориям опциональны. Если переменная не задана — уведомления автоматически уходят в `ADMIN_NOTIFICATIONS_TOPIC_ID`. Можно настроить только нужные топики, остальные останутся в общем.
+</Tip>
 
 ### Чат отчётов
 
@@ -453,37 +490,37 @@ LOG_ROTATION_TOPIC_ID=101
 
 ## Сводная таблица
 
-| Уведомление | Чат | Топик | Флаг | Частота |
-| ----------- | --- | ----- | ---- | ------- |
-| Пополнение баланса | NOTIFICATIONS | TOPIC | ENABLED | Событие |
-| Покупка подписки | NOTIFICATIONS | TOPIC | ENABLED | Событие |
-| Продление подписки | NOTIFICATIONS | TOPIC | ENABLED | Событие |
-| Докупка трафика/устройств | NOTIFICATIONS | TOPIC | ENABLED | Событие |
-| Активация триала | NOTIFICATIONS | TOPIC | ENABLED | Событие |
-| Активация промокода | NOTIFICATIONS | TOPIC | ENABLED | Событие |
-| Переход по кампании | NOTIFICATIONS | TOPIC | ENABLED | Событие |
-| Смена промогруппы | NOTIFICATIONS | TOPIC | ENABLED | Событие |
-| Заявка на партнёрство | NOTIFICATIONS | TOPIC | ENABLED | Событие |
-| Запрос на вывод | NOTIFICATIONS | WITHDRAWAL_TOPIC | ENABLED | Событие |
-| Массовая блокировка | NOTIFICATIONS | TOPIC | ENABLED | Событие |
-| Новый тикет | NOTIFICATIONS | TICKET_TOPIC | ENABLED + runtime | Событие |
-| Ответ на тикет | NOTIFICATIONS | TICKET_TOPIC | ENABLED + runtime | Событие |
-| Напоминание SLA | NOTIFICATIONS | TICKET_TOPIC | SLA_ENABLED | Интервал |
+| Уведомление | Чат | Топик (категория) | Флаг | Частота |
+| ----------- | --- | ----------------- | ---- | ------- |
+| Пополнение баланса | NOTIFICATIONS | BALANCE | ENABLED | Событие |
+| Покупка подписки | NOTIFICATIONS | PURCHASES | ENABLED | Событие |
+| Продление подписки | NOTIFICATIONS | RENEWALS | ENABLED | Событие |
+| Докупка трафика/устройств | NOTIFICATIONS | ADDONS | ENABLED | Событие |
+| Активация триала | NOTIFICATIONS | TRIALS | ENABLED | Событие |
+| Активация промокода | NOTIFICATIONS | PROMO | ENABLED | Событие |
+| Переход по кампании | NOTIFICATIONS | PROMO | ENABLED | Событие |
+| Смена промогруппы | NOTIFICATIONS | PROMO | ENABLED | Событие |
+| Заявка на партнёрство | NOTIFICATIONS | PARTNERS | ENABLED | Событие |
+| Запрос на вывод | NOTIFICATIONS | PARTNERS | ENABLED | Событие |
+| Массовая блокировка | NOTIFICATIONS | PARTNERS | ENABLED | Событие |
+| Новый тикет | NOTIFICATIONS | TICKETS | ENABLED + runtime | Событие |
+| Ответ на тикет | NOTIFICATIONS | TICKETS | ENABLED + runtime | Событие |
+| Напоминание SLA | NOTIFICATIONS | TICKETS | SLA_ENABLED | Интервал |
 | Аномалии трафика | NOTIFICATIONS | SUSPICIOUS_TOPIC | Chat ID | Интервал |
-| Статус панели | NOTIFICATIONS | TOPIC | ENABLED | Событие |
-| Режим обслуживания | NOTIFICATIONS | TOPIC | ENABLED | Событие |
-| Доступно обновление | NOTIFICATIONS | TOPIC | ENABLED | Ежечасно |
-| Ошибка обновления | NOTIFICATIONS | TOPIC | ENABLED | Ежечасно |
-| Запуск бота | NOTIFICATIONS | — | ENABLED | При старте |
-| Крэш-репорт | NOTIFICATIONS | — | ENABLED | При крэше |
-| Ошибки хендлеров | NOTIFICATIONS | — | Chat ID | Throttled |
+| Статус панели | NOTIFICATIONS | INFRASTRUCTURE | ENABLED | Событие |
+| Режим обслуживания | NOTIFICATIONS | INFRASTRUCTURE | ENABLED | Событие |
+| Доступно обновление | NOTIFICATIONS | INFRASTRUCTURE | ENABLED | Ежечасно |
+| Ошибка обновления | NOTIFICATIONS | INFRASTRUCTURE | ENABLED | Ежечасно |
+| Запуск бота | NOTIFICATIONS | INFRASTRUCTURE | ENABLED | При старте |
+| Крэш-репорт | NOTIFICATIONS | ERRORS | ENABLED | При крэше |
+| Ошибки хендлеров | NOTIFICATIONS | ERRORS | Chat ID | Throttled |
 | Очередь NaloGO | NOTIFICATIONS | NALOG_TOPIC | ENABLED | 1ч кулдаун |
-| RemnaWave webhook (12 типов) | NOTIFICATIONS | TOPIC | ENABLED | Событие |
-| Сводка конкурса | NOTIFICATIONS | TOPIC | Конкурс активен | Ежедневно |
-| Итоги конкурса | NOTIFICATIONS | TOPIC | Конкурс активен | При завершении |
+| RemnaWave webhook (12 типов) | NOTIFICATIONS | INFRASTRUCTURE | ENABLED | Событие |
+| Сводка конкурса | NOTIFICATIONS | PROMO | Конкурс активен | Ежедневно |
+| Итоги конкурса | NOTIFICATIONS | PROMO | Конкурс активен | При завершении |
 | Ежедневный отчёт | REPORTS | REPORTS_TOPIC | REPORTS_ENABLED | Ежедневно |
 | Файл бэкапа | BACKUP | BACKUP_TOPIC | BACKUP_CHAT set | По расписанию |
-| Статус бэкапа | NOTIFICATIONS | TOPIC | ENABLED | По расписанию |
+| Статус бэкапа | NOTIFICATIONS | INFRASTRUCTURE | ENABLED | По расписанию |
 | Архив логов | LOG_ROTATION | LOG_TOPIC | LOG_ENABLED | Ежедневно |
 
 <Warning>
