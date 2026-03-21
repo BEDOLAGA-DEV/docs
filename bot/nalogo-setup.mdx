@@ -67,6 +67,7 @@ docker compose up -d --build
 | `NALOGO_QUEUE_CHECK_INTERVAL` | `300` | Интервал проверки очереди (секунды) |
 | `NALOGO_QUEUE_RECEIPT_DELAY` | `3` | Задержка между отправкой чеков из очереди (секунды) |
 | `NALOGO_QUEUE_MAX_ATTEMPTS` | `10` | Максимум попыток отправки одного чека |
+| `NALOGO_PROXY_URL` | — | SOCKS прокси для nalog.ru ([подробнее](/getting-started/proxy-setup#прокси-для-nalogru)) |
 | `ADMIN_NOTIFICATIONS_NALOG_TOPIC_ID` | — | ID топика для уведомлений в Telegram |
 
 <Warning>
@@ -135,6 +136,61 @@ NALOGO_STORAGE_PATH=./data/nalogo_tokens.json
 | Файловое хранение токенов | Требуется персистентный том в Docker |
 | Зависимость от Redis | При потере данных Redis очередь и ключи дедупликации теряются |
 
+## Прокси для nalog.ru
+
+Если сервер бота находится за пределами России или `lknpd.nalog.ru` недоступен напрямую, трафик к API налоговой можно маршрутизировать через SOCKS-прокси.
+
+### Настройка
+
+Добавьте в `.env`:
+
+```env
+# Выделенный прокси для nalog.ru
+NALOGO_PROXY_URL=socks5://proxy-host:1080
+
+# С авторизацией
+NALOGO_PROXY_URL=socks5://username:password@proxy-host:1080
+
+# Удалённое разрешение DNS через прокси (рекомендуется)
+NALOGO_PROXY_URL=socks5h://proxy-host:1080
+```
+
+Если `NALOGO_PROXY_URL` не указан, но настроен общий `PROXY_URL` (для Telegram API) — трафик к nalog.ru автоматически пойдёт через него.
+
+<Info>
+  Схема `socks5h://` выполняет DNS-резолвинг на стороне прокси-сервера. Это полезно, когда DNS `lknpd.nalog.ru` не резолвится локально.
+</Info>
+
+### Поддерживаемые схемы
+
+| Схема | Описание |
+| ----- | -------- |
+| `socks5://` | SOCKS5 с локальным DNS |
+| `socks5h://` | SOCKS5 с удалённым DNS (рекомендуется) |
+| `socks4://` | SOCKS4 |
+
+<Warning>
+  HTTP/HTTPS прокси **не поддерживаются**. Используйте только SOCKS-протоколы.
+</Warning>
+
+### Проверка работоспособности
+
+В логах бота при старте появится:
+
+```
+[info] Nalogo proxy configured proxy_url=socks5://***@proxy-host:1080 source=NALOGO_PROXY_URL
+```
+
+Если используется общий `PROXY_URL`:
+
+```
+[info] Nalogo proxy configured proxy_url=socks5://***@proxy-host:1080 source=PROXY_URL (fallback)
+```
+
+<Note>
+  Подробнее о настройке SOCKS-прокси для бота — в разделе [SOCKS5 прокси](/getting-started/proxy-setup).
+</Note>
+
 ## Устранение проблем
 
 ### Чеки не создаются
@@ -149,6 +205,7 @@ NALOGO_STORAGE_PATH=./data/nalogo_tokens.json
 - Проверьте пароль от `lknpd.nalog.ru` (войдите вручную)
 - Удалите `nalogo_tokens.json` для принудительной реавторизации
 - Проверьте доступность `lknpd.nalog.ru` с сервера
+- Если сервер за рубежом — настройте `NALOGO_PROXY_URL` через SOCKS-прокси в РФ
 
 ### Очередь растет
 
