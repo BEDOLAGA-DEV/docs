@@ -53,6 +53,7 @@
               "getting-started/environment",
               "getting-started/initial-setup",
               "getting-started/smtp-setup",
+              "getting-started/proxy-setup",
               "getting-started/troubleshooting"
             ]
           },
