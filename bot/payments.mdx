@@ -216,6 +216,7 @@ YooKassa поддерживает сохранение банковских ка
 | ---------- | --- | ------------ | -------- |
 | `YOOKASSA_RECURRENT_ENABLED` | `bool` | `false` | Включить сохранение карт и рекуррентные платежи |
 | `YOOKASSA_RECURRENT_REQUIRED` | `bool` | `false` | Всегда запрашивать сохранение карты при оплате |
+| `YOOKASSA_TEST_MODE` | `bool` | `false` | Тестовый режим (принимать тестовые платежи). В проде тестовые платежи отклоняются |
 
 При включённом `YOOKASSA_RECURRENT_ENABLED`:
 - При успешной оплате карта автоматически сохраняется (если пользователь дал согласие или `RECURRENT_REQUIRED=true`)
@@ -519,6 +520,10 @@ PLATEGA_SECRET=your_secret_key
 PLATEGA_ACTIVE_METHODS=2,10
 ```
 
+### Inline-отображение
+
+Если у Platega настроено несколько активных методов (`PLATEGA_ACTIVE_METHODS`), каждый метод отображается как отдельная кнопка на главном экране бота. Пользователь сразу видит доступные варианты (СБП, карты, крипто) без дополнительных переходов.
+
 ### Webhook
 
 В кабинете Platega укажите: `https://hooks.domain.com/platega-webhook`
@@ -744,6 +749,36 @@ SEVERPAY_TOKEN=your_secret_token
 В кабинете SeverPay укажите: `https://hooks.domain.com/severpay-webhook`
 
 Подпись webhook проверяется через HMAC-SHA256. Webhook всегда возвращает HTTP 200 для предотвращения повторных запросов от SeverPay.
+
+---
+
+## Безопасность webhook
+
+Все платёжные webhook проходят проверку подлинности:
+
+| Провайдер | Метод проверки |
+| --------- | -------------- |
+| YooKassa | IP-адреса + trusted proxy networks |
+| CloudPayments | HMAC-SHA256 подпись (обязательна при настроенном `API_SECRET`) |
+| CryptoBot | HMAC-SHA256 подпись |
+| Heleket | HMAC-SHA256 подпись |
+| Freekassa | Подпись по секретному слову |
+| Kassa AI | Подпись по секретному слову |
+| MulenPay | HMAC-SHA256 (hex/base64/bearer) |
+| Platega | HMAC-SHA256 (timing-safe comparison) |
+| WATA | RSA-подпись с публичным ключом |
+| Pal24 | Подпись токена + верификация суммы платежа |
+| Tribute | API-ключ |
+| RioPay | HMAC-SHA512 |
+| SeverPay | HMAC-SHA256 |
+
+<Warning>
+  Если для провайдера настроен секретный ключ, webhook **без подписи будут отклонены**. Убедитесь, что секретные ключи в `.env` совпадают с настройками в кабинете провайдера.
+</Warning>
+
+### Тестовые платежи
+
+CloudPayments и YooKassa проверяют флаг `test_mode` в webhook. В production-окружении тестовые платежи **автоматически отклоняются**, если соответствующий `*_TEST_MODE` не включён явно.
 
 ---
 

@@ -310,6 +310,7 @@ description: "Полный справочник настроек .env файла
 | `YOOKASSA_QUICK_AMOUNT_SELECTION_ENABLED` | Быстрый выбор суммы пополнения | `true` |
 | `YOOKASSA_TRUSTED_PROXY_NETWORKS` | Доверенные IP-сети для webhook (через запятую) | — |
 | `YOOKASSA_WEBHOOK_PATH` | Путь webhook | `/yookassa-webhook` |
+| `YOOKASSA_TEST_MODE` | Принимать тестовые платежи (отклоняются в проде если `false`) | `false` |
 
 <Note>
   Коды НДС: 1 — не облагается, 2 — 0%, 3 — 10%, 4 — 20%, 5 — 10/110, 6 — 20/120, 7 — 5%, 8 — 7%, 9 — 5/105, 10 — 7/107, 11 — 22%, 12 — 22/122.
@@ -884,6 +885,18 @@ description: "Полный справочник настроек .env файла
 | `LOG_WARNING_FILE` | Файл warning-логов | `warning.log` |
 | `LOG_ERROR_FILE` | Файл error-логов | `error.log` |
 | `LOG_PAYMENTS_FILE` | Файл логов платежей | `payments.log` |
+
+## Медиа-загрузки (новости)
+
+Настройки для загрузки изображений и видео в модуле новостей.
+
+| Переменная | Описание | По умолчанию |
+| ---------- | -------- | ------------ |
+| `MEDIA_UPLOAD_DIR` | Директория хранения загрузок | `./uploads` |
+| `MEDIA_MAX_IMAGE_SIZE_MB` | Макс. размер изображения (МБ) | `10` |
+| `MEDIA_MAX_VIDEO_SIZE_MB` | Макс. размер видео (МБ) | `50` |
+| `MEDIA_IMAGE_MAX_DIMENSION` | Макс. сторона изображения (пиксели) | `2048` |
+| `MEDIA_JPEG_QUALITY` | Качество JPEG-сжатия (1-100) | `85` |
 
 ## Дополнительные настройки
 

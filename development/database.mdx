@@ -58,7 +58,7 @@ async with get_session() as session:
 | `SubscriptionStatus` | `trial`, `active`, `expired`, `disabled`, `pending` |
 | `TransactionType` | `deposit`, `withdrawal`, `subscription_payment`, `refund`, `referral_reward`, `poll_reward` |
 | `PromoCodeType` | `balance`, `subscription_days`, `trial_subscription`, `promo_group`, `discount` |
-| `PaymentMethod` | `telegram_stars`, `tribute`, `yookassa`, `cryptobot`, `heleket`, `mulenpay`, `pal24`, `wata`, `platega`, `cloudpayments`, `freekassa`, `kassa_ai`, `manual`, `balance` |
+| `PaymentMethod` | `telegram_stars`, `tribute`, `yookassa`, `cryptobot`, `heleket`, `mulenpay`, `pal24`, `wata`, `platega`, `cloudpayments`, `freekassa`, `kassa_ai`, `riopay`, `severpay`, `manual`, `balance` |
 | `TicketStatus` | `open`, `answered`, `closed`, `pending` |
 | `PartnerStatus` | `none`, `pending`, `approved`, `rejected` |
 | `WithdrawalRequestStatus` | `pending`, `approved`, `rejected`, `completed`, `cancelled` |
@@ -159,6 +159,8 @@ async with get_session() as session:
 | `cloudpayments_payments` | CloudPayments | `transaction_id_cp`, `invoice_id` |
 | `freekassa_payments` | Freekassa | `order_id`, `freekassa_order_id` |
 | `kassa_ai_payments` | Kassa AI | `order_id`, `kassa_ai_order_id` |
+| `riopay_payments` | RioPay | `riopay_payment_id` |
+| `severpay_payments` | SeverPay | `severpay_payment_id` |
 
 **`payment_method_configs`** — настройки отображения платежных методов в Cabinet.
 
@@ -329,6 +331,35 @@ M2M связи: `server_squads`, `tariffs`, `payment_method_configs`
 
 **`squads`** — устаревшая таблица серверов (заменена на `server_squads`).
 
+### Новости (3 таблицы)
+
+**`news_articles`** — статьи новостей.
+
+| Группа полей | Ключевые поля |
+| ------------ | ------------- |
+| Основные | `id`, `title`, `slug` (UNIQUE), `content` (HTML), `excerpt` |
+| Категория | `category` (legacy string), `category_color`, `category_id` (FK → news_categories, SET NULL) |
+| Тег | `tag` (legacy string), `tag_id` (FK → news_tags, SET NULL) |
+| Медиа | `featured_image_url` (http/https) |
+| Публикация | `is_published`, `is_featured` (единственная), `published_at` |
+| Метаданные | `read_time_minutes` (1-60), `views_count`, `created_by` (FK → users) |
+
+Индексы: slug (unique), composite `is_published + published_at DESC`, composite `is_published + category`, `created_at`, FK-индексы.
+
+**`news_categories`** — управляемые категории.
+
+| Поле | Описание |
+| ---- | -------- |
+| `name` | Название (unique, case-insensitive) |
+| `color` | HEX-цвет (`#00e5a0` по умолчанию) |
+
+**`news_tags`** — управляемые теги.
+
+| Поле | Описание |
+| ---- | -------- |
+| `name` | Название (unique, case-insensitive) |
+| `color` | HEX-цвет (`#94a3b8` по умолчанию) |
+
 ### Системные и контентные (12 таблиц)
 
 | Таблица | Описание |
@@ -375,5 +406,6 @@ M2M связи: `server_squads`, `tariffs`, `payment_method_configs`
 | Серверы и тарифы | 3 | tariffs, server_squads, squads |
 | Системные | 12 | system_settings, service_rules, privacy_policies, faq_pages, main_menu_buttons, menu_layout_history и др. |
 | Вебхуки | 2 | webhooks, webhook_deliveries |
+| Новости | 3 | news_articles, news_categories, news_tags |
 | Web API | 2 | web_api_tokens, button_click_logs |
-| **Итого** | **~66 + 3 M2M** | |
+| **Итого** | **~69 + 3 M2M** | |
