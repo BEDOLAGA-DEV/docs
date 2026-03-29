@@ -67,6 +67,7 @@
               "bot/recurrent-payments",
               "bot/subscriptions",
               "bot/tariffs",
+              "bot/multi-tariff",
               "bot/auto-purchase",
               "bot/promo-system",
               "bot/referral-program",
