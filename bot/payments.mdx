@@ -3,7 +3,7 @@ title: Настройка платежей
 description: "Подключение платёжных систем, настройки баланса, автооплаты и webhook"
 ---
 
-Бот поддерживает 14 платёжных провайдеров одновременно. Каждый провайдер включается отдельно, все работают параллельно через единый веб-сервер на порту `8080`.
+Бот поддерживает 16 платёжных провайдеров одновременно. Каждый провайдер включается отдельно, все работают параллельно через единый веб-сервер на порту `8080`.
 
 ## Общая архитектура
 
@@ -37,7 +37,9 @@ description: "Подключение платёжных систем, настр
 13. Kassa AI
 14. RioPay
 15. SeverPay
-16. Через поддержку (всегда последний)
+16. PayPear
+17. RollyPay
+18. Через поддержку (всегда последний)
 
 ---
 
@@ -59,6 +61,8 @@ description: "Подключение платёжных систем, настр
 | Tribute | Telegram | `/tribute-webhook` | RUB |
 | RioPay | Карты | `/riopay-webhook` | RUB |
 | SeverPay | СБП, карты | `/severpay-webhook` | RUB |
+| PayPear | Карты, СБП, SberPay, T-Pay | `/paypear-webhook` | RUB |
+| RollyPay | СБП, карты, крипто | `/rollypay-webhook` | RUB → USDT |
 
 <Note>
   Все webhook URL доступны на едином сервере бота (порт 8080). Укажите полный путь: `https://hooks.domain.com/webhook-path`. Для CloudPayments дополнительно доступны суб-роуты `/check`, `/pay`, `/fail`.
@@ -752,6 +756,123 @@ SEVERPAY_TOKEN=your_secret_token
 
 ---
 
+## PayPear
+
+Платежи через PayPear (`api.paypear.ru`) с поддержкой банковских карт, СБП, SberPay и T-Pay. Аутентификация через HTTP Basic Auth, идемпотентность через UUID.
+
+### Обязательные настройки
+
+```env
+PAYPEAR_ENABLED=true
+PAYPEAR_SHOP_ID=your_shop_id
+PAYPEAR_SECRET_KEY=your_secret_key
+```
+
+### Все переменные
+
+| Переменная | Тип | По умолчанию | Описание |
+| ---------- | --- | ------------ | -------- |
+| `PAYPEAR_ENABLED` | `bool` | `false` | Включить PayPear |
+| `PAYPEAR_SHOP_ID` | `str` | — | **Обязательно**. ID магазина (для Basic Auth) |
+| `PAYPEAR_SECRET_KEY` | `str` | — | **Обязательно**. Секретный ключ (для Basic Auth) |
+| `PAYPEAR_DISPLAY_NAME` | `str` | `PayPear` | Отображаемое название |
+| `PAYPEAR_CURRENCY` | `str` | `RUB` | Валюта |
+| `PAYPEAR_MIN_AMOUNT_KOPEKS` | `int` | `10000` | Минимальная сумма (100 руб) |
+| `PAYPEAR_MAX_AMOUNT_KOPEKS` | `int` | `10000000` | Максимальная сумма (100 000 руб) |
+| `PAYPEAR_WEBHOOK_PATH` | `str` | `/paypear-webhook` | Путь webhook |
+| `PAYPEAR_RETURN_URL` | `str` | — | URL возврата после оплаты |
+| `PAYPEAR_PAYMENT_LIFETIME_MINUTES` | `int` | `60` | Время жизни платежа (минуты) |
+
+### Методы оплаты
+
+PayPear поддерживает 4 метода оплаты, доступных как sub-options в кабинете:
+
+- **bank_card** — банковские карты (Visa, Mastercard, Мир)
+- **sbp** — Система быстрых платежей
+- **sberpay** — SberPay (через приложение СберБанк Онлайн)
+- **tpay** — T-Pay (через приложение Т-Банка)
+
+### Webhook
+
+В личном кабинете PayPear укажите: `https://hooks.domain.com/paypear-webhook`
+
+Webhook содержит поле `signature` в теле запроса (HMAC-SHA256). Поддерживаемые события: `payment.confirmed`, `payment.canceled`. PayPear повторяет отправку в течение 24 часов при получении не-200 ответа.
+
+### Статусы платежей
+
+| Статус | Описание |
+| ------ | -------- |
+| `NEW` | Создан, ожидает оплаты |
+| `PROCESS` | Клиент инициировал оплату |
+| `CONFIRMED` | Оплачен (финальный) |
+| `CANCELED` | Отменён (финальный) |
+| `REFUNDED` | Возвращён (финальный) |
+| `EXPIRED` | Истёк срок (финальный) |
+
+---
+
+## RollyPay
+
+Платежи через RollyPay (`rollypay.io`) — платёжный шлюз с приёмом рублей и автоматической конвертацией в USDT. Поддержка СБП, карт и криптовалюты.
+
+### Обязательные настройки
+
+```env
+ROLLYPAY_ENABLED=true
+ROLLYPAY_API_KEY=rpk_live_your_api_key
+ROLLYPAY_SIGNING_SECRET=your_signing_secret
+```
+
+### Все переменные
+
+| Переменная | Тип | По умолчанию | Описание |
+| ---------- | --- | ------------ | -------- |
+| `ROLLYPAY_ENABLED` | `bool` | `false` | Включить RollyPay |
+| `ROLLYPAY_API_KEY` | `str` | — | **Обязательно**. API ключ (header X-API-Key) |
+| `ROLLYPAY_SIGNING_SECRET` | `str` | — | **Обязательно**. Секрет для HMAC верификации вебхуков |
+| `ROLLYPAY_DISPLAY_NAME` | `str` | `RollyPay` | Отображаемое название |
+| `ROLLYPAY_CURRENCY` | `str` | `RUB` | Валюта |
+| `ROLLYPAY_MIN_AMOUNT_KOPEKS` | `int` | `10000` | Минимальная сумма (100 руб) |
+| `ROLLYPAY_MAX_AMOUNT_KOPEKS` | `int` | `10000000` | Максимальная сумма (100 000 руб) |
+| `ROLLYPAY_WEBHOOK_PATH` | `str` | `/rollypay-webhook` | Путь webhook |
+| `ROLLYPAY_RETURN_URL` | `str` | — | URL возврата после оплаты |
+
+### Методы оплаты
+
+RollyPay поддерживает 3 метода, доступных как sub-options:
+
+- **sbp** — Система быстрых платежей
+- **card** — Банковские карты
+- **crypto** — Криптовалюта
+
+Если метод не указан, платёжная форма RollyPay покажет все доступные варианты.
+
+### Webhook
+
+Webhook URL настраивается при создании кассы (terminal) в RollyPay. Укажите: `https://hooks.domain.com/rollypay-webhook`
+
+Подпись передаётся в header `X-Signature` (HMAC-SHA256 от `timestamp.body`), timestamp — в `X-Timestamp`. Повторные попытки: экспоненциальный backoff 30с×2^(n-1), максимум 8 попыток (~2 часа).
+
+### Особенности
+
+- Все платежи конвертируются в USDT по текущему курсу
+- Баланс кассы хранится в USDT
+- Каждый запрос требует уникальный `X-Nonce` (UUID), повторное использование в течение 10 минут запрещено
+- Поддерживаемые события: `payment.paid`, `payment.canceled`, `payment.chargeback`
+
+### Статусы платежей
+
+| Статус | Описание |
+| ------ | -------- |
+| `created` | Создан, ожидает оплаты |
+| `processing` | QR активирован, клиент инициировал оплату |
+| `paid` | Оплачен (финальный) |
+| `expired` | Истёк срок (финальный) |
+| `canceled` | Отменён (финальный) |
+| `chargeback` | Возврат после успешной оплаты |
+
+---
+
 ## Безопасность webhook
 
 Все платёжные webhook проходят проверку подлинности:
@@ -771,6 +892,8 @@ SEVERPAY_TOKEN=your_secret_token
 | Tribute | API-ключ |
 | RioPay | HMAC-SHA512 |
 | SeverPay | HMAC-SHA256 |
+| PayPear | HMAC-SHA256 (подпись в теле запроса) |
+| RollyPay | HMAC-SHA256 (X-Signature + X-Timestamp headers) |
 
 <Warning>
   Если для провайдера настроен секретный ключ, webhook **без подписи будут отклонены**. Убедитесь, что секретные ключи в `.env` совпадают с настройками в кабинете провайдера.
