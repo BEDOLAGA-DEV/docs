@@ -3,7 +3,7 @@ title: Настройка платежей
 description: "Подключение платёжных систем, настройки баланса, автооплаты и webhook"
 ---
 
-Бот поддерживает 16 платёжных провайдеров одновременно. Каждый провайдер включается отдельно, все работают параллельно через единый веб-сервер на порту `8080`.
+Бот поддерживает 17 платёжных провайдеров одновременно. Каждый провайдер включается отдельно, все работают параллельно через единый веб-сервер на порту `8080`.
 
 ## Общая архитектура
 
@@ -39,7 +39,8 @@ description: "Подключение платёжных систем, настр
 15. SeverPay
 16. PayPear
 17. RollyPay
-18. Через поддержку (всегда последний)
+18. AuraPay
+19. Через поддержку (всегда последний)
 
 ---
 
@@ -63,6 +64,7 @@ description: "Подключение платёжных систем, настр
 | SeverPay | СБП, карты | `/severpay-webhook` | RUB |
 | PayPear | Карты, СБП, SberPay, T-Pay | `/paypear-webhook` | RUB |
 | RollyPay | СБП, карты, крипто | `/rollypay-webhook` | RUB → USDT |
+| AuraPay | Карты, СБП | `/aurapay-webhook` | RUB |
 
 <Note>
   Все webhook URL доступны на едином сервере бота (порт 8080). Укажите полный путь: `https://hooks.domain.com/webhook-path`. Для CloudPayments дополнительно доступны суб-роуты `/check`, `/pay`, `/fail`.
@@ -873,6 +875,62 @@ Webhook URL настраивается при создании кассы (termi
 
 ---
 
+## AuraPay
+
+Платежи через AuraPay (`app.aurapay.tech`) с поддержкой банковских карт и СБП. Аутентификация через API-ключ и ID кассы в заголовках.
+
+### Обязательные настройки
+
+```env
+AURAPAY_ENABLED=true
+AURAPAY_API_KEY=your_api_key
+AURAPAY_SHOP_ID=your_shop_uuid
+AURAPAY_SECRET_KEY=your_secret_key_2
+```
+
+### Все переменные
+
+| Переменная | Тип | По умолчанию | Описание |
+| ---------- | --- | ------------ | -------- |
+| `AURAPAY_ENABLED` | `bool` | `false` | Включить AuraPay |
+| `AURAPAY_API_KEY` | `str` | — | **Обязательно**. API ключ (header X-ApiKey) |
+| `AURAPAY_SHOP_ID` | `str` | — | **Обязательно**. UUID кассы (header X-ShopId) |
+| `AURAPAY_SECRET_KEY` | `str` | — | **Обязательно**. Секретный ключ #2 (HMAC-SHA256 webhook) |
+| `AURAPAY_DISPLAY_NAME` | `str` | `AuraPay` | Отображаемое название |
+| `AURAPAY_CURRENCY` | `str` | `RUB` | Валюта |
+| `AURAPAY_MIN_AMOUNT_KOPEKS` | `int` | `10000` | Минимальная сумма (100 руб) |
+| `AURAPAY_MAX_AMOUNT_KOPEKS` | `int` | `10000000` | Максимальная сумма (100 000 руб) |
+| `AURAPAY_WEBHOOK_PATH` | `str` | `/aurapay-webhook` | Путь webhook |
+| `AURAPAY_RETURN_URL` | `str` | — | URL возврата после оплаты |
+| `AURAPAY_PAYMENT_LIFETIME_MINUTES` | `int` | `60` | Время жизни инвойса (минуты, 1–43200) |
+
+### Методы оплаты
+
+AuraPay поддерживает 2 метода оплаты, доступных как sub-options в кабинете:
+
+- **card** — банковские карты
+- **sbp** — Система быстрых платежей (СБП)
+
+Если метод не указан, пользователь выбирает способ оплаты на платёжной форме AuraPay.
+
+### Webhook
+
+Webhook URL указывается при создании инвойса (параметр `callback_url`) или в настройках кассы. Укажите: `https://hooks.domain.com/aurapay-webhook`
+
+Подпись передаётся в header `X-SIGNATURE`. Алгоритм: отсортировать ключи JSON по алфавиту, склеить все **значения** в одну строку, HMAC-SHA256 с секретным ключом #2.
+
+Повторные попытки: максимум 5 раз, до получения HTTP 200.
+
+### Статусы инвойсов
+
+| Статус | Описание |
+| ------ | -------- |
+| `PENDING` | Создан, ожидает оплаты |
+| `PAID` | Оплачен (финальный) |
+| `EXPIRED` | Истёк срок (финальный) |
+
+---
+
 ## Безопасность webhook
 
 Все платёжные webhook проходят проверку подлинности:
@@ -894,6 +952,7 @@ Webhook URL настраивается при создании кассы (termi
 | SeverPay | HMAC-SHA256 |
 | PayPear | HMAC-SHA256 (подпись в теле запроса) |
 | RollyPay | HMAC-SHA256 (X-Signature + X-Timestamp headers) |
+| AuraPay | HMAC-SHA256 (X-SIGNATURE header, sorted values) |
 
 <Warning>
   Если для провайдера настроен секретный ключ, webhook **без подписи будут отклонены**. Убедитесь, что секретные ключи в `.env` совпадают с настройками в кабинете провайдера.
