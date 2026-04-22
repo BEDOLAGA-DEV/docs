@@ -127,6 +127,89 @@ gtag('event', 'conversion', {'send_to': 'AW-1234567890/AbCdEfGhIjKl'});
 
 Для отключения счетчика очистите соответствующее поле и сохраните.
 
+## Оффлайн-конверсии Яндекс Метрики
+
+Помимо клиентской аналитики (JavaScript-счётчик), бот поддерживает отправку **оффлайн-конверсий** в Яндекс Метрику через Measurement Protocol. Это позволяет отслеживать конверсии от пользователей, которые пришли через рекламу в Яндексе и совершили покупку в Telegram-боте или Cabinet.
+
+### Как работает
+
+1. **Захват CID**: Яндекс Метрика присваивает каждому посетителю уникальный Client ID (CID). Бот захватывает CID из нескольких источников:
+   - Параметр `/start` в Telegram-боте (ссылка вида `https://t.me/bot?start=utm_ya_XXXXXXXXXX`)
+   - Авторизация в Cabinet
+   - Переходы на лендинги
+2. **Сохранение CID**: CID привязывается к пользователю в базе данных
+3. **Отправка конверсий**: При покупке подписки бот отправляет POST-запрос на `https://mc.yandex.ru/collect` с данными конверсии (CID, цена, валюта)
+
+### Настройка
+
+#### Шаг 1: Получение Measurement Secret
+
+1. Откройте [Яндекс Метрика](https://metrika.yandex.ru/) → ваш счётчик
+2. Перейдите в **Настройка** → **Оффлайн-конверсии**
+3. Скопируйте **Measurement Secret** (или создайте новый)
+
+#### Шаг 2: Переменные окружения
+
+```env
+YANDEX_OFFLINE_CONV_ENABLED=true
+YANDEX_OFFLINE_CONV_COUNTER_ID=98765432
+YANDEX_OFFLINE_CONV_MEASUREMENT_SECRET=your_measurement_secret
+YANDEX_OFFLINE_CONV_START_PREFIX=utm_ya_
+YANDEX_OFFLINE_CONV_CURRENCY=RUB
+```
+
+| Переменная | Описание | По умолчанию |
+| ---------- | -------- | ------------ |
+| `YANDEX_OFFLINE_CONV_ENABLED` | Включить отправку оффлайн-конверсий | `false` |
+| `YANDEX_OFFLINE_CONV_COUNTER_ID` | ID счётчика Яндекс Метрики | — |
+| `YANDEX_OFFLINE_CONV_MEASUREMENT_SECRET` | Секрет для Measurement Protocol | — |
+| `YANDEX_OFFLINE_CONV_START_PREFIX` | Префикс для захвата CID из `/start` | `utm_ya_` |
+| `YANDEX_OFFLINE_CONV_DL` | URL страницы (параметр `dl` в запросе) | — |
+| `YANDEX_OFFLINE_CONV_DT` | Заголовок страницы (параметр `dt`) | — |
+| `YANDEX_OFFLINE_CONV_CURRENCY` | Валюта конверсий | `RUB` |
+
+#### Шаг 3: Настройка UTM-ссылки
+
+Для захвата CID через Telegram создайте ссылку вида:
+
+```
+https://t.me/your_bot?start=utm_ya_{ClientID}
+```
+
+Где `{ClientID}` подставляется Яндексом при клике на рекламу. В рекламных кампаниях Яндекс Директ используйте параметр `{YCLID}` или настройте передачу CID через лендинг.
+
+### Проверка
+
+1. Убедитесь что в логах бота появляются записи о захвате CID:
+   ```bash
+   docker logs <bot_container> 2>&1 | grep -i "yandex.*cid"
+   ```
+2. После покупки проверьте в Яндекс Метрике раздел **Отчёты** → **Оффлайн-конверсии** (данные появляются с задержкой до нескольких часов)
+
+## S2S Postback
+
+S2S (Server-to-Server) постбэки позволяют отправлять HTTP-запросы на внешние URL при ключевых событиях: регистрация пользователя, активация триала и покупка подписки. Используется для интеграции с рекламными сетями, CPA-сетями и трекерами конверсий.
+
+### Настройка
+
+```env
+S2S_POSTBACK_ENABLED=true
+S2S_POSTBACK_REGISTRATION_URL=https://tracker.example.com/postback?event=reg&uid={user_id}
+S2S_POSTBACK_TRIAL_URL=https://tracker.example.com/postback?event=trial&uid={user_id}
+S2S_POSTBACK_PURCHASE_URL=https://tracker.example.com/postback?event=purchase&uid={user_id}&amount={amount}
+```
+
+| Переменная | Описание | По умолчанию |
+| ---------- | -------- | ------------ |
+| `S2S_POSTBACK_ENABLED` | Включить S2S постбэки | `false` |
+| `S2S_POSTBACK_REGISTRATION_URL` | URL постбэка при регистрации | — |
+| `S2S_POSTBACK_TRIAL_URL` | URL постбэка при активации триала | — |
+| `S2S_POSTBACK_PURCHASE_URL` | URL постбэка при покупке подписки | — |
+
+<Note>
+  Постбэки отправляются асинхронно и не блокируют основную логику. Ошибки отправки логируются, но не влияют на процесс покупки.
+</Note>
+
 ## Устранение проблем
 
 ### Счетчик не появляется на сайте
