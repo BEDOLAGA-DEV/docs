@@ -516,6 +516,28 @@ description: "Полный справочник настроек .env файла
 | `RIOPAY_SUCCESS_URL` | URL при успешной оплате | — |
 | `RIOPAY_FAIL_URL` | URL при ошибке оплаты | — |
 
+### Overpay
+
+Платёжная система с mTLS-аутентификацией (P12 клиентский сертификат) и HTTP Basic Auth.
+
+| Переменная | Описание | По умолчанию |
+| ---------- | -------- | ------------ |
+| `OVERPAY_ENABLED` | Включить Overpay | `false` |
+| `OVERPAY_API_URL` | URL API | `https://api.overpay.io` |
+| `OVERPAY_USERNAME` | Логин для HTTP Basic Auth | — |
+| `OVERPAY_PASSWORD` | Пароль для HTTP Basic Auth | — |
+| `OVERPAY_PROJECT_ID` | ID проекта | — |
+| `OVERPAY_P12_PATH` | Путь к P12 клиентскому сертификату (обязательно для mTLS) | — |
+| `OVERPAY_P12_PASSPHRASE` | Пароль от P12 сертификата | — |
+| `OVERPAY_DISPLAY_NAME` | Название кнопки в интерфейсе | `Overpay` |
+| `OVERPAY_CURRENCY` | Валюта | `RUB` |
+| `OVERPAY_MIN_AMOUNT_KOPEKS` | Мин. сумма (копейки) | `10000` |
+| `OVERPAY_MAX_AMOUNT_KOPEKS` | Макс. сумма (копейки) | `10000000` |
+| `OVERPAY_WEBHOOK_PATH` | Путь webhook | `/overpay-webhook` |
+| `OVERPAY_RETURN_URL` | URL возврата после оплаты | — |
+| `OVERPAY_LIFETIME_MINUTES` | Время жизни платежа (минуты) | `1440` |
+| `OVERPAY_PAYMENT_METHODS` | Методы оплаты (через запятую): `card` — банковские карты, `fps` — СБП | `card,fps` |
+
 ## Налоговая служба (NaloGO)
 
 Автоматическая отправка чеков в налоговую при пополнении баланса.
@@ -652,7 +674,7 @@ description: "Полный справочник настроек .env файла
 | Переменная | Описание | По умолчанию |
 | ---------- | -------- | ------------ |
 | `MONITORING_INTERVAL` | Интервал проверки панели (секунды) | `60` |
-| `INACTIVE_USER_DELETE_MONTHS` | Удалять неактивных через N месяцев | `3` |
+| `INACTIVE_USER_DELETE_MONTHS` | Удалять неактивных через N месяцев (учитывается и дата последней активности, и дата окончания подписки — пользователи с активной или недавно истёкшей подпиской не удаляются) | `3` |
 | `TRIAL_WARNING_HOURS` | Предупреждение об истечении триала (часы) | `2` |
 | `ENABLE_NOTIFICATIONS` | Включить уведомления пользователям | `true` |
 | `NOTIFICATION_RETRY_ATTEMPTS` | Попытки отправки уведомлений | `3` |
