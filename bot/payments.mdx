@@ -1240,49 +1240,128 @@ URL: `https://hooks.domain.com/lava-webhook`<br/>
 
 ## Apple In-App Purchase
 
-Apple IAP — нативные покупки через iOS App Store (Mini App). Используется **App Store Server API** с JWT-аутентификацией (ES256, .p8 ключ). Поддерживает sandbox + production окружения, refund handling с защитой от double-deduction.
+Apple IAP — нативные **consumable**-покупки (пополнения баланса) через iOS App Store Mini App. Используется **App Store Server API** с JWT-аутентификацией (ES256, .p8 ключ) и **App Store Server Notifications V2** для real-time событий (purchase, refund, revoke). Поддерживает Sandbox + Production окружения, refund handling с защитой от double-deduction, idempotency на уровне `web_order_line_item_id`, self-healing через reconciliation service.
 
-### Обязательные настройки
+### Минимальная конфигурация
 
 ```env
 APPLE_IAP_ENABLED=true
 APPLE_IAP_BUNDLE_ID=com.example.vpnclient
 APPLE_IAP_ISSUER_ID=57246542-96fe-1a63-e053-0824d011072a
 APPLE_IAP_KEY_ID=2X9R4HXF34
-APPLE_IAP_PRIVATE_KEY=-----BEGIN PRIVATE KEY-----\n...
-# или путь к файлу:
-APPLE_IAP_PRIVATE_KEY_PATH=/path/to/AuthKey_2X9R4HXF34.p8
-APPLE_IAP_ENVIRONMENT=production  # или sandbox
+APPLE_IAP_APP_APPLE_ID=1234567890
+APPLE_IAP_PRIVATE_KEY_PATH=/run/secrets/apple/AuthKey_2X9R4HXF34.p8
+APPLE_IAP_ENVIRONMENT=Production
+APPLE_IAP_ROOT_CERTS_PATHS=/certs/AppleIncRootCertificate.cer,/certs/AppleRootCA-G2.cer,/certs/AppleRootCA-G3.cer
+APPLE_IAP_PRODUCTS={"com.example.vpnclient.topup.100":10000,"com.example.vpnclient.topup.300":30000,"com.example.vpnclient.topup.500":50000}
 ```
 
 ### Все переменные
 
+#### Ключевые (App Store Connect)
+
 | Переменная | Тип | По умолчанию | Описание |
 | --- | --- | --- | --- |
-| `APPLE_IAP_ENABLED` | bool | false | Включает Apple IAP |
-| `APPLE_IAP_BUNDLE_ID` | str | — | **Обязательно**. Bundle ID iOS-приложения |
-| `APPLE_IAP_ISSUER_ID` | str | — | **Обязательно**. Issuer ID из App Store Connect |
-| `APPLE_IAP_KEY_ID` | str | — | **Обязательно**. Key ID из App Store Connect |
-| `APPLE_IAP_PRIVATE_KEY` | str | — | **Обязательно (или PATH)**. Содержимое .p8 файла |
-| `APPLE_IAP_PRIVATE_KEY_PATH` | str | — | Альтернатива: путь к .p8 файлу |
-| `APPLE_IAP_ENVIRONMENT` | str | production | `production` или `sandbox` |
-| `APPLE_IAP_DISPLAY_NAME` | str | Apple In-App Purchase | Имя в кнопке |
+| `APPLE_IAP_ENABLED` | bool | false | Включает Apple IAP. Ставьте `true` только после того как заполнены все обязательные поля ниже |
+| `APPLE_IAP_BUNDLE_ID` | str | `com.app.client` | **Обязательно**. Должен **точно** совпадать с bundle ID iOS-приложения и `bundleId` в signed transactions от Apple |
+| `APPLE_IAP_ISSUER_ID` | str | — | **Обязательно**. Issuer ID (UUID) из App Store Connect → Users and Access → Integrations → App Store Connect API |
+| `APPLE_IAP_KEY_ID` | str | — | **Обязательно**. Key ID In-App Purchase ключа из App Store Connect (пример: `ABC123DEFG`) |
+| `APPLE_IAP_APP_APPLE_ID` | int | — | **Обязательно для Production**. Числовой App Apple ID из App Store Connect, используется `SignedDataVerifier` Apple. Опционально для Sandbox |
 
-### Refund handling
+#### Приватный ключ (.p8)
 
-При получении server notification от Apple о возврате:
-1. Транзакция блокируется через `FOR UPDATE` lock на `apple_transactions` row
-2. Сумма списывается с баланса пользователя
-3. Транзакция помечается как `refunded` (sticky)
-4. Защита от double-deduction: повторный refund-webhook игнорируется
+Нужна **одна из двух** опций:
+
+| Переменная | Тип | По умолчанию | Описание |
+| --- | --- | --- | --- |
+| `APPLE_IAP_PRIVATE_KEY_PATH` | str | — | **Рекомендуется для прода**. Путь к смонтированному `.p8` файлу. Пример: `/run/secrets/apple/AuthKey_ABC123DEFG.p8` |
+| `APPLE_IAP_PRIVATE_KEY` | str | — | Альтернатива — содержимое `.p8` инлайн (с `\n` для переносов строк). Не рекомендуется для прода — секрет попадает в env-листинги |
+
+#### Окружение и webhook
+
+| Переменная | Тип | По умолчанию | Описание |
+| --- | --- | --- | --- |
+| `APPLE_IAP_ENVIRONMENT` | str | `Production` | **Обязательно**. Допустимые значения: `Sandbox`, `Production`. Покупки из TestFlight приходят как Sandbox-транзакции |
+| `APPLE_IAP_WEBHOOK_PATH` | str | `/apple-iap-webhook` | Путь для App Store Server Notifications V2. Полный URL для регистрации в App Store Connect: `https://your-domain.example` + этот path |
+| `APPLE_IAP_ALLOW_SANDBOX_ON_PRODUCTION` | bool | false | Разрешает Production-бэкенду верифицировать Sandbox-транзакции из App Review / TestFlight. Такие транзакции **записываются для аудита, но не зачисляются на баланс** |
+
+#### Проверка подписей и сертификаты
+
+| Переменная | Тип | По умолчанию | Описание |
+| --- | --- | --- | --- |
+| `APPLE_IAP_ROOT_CERTS_PATHS` | str | — | **Обязательно**. Comma-separated пути к Apple Root CA сертификатам (`.cer`) с [apple.com/certificateauthority](https://www.apple.com/certificateauthority/). Рекомендуемые: `Apple Inc. Root`, `Apple Root CA - G2 Root`, `Apple Root CA - G3 Root` |
+| `APPLE_IAP_ENABLE_ONLINE_CERT_CHECKS` | bool | true | Включает online certificate status checks при верификации JWS. Рекомендуется `true` в проде, требует исходящий доступ к Apple CA |
+
+#### Маппинг продуктов
+
+| Переменная | Тип | По умолчанию | Описание |
+| --- | --- | --- | --- |
+| `APPLE_IAP_PRODUCTS` | json | — | **Обязательно**. JSON-объект: `{"product_id": kopeks_to_credit}`. Бэкенд **игнорирует** цену и amount от клиента — зачисляет ровно столько, сколько указано здесь. Это защита от подмены цены через mod'нутый клиент |
+
+Пример с топапами 100 / 300 / 500 / 1000 ₽:
+
+```env
+APPLE_IAP_PRODUCTS={"com.example.topup.100":10000,"com.example.topup.300":30000,"com.example.topup.500":50000,"com.example.topup.1000":100000}
+```
+
+#### Защита от abuse
+
+| Переменная | Тип | По умолчанию | Описание |
+| --- | --- | --- | --- |
+| `APPLE_IAP_PURCHASE_RATE_LIMIT_PER_MINUTE` | int | 10 | Лимит попыток верификации покупки per-user и per-IP в минуту |
+| `APPLE_IAP_PURCHASE_FAILURE_LIMIT_PER_HOUR` | int | 20 | Лимит **неудачных** верификаций per-user в час |
+| `APPLE_IAP_RATE_LIMIT_FAIL_OPEN` | bool | false | При `false` (рекомендуется) — недоступность Redis блокирует endpoint целиком (fail-closed). При `true` — пропускает запросы при сбое Redis (availability > security) |
+
+### Refund и revocation handling
+
+При получении Apple Server Notification (`REFUND`, `REVOKE`, `REFUND_REVERSED`):
+
+1. Notification сохраняется в `apple_notifications` со статусом `received` (для дедупликации по `payload_hash`)
+2. Транзакция блокируется через `SELECT FOR UPDATE` на `apple_transactions` row
+3. Списание / возврат списания применяется к балансу пользователя
+4. Транзакция помечается `revoked` / `refund_reversed` с датой
+5. **Idempotency:** повторный webhook с тем же `payload_hash` игнорируется
+6. Если бэкенд был offline и webhook потерян — **reconciliation service** в фоне сверит состояние с App Store Server API и применит изменение
+
+### Reconciliation service
+
+Фоновая таска проходит по `apple_notifications` со статусом `failed` (сетевые ошибки, race с user-запросом), запрашивает текущий статус через `getTransactionInfo`, выравнивает локальное состояние с Apple. Self-healing для пропущенных webhook'ов.
+
+### Idempotency
+
+- **`web_order_line_item_id`** — уникальный per billing-cycle идентификатор от Apple, `UNIQUE` constraint в БД (миграция `0076`). Защищает от повторного зачисления одной и той же покупки
+- **`payload_hash` нотификаций** — SHA256 от signed payload, тоже `UNIQUE`. Дедуп Apple webhook'ов
+- **`app_account_token`** — UUID, который мы передаём Apple через `appAccountToken` параметр при инициации покупки в iOS-приложении. Apple возвращает его в transaction, мы матчим purchase к нашему юзеру без передачи telegram_id / email на сторону Apple
+
+### Создание App Store Connect API ключа
+
+1. **App Store Connect** → Users and Access → Integrations → **App Store Connect API**
+2. Выберите вкладку **In-App Purchase** (не General!)
+3. Нажмите **+** → Name → **Generate**
+4. Скачайте `.p8` файл (доступен **только один раз**, потом — генерация заново)
+5. Скопируйте **Issuer ID** (сверху страницы) и **Key ID** (рядом с ключом)
+6. Положите `.p8` файл в безопасное место и пропишите путь в `APPLE_IAP_PRIVATE_KEY_PATH`
+
+### Регистрация webhook в App Store Connect
+
+1. **App Store Connect** → ваше приложение → App Information → App Store Server Notifications
+2. **Production URL:** `https://your-domain.example` + `APPLE_IAP_WEBHOOK_PATH`
+3. **Sandbox URL:** тот же путь, но на тестовом доменe (если есть отдельный)
+4. **Version:** Version 2 Notifications (Version 1 не поддерживается)
 
 <Note>
-  Apple IAP отображается **только в Mini App на iOS**. На Android и веб-кабинете кнопка не появляется.
+  Apple IAP отображается **только в Mini App на iOS**. На Android и веб-кабинете кнопка не появляется, потому что Apple Review Guidelines 3.1.1 запрещают принимать платежи за digital goods вне IAP только в iOS-приложениях.
 </Note>
 
 <Warning>
-  Для подключения нужно создать App Store Server API key в App Store Connect (Users and Access → Keys). Bundle ID должен совпадать с реальным iOS-приложением.
+  - Bundle ID в `APPLE_IAP_BUNDLE_ID` должен **точно** совпадать с реальным iOS-приложением — иначе все signed transactions будут отклонены проверкой `bundleId`
+  - **Никогда** не зачисляйте цену, переданную клиентом — только из `APPLE_IAP_PRODUCTS`. Клиент можно подменить
+  - Сертификаты Apple Root CA из `APPLE_IAP_ROOT_CERTS_PATHS` — это основа security. Без них JWS-подписи не проверяются и backend будет принимать любые поддельные транзакции
 </Warning>
+
+<Tip>
+  Для тестов используйте **Sandbox**-окружение с sandbox Apple ID. TestFlight-покупки тоже идут через Sandbox даже если приложение в проде.
+</Tip>
 
 ---
 
@@ -1359,7 +1438,7 @@ CloudPayments и YooKassa проверяют флаг `test_mode` в webhook. В
 | Jupiter | `JUPITER_ENABLED` + `TOKEN` + `SECRET` |
 | Donut | `DONUT_ENABLED` + `TOKEN` + `SECRET` |
 | Lava | `LAVA_ENABLED` + `SHOP_ID` + `SECRET_KEY` + `WEBHOOK_SECRET` |
-| Apple IAP | `APPLE_IAP_ENABLED` + `BUNDLE_ID` + `ISSUER_ID` + `KEY_ID` + (`PRIVATE_KEY` или `PRIVATE_KEY_PATH`) |
+| Apple IAP | `APPLE_IAP_ENABLED` + `BUNDLE_ID` + `ISSUER_ID` + `KEY_ID` + `APP_APPLE_ID` (для Production) + (`PRIVATE_KEY` или `PRIVATE_KEY_PATH`) + `ENVIRONMENT` + `ROOT_CERTS_PATHS` + `PRODUCTS` |
 
 ---
 
