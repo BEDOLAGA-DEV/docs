@@ -78,6 +78,7 @@ description: "Подключение платёжных систем, настр
 | Jupiter (FPGate P2P) | СБП через QR-код | `/jupiter-webhook` | RUB |
 | Donut (Donut P2P) | Карты, СБП по телефону, СБП QR | `/donut-webhook` | RUB |
 | Lava Business | Карты, СБП | `/lava-webhook` | RUB |
+| cisPay | Карты, СБП | `/cispay-webhook` | RUB |
 | Apple In-App Purchase | Покупки через iOS App Store | (App Store Server API) | USD |
 
 <Note>
@@ -105,13 +106,32 @@ PAYMENT_BALANCE_TEMPLATE={service_name} - {description}
 PAYMENT_SUBSCRIPTION_TEMPLATE={service_name} - {description}
 ```
 
+<Note>
+  **White-label описание метода** (`v3.62.0`): каждому платёжному методу можно задать собственное описание, которое показывается под названием метода на странице баланса в кабинете. Так бренд провайдера можно скрыть. Настраивается в админке кабинета (там же, где `display_name`); пустое описание откатывается к локализованному значению по умолчанию.
+</Note>
+
 ### Управление интерфейсом
 
 | Переменная | Тип | По умолчанию | Описание |
 | ---------- | --- | ------------ | -------- |
-| `DISABLE_TOPUP_BUTTONS` | `bool` | `false` | Скрыть кнопки быстрого пополнения |
 | `SUPPORT_TOPUP_ENABLED` | `bool` | `true` | Показывать кнопку "Через поддержку" |
 | `PRICE_ROUNDING_ENABLED` | `bool` | `true` | Округление цен (до 50 коп вниз, свыше 50 коп вверх) |
+
+### Кнопки быстрых сумм
+
+Быстрые суммы пополнения задаются **отдельно для каждого платёжного метода** и хранятся в базе, а не в `.env`. Управление — в админ-панели бота, раздел **💸 Быстрые суммы**, и через Cabinet Admin API.
+
+| Состояние | Что показывается |
+| --------- | ---------------- |
+| Не задано | Значения по умолчанию: 100, 300, 500, 1000 ₽ |
+| Задан список | Заданные суммы |
+| Задан пустой список | Кнопки отключены — только ручной ввод (`v3.67.0`) |
+
+<Warning>
+  Переменных `DISABLE_TOPUP_BUTTONS`, `HIDE_TOPUP_BUTTONS` и `YOOKASSA_QUICK_AMOUNT_SELECTION_ENABLED` **в боте не существует** — раньше они ошибочно упоминались в этой документации. Добавление их в `.env` ни на что не влияет.
+
+  До `v3.67.0` отключить кнопки было невозможно в принципе: пустой список схлопывался обратно в значения по умолчанию. Теперь пустой список означает именно «кнопок нет».
+</Warning>
 
 ### Автопроверка платежей
 
@@ -215,18 +235,30 @@ YOOKASSA_SECRET_KEY=live_xxxxxxxxxxxxx
 | `YOOKASSA_WEBHOOK_PATH` | `str` | `/yookassa-webhook` | Путь webhook |
 | `YOOKASSA_WEBHOOK_HOST` | `str` | `0.0.0.0` | Хост для webhook |
 | `YOOKASSA_WEBHOOK_PORT` | `int` | `8082` | Порт (устаревший, используется 8080) |
-| `YOOKASSA_TRUSTED_PROXY_NETWORKS` | `str` | — | Доверенные сети прокси (через запятую) |
+| `YOOKASSA_TRUSTED_PROXY_NETWORKS` | `str` | — | Доверенные прокси **перед ботом** (CIDR через запятую) |
+| `YOOKASSA_SKIP_IP_CHECK` | `bool` | `false` | Отключить IP-проверку отправителя webhook |
 | `YOOKASSA_MIN_AMOUNT_KOPEKS` | `int` | `5000` | Минимальная сумма (50 руб) |
 | `YOOKASSA_MAX_AMOUNT_KOPEKS` | `int` | `1000000` | Максимальная сумма (10 000 руб) |
-| `YOOKASSA_QUICK_AMOUNT_SELECTION_ENABLED` | `bool` | `false` | Кнопки быстрого выбора суммы |
+
+<Note>
+  Кнопки быстрых сумм для YooKassa настраиваются не через `.env`, а в разделе [Кнопки быстрых сумм](#кнопки-быстрых-сумм).
+</Note>
 
 ### Webhook
 
 Укажите в кабинете YooKassa: `https://hooks.domain.com/yookassa-webhook`
 
 <Info>
-  Бот проверяет IP-адреса YooKassa и отклоняет запросы с неизвестных адресов. При использовании reverse proxy укажите сети прокси в `YOOKASSA_TRUSTED_PROXY_NETWORKS`.
+  Бот проверяет IP-адреса YooKassa и отклоняет запросы с неизвестных адресов. Сами адреса YooKassa захардкожены в коде — вписывать их никуда не нужно.
+
+  `YOOKASSA_TRUSTED_PROXY_NETWORKS` — это адреса **вашего** реверс-прокси или балансировщика, чьему `X-Forwarded-For` можно верить при вычислении реального IP отправителя. Приватные сети и диапазоны Cloudflare доверяются автоматически.
 </Info>
+
+<Warning>
+  **`YOOKASSA_SKIP_IP_CHECK`** (`v3.65.0`) нужен, когда бот стоит за Anti-DDoS или прокси, который не пробрасывает IP клиента: до бота доходит только адрес прокси, и вебхуки отбиваются с `forbidden_ip`.
+
+  При включении подлинность каждого платежа подтверждается обязательным (fail-closed) запросом в API YooKassa. Требуется исходящий доступ к `api.yookassa.ru` — без него платежи не зачисляются вообще. По умолчанию IP-проверка остаётся основным барьером.
+</Warning>
 
 ### Рекуррентные платежи (сохранённые карты)
 
@@ -522,6 +554,21 @@ PLATEGA_SECRET=your_secret_key
 | `PLATEGA_WEBHOOK_PATH` | `str` | `/platega-webhook` | Путь webhook |
 | `PLATEGA_WEBHOOK_HOST` | `str` | `0.0.0.0` | Хост для webhook |
 | `PLATEGA_WEBHOOK_PORT` | `int` | `8086` | Порт (устаревший, используется 8080) |
+| `PLATEGA_API_VERSION` | `str` | `v1` | Версия API создания платежа |
+| `PLATEGA_RECURRENT_ENABLED` | `bool` | `false` | Рекуррентные СБП-подписки (автопродление) |
+
+### Версия API
+
+| Значение | Эндпоинт | Когда использовать |
+| -------- | -------- | ------------------ |
+| `v1` | `/transaction/process` | По умолчанию; метод оплаты задаёт бот |
+| `v2` | `/v2/transaction/process` | Если карты (метод `11`) падают с **No available card cascades** |
+
+### СБП-автопродление
+
+`PLATEGA_RECURRENT_ENABLED=true` включает рекуррентные СБП-подписки: пользователь один раз подтверждает подписку в приложении банка, дальше списания идут без его участия. Это альтернатива автопродлению с баланса — включение одного выключает другое для той же подписки.
+
+Оформление доступно и с экрана «недостаточно средств» при продлении. Подробнее: [Рекуррентные платежи](/bot/recurrent-payments).
 
 ### Методы оплаты
 
@@ -1216,6 +1263,17 @@ LAVA_WEBHOOK_SECRET=your_secret_key_2  # для проверки webhook
 | `LAVA_PAYMENT_LIFETIME_MINUTES` | int | 60 | Время жизни инвойса (clamp до 7200, макс 5 дней) |
 | `LAVA_CARD_ENABLED` | bool | false | Кнопка «Карта» (`includeService=['card']`) |
 | `LAVA_SBP_ENABLED` | bool | false | Кнопка «СБП» (`includeService=['sbp']`) |
+| `LAVA_RECURRENT_ENABLED` | bool | false | Рекуррентные подписки Lava (автопродление) |
+
+### Рекуррентные подписки
+
+`LAVA_RECURRENT_ENABLED=true` включает автопродление через подписки Lava (`v3.67.0`).
+
+<Warning>
+  Подписка Lava оформляется на **продукт из личного кабинета Lava**, а не на сумму: цена и период заданы там. Поэтому тарифу в боте нужно проставить `lava_product_id` — без него рекуррент по этому тарифу недоступен.
+
+  Рекуррент Lava взаимоисключающ с СБП-автопродлением Platega и с автооплатой с баланса. Подробнее: [Рекуррентные платежи](/bot/recurrent-payments).
+</Warning>
 
 ### API Endpoints
 
@@ -1235,6 +1293,60 @@ URL: `https://hooks.domain.com/lava-webhook`<br/>
 <Warning>
   Lava ретраит webhook до 5 раз каждые 150 секунд при HTTP не-200. Бот всегда отдаёт 200 после успешной верификации подписи.
 </Warning>
+
+---
+
+## cisPay
+
+cisPay — H2H merchant API (`api.cispay.app`) с оплатой картой и через СБП. Добавлен в `v3.65.0`.
+
+### Обязательные настройки
+
+```env
+CISPAY_ENABLED=true
+CISPAY_SHOP_ID=11111111-2222-3333-4444-555555555555
+CISPAY_API_KEY=cis_sec_xxxxxxxxxxxx
+```
+
+### Все переменные
+
+| Переменная | Тип | По умолчанию | Описание |
+| ---------- | --- | ------------ | -------- |
+| `CISPAY_ENABLED` | `bool` | `false` | Включить cisPay |
+| `CISPAY_SHOP_ID` | `uuid` | — | **Обязательно**. `X-Shop-ID` — UUID магазина |
+| `CISPAY_API_KEY` | `str` | — | **Обязательно**. `X-Api-Key` — секретный ключ (`cis_sec_...`) |
+| `CISPAY_BASE_URL` | `str` | `https://api.cispay.app` | URL API |
+| `CISPAY_DISPLAY_NAME` | `str` | `CisPay` | Имя в кнопке |
+| `CISPAY_CURRENCY` | `str` | `RUB` | Валюта |
+| `CISPAY_MIN_AMOUNT_KOPEKS` | `int` | `10000` | Минимальная сумма (100 руб) |
+| `CISPAY_MAX_AMOUNT_KOPEKS` | `int` | `10000000` | Максимальная сумма (100 000 руб) |
+| `CISPAY_PAYMENT_LIFETIME_MINUTES` | `int` | `30` | Время жизни счёта |
+| `CISPAY_WEBHOOK_PATH` | `str` | `/cispay-webhook` | Путь webhook |
+| `CISPAY_CARD_ENABLED` | `bool` | `false` | Отдельная кнопка «Карта» |
+| `CISPAY_CARD_DISPLAY_NAME` | `str` | `Карта (CisPay)` | Название кнопки карты |
+| `CISPAY_SBP_ENABLED` | `bool` | `false` | Отдельная кнопка «СБП» |
+| `CISPAY_SBP_DISPLAY_NAME` | `str` | `СБП (CisPay)` | Название кнопки СБП |
+
+### Статусы платежа
+
+| Статус cisPay | Внутренний |
+| ------------- | ---------- |
+| `PENDING` | Ожидает оплаты |
+| `PAID` | Успешно зачислен |
+| `FAILED` | Отклонён |
+| `EXPIRED` | Истёк срок счёта |
+| `REFUNDED` | Возврат |
+
+### Webhook
+
+URL: `https://hooks.domain.com/cispay-webhook`<br/>
+Подпись: HMAC-SHA256 от **сырого тела запроса** ключом `X-Api-Key`, заголовок `X-Signature`.
+
+<Note>
+  Все суммы в API cisPay передаются **в копейках** — конвертация в рубли не нужна.
+
+  Если включён только один сабметод (например, СБП), обычная кнопка оплаты тоже использует его: генерик-запрос с `CARD` магазин с одним СБП отклонил бы.
+</Note>
 
 ---
 
