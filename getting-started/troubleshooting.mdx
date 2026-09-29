@@ -46,6 +46,7 @@ docker stats
 | -------- | ----------- | ------- |
 | Бот не отвечает | `docker logs remnawave_bot` | Проверьте `BOT_TOKEN` и интернет |
 | Ошибки БД | `docker compose ps postgres` | Проверьте статус PostgreSQL |
+| После обновления бот не стартует, в логах базы «база ещё на PostgreSQL 15» | `docker compose logs postgres` | Выполните `make pg-upgrade` — см. [Обновление PostgreSQL 15 → 18](/getting-started/postgresql-18-upgrade) |
 | Webhook не работает | `curl http://localhost:8080/health/telegram-webhook` | Проверьте `WEBHOOK_URL`, прокси и секрет |
 | API недоступен | Проверьте логи бота | Проверьте `REMNAWAVE_API_URL` |
 | Корзина не сохраняется | `docker compose ps redis` | Проверьте статус Redis |
@@ -87,6 +88,10 @@ git checkout v2.7.0
 # Перезапуск
 make reload
 ```
+
+<Warning>
+  Если бот работал на PostgreSQL 15, после обновления на версию с PostgreSQL 18 выполните один раз `make pg-upgrade` — скрипт сделает резервную копию и перенесёт базу. Подробно: [Обновление PostgreSQL 15 → 18](/getting-started/postgresql-18-upgrade).
+</Warning>
 
 ### Как сделать бэкап?
 

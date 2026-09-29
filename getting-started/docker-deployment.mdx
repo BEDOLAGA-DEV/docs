@@ -68,12 +68,16 @@ WEB_API_ALLOWED_ORIGINS=https://miniapp.domain.com
 
 ## Docker Compose
 
+<Warning>
+  Бот использует PostgreSQL 18. Если у вас уже работает установка на PostgreSQL 15, после обновления выполните `make pg-upgrade` — см. [Обновление PostgreSQL 15 → 18](/getting-started/postgresql-18-upgrade). Файл `docker/postgres/pg-upgrade-guard.sh`, на который ссылается compose, лежит в репозитории бота.
+</Warning>
+
 ### Вариант 1: Бот на отдельном сервере
 
 ```yaml docker-compose.yml
 services:
   postgres:
-    image: postgres:15-alpine
+    image: postgres:18-alpine
     container_name: remnawave_bot_db
     restart: unless-stopped
     environment:
@@ -81,8 +85,15 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-remnawave_user}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secure_password_123}
       POSTGRES_INITDB_ARGS: '--encoding=UTF8 --locale=C'
+    # Сторож: не даёт PostgreSQL 18 молча создать пустую базу, пока данные ещё в томе 15
+    entrypoint: ['/bin/sh', '/usr/local/bin/pg-upgrade-guard.sh']
+    command: ['postgres']
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      # Образ 18 хранит данные в /var/lib/postgresql/18/docker — том монтируется в /var/lib/postgresql
+      - postgres18_data:/var/lib/postgresql
+      # Том PostgreSQL 15 — только на чтение, для сторожа (см. «Обновление PostgreSQL 15 → 18»)
+      - postgres_data:/mnt/pg-legacy-data:ro
+      - ./docker/postgres/pg-upgrade-guard.sh:/usr/local/bin/pg-upgrade-guard.sh:ro
     networks:
       - bot_network
     healthcheck:
@@ -156,6 +167,8 @@ services:
       start_period: 30s
 
 volumes:
+  postgres18_data:
+    driver: local
   postgres_data:
     driver: local
   redis_data:
@@ -208,7 +221,7 @@ networks:
 ```yaml docker-compose.local.yml
 services:
   postgres:
-    image: postgres:15-alpine
+    image: postgres:18-alpine
     container_name: remnawave_bot_db
     restart: unless-stopped
     environment:
@@ -216,8 +229,15 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-remnawave_user}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secure_password_123}
       POSTGRES_INITDB_ARGS: '--encoding=UTF8 --locale=C'
+    # Сторож: не даёт PostgreSQL 18 молча создать пустую базу, пока данные ещё в томе 15
+    entrypoint: ['/bin/sh', '/usr/local/bin/pg-upgrade-guard.sh']
+    command: ['postgres']
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      # Образ 18 хранит данные в /var/lib/postgresql/18/docker — том монтируется в /var/lib/postgresql
+      - postgres18_data:/var/lib/postgresql
+      # Том PostgreSQL 15 — только на чтение, для сторожа (см. «Обновление PostgreSQL 15 → 18»)
+      - postgres_data:/mnt/pg-legacy-data:ro
+      - ./docker/postgres/pg-upgrade-guard.sh:/usr/local/bin/pg-upgrade-guard.sh:ro
     networks:
       - bot_network
       - remnawave-network
@@ -294,6 +314,8 @@ services:
       start_period: 30s
 
 volumes:
+  postgres18_data:
+    driver: local
   postgres_data:
     driver: local
   redis_data:
