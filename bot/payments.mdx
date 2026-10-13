@@ -708,6 +708,10 @@ MULENPAY_SHOP_ID=12345
 | `MULENPAY_IFRAME_EXPECTED_ORIGIN` | `str` | — | Ожидаемый origin iframe (для CORS, определяется из BASE_URL) |
 | `MULENPAY_WEBSITE_URL` | `str` | — | URL сайта магазина |
 
+### Данные клиента
+
+Бот автоматически передаёт в поле `client` запроса на создание платежа контакт плательщика — MulenPay использует его, чтобы иметь возможность связаться с клиентом по вопросам платежа. Значение выбирается по приоритету: email пользователя → телефон (если известен) → Telegram ID. Отдельная настройка не требуется.
+
 ### Webhook
 
 В кабинете MulenPay укажите: `https://hooks.domain.com/mulenpay-webhook`
